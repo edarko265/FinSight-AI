@@ -297,6 +297,7 @@ FinSight-AI/
 | [Project scope](docs/FinSight-AI-Project-Scope.md) | Full requirements, data findings and acceptance criteria |
 | [Database](docs/database.md)                       | Why PostgreSQL, and how it fits a bank                   |
 | [Security](docs/security.md)                       | Encryption, sessions, customer isolation, AI boundaries  |
+| [Privacy](docs/privacy.md)                         | GDPR principles, consent, data rights, processors        |
 | [Coding conventions](docs/coding-conventions.md)   | How this codebase is written                             |
 | [Branching strategy](docs/branching-strategy.md)   | Branches, pull requests, promotion                       |
 | [Decisions](docs/decisions.md)                     | Open questions for the bank and the answers we get       |
