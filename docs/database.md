@@ -79,24 +79,29 @@ separate credentials and separate encryption keys.
 
 ## Shape of the data
 
-Money is stored as integer cents (sealed), never floating point. Identifiers are looked up
-by blind index. Source row order is preserved as the tie-breaker for equal timestamps.
+Each customer's whole transaction history is stored as **one sealed value**: the rows are
+packed, compressed and encrypted with that customer's own key. The database cannot see how
+many transactions a customer has, what they bought, or when.
 
-| Table                  | Plain columns                                                   | Encrypted or hashed                                                       |
-| ---------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `ingestions`           | id, source commit, checksum, status, counts, timestamps         | —                                                                         |
-| `customers`            | id (UUID), key ID                                               | customer blind index, sealed customer ID, age, postal code                |
-| `accounts`             | id (UUID), customer FK                                          | account blind index, sealed account ID                                    |
-| `transactions`         | id (UUID), customer FK, ingestion ID, source row number, key ID | sealed date, timestamp, amount, balance, category, type, merchant ID, MCC |
-| `demo_sessions`        | id, expiry                                                      | token hash, sealed assumptions                                            |
-| `classification_rules` | version, matcher, basket, necessity, explanation                | — (product configuration)                                                 |
+| Table              | Plain columns                                         | Encrypted or hashed                                                                                                 |
+| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `ingestions`       | id, source file, checksum, status, counts, timestamps | —                                                                                                                   |
+| `customer_ledgers` | key ID, ingestion ID                                  | customer blind index, sealed profile (customer ID, account ID, age, postal code), sealed ledger (every transaction) |
+| `customer_state`   | kind, updated-at                                      | customer blind index, sealed value (dashboard, read insights, consent)                                              |
+| `sessions`         | expiry                                                | SHA-256 token hash, customer blind index                                                                            |
+| `peer_benchmarks`  | age band, metric, group size, percentiles             | — (anonymous group statistics; groups under 30 are dropped)                                                         |
 
-Index `transactions (customer_id, source_row_number)`. With at most ~1,500 rows per
-customer, one indexed fetch followed by in-memory decryption and aggregation stays well
-inside the latency target.
+Money is integer cents. Source row order is kept as the tie-breaker for equal timestamps.
+
+A request fetches one row by blind index, decrypts it in memory and runs the analytics in
+the application. The full dataset (5,100 customers, 3.6 million transactions) ingests in
+about 25 seconds and occupies roughly 300 MB.
 
 ## Query layer
 
-Drizzle ORM for typed schema and migrations, with hand-written parameterised SQL for bulk
-`COPY`. All access goes through repository functions that take the server-validated
-customer context.
+Hand-written, parameterised SQL through a small `Db` interface
+([`src/lib/db/client.ts`](../src/lib/db/client.ts)); migrations are plain `.sql` files
+applied by `pnpm db:migrate`. With `DATABASE_URL` set the app connects to PostgreSQL over
+TLS; without it, an embedded PostgreSQL (PGlite) under `data/derived/` is used so the
+project runs locally with no external service. All access goes through repository functions
+that take the customer's blind index from the server session.

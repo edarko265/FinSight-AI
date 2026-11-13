@@ -1,9 +1,12 @@
+"use client";
+
 import { BarChart } from "@/components/charts/BarChart";
 import { chartColor } from "@/components/charts/chart-palette";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { LineChart } from "@/components/charts/LineChart";
 import type { ChartCard, ChartSpec } from "@/lib/contracts/chart";
-import { formatEur } from "@/lib/money";
+import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { formatMoney } from "@/lib/i18n/config";
 
 function Plot({ chart }: { chart: ChartSpec }): React.JSX.Element {
   switch (chart.kind) {
@@ -21,6 +24,7 @@ function Plot({ chart }: { chart: ChartSpec }): React.JSX.Element {
  * data is readable without colour, and by screen readers.
  */
 function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
+  const { t, locale } = usePreferences();
   const isDonut = chart.kind === "donut";
   const total = chart.points.reduce((sum, point) => sum + point.valueCents, 0);
 
@@ -39,10 +43,8 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
             {point.label}
           </span>
           <span className="tabular-nums text-muted">
-            {formatEur(point.valueCents)}
-            {isDonut && total > 0
-              ? ` · ${Math.round((point.valueCents / total) * 100)} %`
-              : null}
+            {formatMoney(point.valueCents, locale)}
+            {isDonut && total > 0 ? ` · ${Math.round((point.valueCents / total) * 100)} %` : null}
           </span>
         </li>
       ))}
@@ -54,7 +56,9 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
   }
   return (
     <details className="group mt-3">
-      <summary className="cursor-pointer text-sm font-medium text-accent">Show values</summary>
+      <summary className="cursor-pointer text-sm font-medium text-accent">
+        {t("chart.showValues")}
+      </summary>
       <div className="mt-2">{list}</div>
     </details>
   );

@@ -1,0 +1,86 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+
+import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
+
+export interface Overview {
+  asOf: string;
+  balanceCents: number;
+  forecast: {
+    status: "ok" | "shortfall" | "insufficient_data";
+    availableCents: number;
+    shortfallCents: number;
+    horizonDays: number;
+  };
+  unreadInsights: number;
+}
+
+export interface Me {
+  customerId: string;
+  asOf: string;
+  aiEnabled: boolean;
+  voiceEnabled: boolean;
+  voiceAgentEnabled: boolean;
+}
+
+interface OverviewValue {
+  overview: Overview | null;
+  me: Me | null;
+  refresh: () => void;
+}
+
+const OverviewContext = createContext<OverviewValue>({
+  overview: null,
+  me: null,
+  refresh: () => undefined,
+});
+
+/** Shared account summary for the signed-in area: balance, estimate, unread insights. */
+export function OverviewProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
+  const { locale } = usePreferences();
+  const router = useRouter();
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    api<Overview>(`/api/overview?locale=${locale}`)
+      .then((data) => {
+        if (!cancelled) setOverview(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, tick]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api<Me>("/api/me")
+      .then((data) => {
+        if (!cancelled) setMe(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const toSignIn = (): void => router.replace("/login");
+    window.addEventListener(SIGNED_OUT_EVENT, toSignIn);
+    return () => window.removeEventListener(SIGNED_OUT_EVENT, toSignIn);
+  }, [router]);
+
+  const refresh = useCallback(() => setTick((value) => value + 1), []);
+  const value = useMemo(() => ({ overview, me, refresh }), [overview, me, refresh]);
+  return <OverviewContext.Provider value={value}>{children}</OverviewContext.Provider>;
+}
+
+export function useOverview(): OverviewValue {
+  return useContext(OverviewContext);
+}

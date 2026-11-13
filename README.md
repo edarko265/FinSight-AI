@@ -218,15 +218,24 @@ Generate the encryption keys with `openssl rand -base64 32` (one per key).
 
 ### 📦 Getting the dataset
 
-The bank's transaction file is ~363 MB and managed with Git LFS. Keep it **outside** this
-repository; it is never committed.
+The bank's transaction file is ~363 MB and is never committed. Download it into `data/raw/`
+(git-ignored), then load it — encrypted — into the database:
 
 ```bash
-git lfs install
-git clone https://github.com/hackjunction/Junction-2026-S-pankki.git ../s-pankki-data
-git -C ../s-pankki-data lfs pull
-head -c 200 ../s-pankki-data/tx_junction_transactions.csv   # must be CSV, not an LFS pointer
+mkdir -p data/raw && cd data/raw
+BASE=https://raw.githubusercontent.com/hackjunction/Junction-2026-S-pankki/main
+curl -fLO $BASE/tx_customers_junction.csv
+curl -fL https://media.githubusercontent.com/media/hackjunction/Junction-2026-S-pankki/main/tx_junction_transactions.csv \
+  -o tx_junction_transactions.csv
+head -c 200 tx_junction_transactions.csv   # must be CSV, not a Git LFS pointer
+cd ../..
+
+pnpm data:ingest --source data/raw         # all 5,100 customers, about 25 seconds
 ```
+
+With `DATABASE_URL` empty the app uses an embedded local database, so nothing else needs to
+be installed. Sign in at `/login` with a customer ID from the dataset and the
+`DEMO_LOGIN_PASSWORD` you set in `.env.local`.
 
 ### ✅ Before you push
 

@@ -12,13 +12,14 @@ export function DonutChart({ points }: { points: ChartPoint[] }): React.JSX.Elem
     1,
   );
 
-  let offset = 0;
-  const segments = points.map((point, index) => {
-    const length = (point.valueCents / total) * CIRCUMFERENCE;
-    const segment = { label: point.label, length, offset, color: chartColor(index) };
-    offset += length;
-    return segment;
-  });
+  const segments = points.map((point, index) => ({
+    label: point.label,
+    length: (point.valueCents / total) * CIRCUMFERENCE,
+    offset:
+      (points.slice(0, index).reduce((sum, earlier) => sum + earlier.valueCents, 0) / total) *
+      CIRCUMFERENCE,
+    color: chartColor(index),
+  }));
 
   return (
     <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="mx-auto h-auto w-40" aria-hidden="true">

@@ -48,25 +48,23 @@ flowchart LR
 
 ### What is encrypted
 
-| Data                                                          | Storage                                             |
-| ------------------------------------------------------------- | --------------------------------------------------- |
-| Customer ID, account ID                                       | Blind index for lookup; encrypted copy for display  |
-| Amount, balance                                               | Encrypted                                           |
-| Date, timestamp                                               | Encrypted                                           |
-| Category, transaction type, merchant ID, MCC                  | Encrypted                                           |
-| Age, postal code                                              | Encrypted                                           |
-| User assumptions and overrides                                | Encrypted                                           |
-| Session token                                                 | SHA-256 hash only                                   |
-| Row UUID, ingestion ID, source row number, key ID, created-at | Plain — technical metadata with no customer meaning |
-| Classification rules, teaching glossary                       | Plain — product configuration, not customer data    |
+| Data                                                                             | Storage                                                                  |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Customer ID                                                                      | Blind index for lookup; sealed copy inside the profile                   |
+| Account ID, age, postal code                                                     | Sealed in the customer's profile                                         |
+| Every transaction: date, time, amount, balance, category, type, merchant ID, MCC | Sealed together as one compressed ledger per customer                    |
+| Dashboard layouts, read insights, consent record                                 | Sealed per customer                                                      |
+| Session token                                                                    | SHA-256 hash only                                                        |
+| Ingestion ID, key ID, timestamps                                                 | Plain — technical metadata with no customer meaning                      |
+| Peer benchmarks                                                                  | Plain — percentiles over groups of 30 or more; no row describes a person |
 
 ### Why this still performs
 
 Encrypted values cannot be summed or filtered in SQL. That is acceptable here because the
-data is naturally partitioned: the dataset has between 148 and 1,543 transactions per
-customer. A request fetches one customer's rows by blind index, decrypts them in memory and
-runs the analytics in the application. Nothing is decrypted in the database, and no query
-ever spans customers.
+data is naturally partitioned: between 148 and 1,543 transactions per customer. A request
+fetches that customer's single sealed ledger by blind index, decrypts it in memory and runs
+the analytics in the application. Nothing is decrypted in the database, no query spans
+customers, and the database does not even learn how many transactions a customer has.
 
 ### Keys
 

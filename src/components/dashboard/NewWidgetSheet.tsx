@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import type { ChartCard } from "@/lib/contracts/chart";
-import { PROMPT_SUGGESTIONS } from "@/lib/demo/fixtures";
+import { usePreferences } from "@/components/providers/PreferencesProvider";
 
 interface NewWidgetSheetProps {
   open: boolean;
@@ -13,6 +13,7 @@ interface NewWidgetSheetProps {
 
 /** A bottom sheet where the assistant proposes a chart and the user decides whether to pin it. */
 export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): React.JSX.Element {
+  const { t } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -31,21 +32,20 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
     >
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 id="new-widget-title" className="text-base font-semibold">
-          New widget
+          {t("dashboard.newWidget")}
         </h2>
         <button
           type="button"
           onClick={onClose}
           className="rounded-full px-3 py-1.5 text-sm font-medium text-accent"
         >
-          Close
+          {t("evidence.close")}
         </button>
       </header>
 
       <ChatPanel
-        intro="Tell me what you would like to see on your dashboard, and I will draw it."
-        suggestions={PROMPT_SUGGESTIONS}
-        placeholder="e.g. Show my restaurant spending"
+        intro={t("dashboard.widgetPrompt")}
+        placeholder={t("dashboard.widgetExample")}
         cardAction={(card) => (
           <button
             type="button"
@@ -55,7 +55,7 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
             }}
             className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary"
           >
-            Add to dashboard
+            {t("chat.addToDashboard")}
           </button>
         )}
       />

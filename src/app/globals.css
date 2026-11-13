@@ -14,6 +14,9 @@
   --primary: #91fa9b;
   --on-primary: #004628;
 
+  --warning: #8a5300;
+  --warning-soft: #fff4dc;
+
   --chart-1: #007841;
   --chart-2: #006e87;
   --chart-3: #885600;
@@ -22,8 +25,9 @@
   --chart-bar-muted: #b7d9c4;
 }
 
+/* Dark theme: follows the system unless the user picks a theme in Settings. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0c1a13;
     --surface: #14261c;
     --foreground: #eff0f1;
@@ -32,6 +36,8 @@
     --accent: #4cc486;
     --accent-soft: #17301f;
     --brand: #004628;
+    --warning: #f0b860;
+    --warning-soft: #33280f;
 
     --chart-1: #4cc486;
     --chart-2: #4fb3d1;
@@ -40,6 +46,26 @@
     --chart-5: #91fa9b;
     --chart-bar-muted: #2c5a43;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0c1a13;
+  --surface: #14261c;
+  --foreground: #eff0f1;
+  --muted: #a3b3aa;
+  --border: #25382d;
+  --accent: #4cc486;
+  --accent-soft: #17301f;
+  --brand: #004628;
+  --warning: #f0b860;
+  --warning-soft: #33280f;
+
+  --chart-1: #4cc486;
+  --chart-2: #4fb3d1;
+  --chart-3: #d9a441;
+  --chart-4: #9aa3a8;
+  --chart-5: #91fa9b;
+  --chart-bar-muted: #2c5a43;
 }
 
 @theme inline {
@@ -52,6 +78,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-brand: var(--brand);
   --color-on-brand: var(--on-brand);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --font-sans: var(--font-geist-sans);

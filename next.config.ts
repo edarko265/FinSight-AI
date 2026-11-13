@@ -15,6 +15,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
+  "media-src 'self' blob:",
   `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
@@ -28,7 +29,7 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 

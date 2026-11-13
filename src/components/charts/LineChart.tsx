@@ -34,7 +34,14 @@ export function LineChart({ points }: { points: ChartPoint[] }): React.JSX.Eleme
       />
       {coordinates.map((c) => (
         <g key={c.label}>
-          <circle cx={c.x} cy={c.y} r={3} fill="var(--surface)" stroke="var(--chart-1)" strokeWidth={2} />
+          <circle
+            cx={c.x}
+            cy={c.y}
+            r={3}
+            fill="var(--surface)"
+            stroke="var(--chart-1)"
+            strokeWidth={2}
+          />
           <text x={c.x} y={HEIGHT - 5} textAnchor="middle" fontSize={11} fill="var(--muted)">
             {c.label}
           </text>
