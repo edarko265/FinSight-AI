@@ -12,7 +12,8 @@ applied when the repository was initialised; the rest are for the maintainer.
 ## 2. Branch protection — `main` and `dev`
 
 - [x] Require a pull request before merging
-- [x] Require the status check `Lint / Typecheck / Test / Build`
+- [ ] Require the status check `Lint / Typecheck / Test / Build` — turn on once GitHub
+      Actions is running for the account (a required check that cannot run blocks every merge)
 - [x] Block force pushes and deletions
 - [ ] After the event: require 1 approval and Code Owner review (left off so a small team
       is not blocked during the hackathon)

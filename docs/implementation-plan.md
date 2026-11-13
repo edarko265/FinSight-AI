@@ -18,6 +18,30 @@ accuracy or evidence.
 | ✅ Done | Integer-cent money parsing and field-level encryption, both tested            |
 | ⏭️ Next | Milestone A remainder: database connection, schema, migrations                |
 
+## Feature roadmap (team proposal, 13 Nov)
+
+The team's proposed features, mapped onto the scope and onto tasks below. These are still
+ideas for discussion; the mapping shows where each one lands if we keep it.
+
+| Priority | Feature                        | How we build it                                                                                                                                                                                                 | Tasks        |
+| -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| P0       | Conversational needs discovery | The coach asks short follow-up questions and proposes the next useful question from computed patterns (largest discretionary category, uncovered bills, no reserve). It describes patterns, never people.       | B15, D9      |
+| P0       | Explainable AI advice          | Already the core of the scope: every answer carries its transactions, calculation and assumptions.                                                                                                              | B1, C4, D6   |
+| P0       | AI transaction categorisation  | The dataset already has a category on every row. Basket and necessity come from versioned rules; the model only _suggests_ a label for rows the rules leave unclassified, with a reason, and the user confirms. | B9, D10      |
+| P0       | Irregular expense planning     | The irregular reserve in the spending estimate, with a suggested amount from the user's own history of irregular essential costs.                                                                               | B11, B16, C5 |
+| P1       | Goal-based savings             | One savings goal per session, linked to a scenario: "cut restaurants 20% → reach the goal in N months". Hypothetical, no money moves.                                                                           | F1           |
+| P1       | Proactive alerts               | In-app insight cards on opening the coach: unusual category spend, bills expected in the horizon, modelled shortfall. No push notifications.                                                                    | F2           |
+| P1       | Recurring payments             | Detect regular bills from history. The data has synthetic merchant IDs and no merchant names, so detection is by merchant ID and category, shown as "history-based suggestion" until the user confirms.         | B17, F3      |
+
+Two points to settle as a team:
+
+- **Categorisation.** Letting a model classify freely would make totals unrepeatable and
+  hard to explain, which costs us on feasibility and trust. Rules first, model as a
+  suggester, user confirms — the answer stays explainable and the AI is still visibly doing
+  useful work.
+- **Alerts.** The scope excludes a push-notification system. In-app cards show the same
+  value in the demo without it.
+
 ## Sequence
 
 ```mermaid
@@ -77,6 +101,9 @@ people stop blocking each other.
 | B12 | Golden tests in integer cents for B7–B11, plus no-future-leakage tests                                                                                               | Eric       | P0-03–06     |
 | B13 | Persona selection script: 2–3 customers chosen from pre-cutoff history                                                                                               | Eric       | P0-01        |
 | B14 | Build screens against fixture responses that match the B1 contracts                                                                                                  | Tom        | P0-08        |
+| B15 | Pattern detector for needs discovery: largest discretionary categories, period-over-period change, missing reserve, bills not covered — each with evidence           | Eric       | P0-07        |
+| B16 | Irregular-reserve suggestion: history of irregular essential costs → suggested monthly reserve, shown as a suggestion until confirmed                                | Eric       | P0-05        |
+| B17 | Recurrence inference: salary and regular-cost candidates by merchant ID and category, expected window not exact date                                                 | Eric       | P0-05        |
 
 **Exit gate:** ingestion runs twice with identical totals; every golden test passes.
 
@@ -97,16 +124,18 @@ people stop blocking each other.
 
 ## Milestone D — Grounded AI (5–6 h)
 
-| #   | Task                                                                                                 | Owner           | Req.  |
-| --- | ---------------------------------------------------------------------------------------------------- | --------------- | ----- |
-| D1  | Confirm with the bank that aggregates may be sent to a model; record in [decisions.md](decisions.md) | Jennifer        | P0-09 |
-| D2  | Deterministic intent router for prompt chips (works with no key)                                     | Eric            | P0-10 |
-| D3  | Provider adapter behind a small interface; model chosen by environment                               | Eric            | P0-09 |
-| D4  | Tool registry: six allowlisted read-only tools calling the same analytics as the UI                  | Eric            | P0-09 |
-| D5  | Bounded loop: 4 steps, 8 tool calls, 20 s timeout; validated final response                          | Eric            | P0-09 |
-| D6  | Cards render numbers from tool results; model text references fact IDs only                          | Eric + Tom      | P0-07 |
-| D7  | Fallback on missing key, denied permission, timeout, 429                                             | Eric            | P0-10 |
-| D8  | Evaluation set of 20 prompts with expected tools and facts                                           | Jennifer + Eric | P0-09 |
+| #   | Task                                                                                                                                                       | Owner           | Req.  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ----- |
+| D1  | Confirm with the bank that aggregates may be sent to a model; record in [decisions.md](decisions.md)                                                       | Jennifer        | P0-09 |
+| D2  | Deterministic intent router for prompt chips (works with no key)                                                                                           | Eric            | P0-10 |
+| D3  | Provider adapter behind a small interface; model chosen by environment                                                                                     | Eric            | P0-09 |
+| D4  | Tool registry: six allowlisted read-only tools calling the same analytics as the UI                                                                        | Eric            | P0-09 |
+| D5  | Bounded loop: 4 steps, 8 tool calls, 20 s timeout; validated final response                                                                                | Eric            | P0-09 |
+| D6  | Cards render numbers from tool results; model text references fact IDs only                                                                                | Eric + Tom      | P0-07 |
+| D7  | Fallback on missing key, denied permission, timeout, 429                                                                                                   | Eric            | P0-10 |
+| D8  | Evaluation set of 20 prompts with expected tools and facts                                                                                                 | Jennifer + Eric | P0-09 |
+| D9  | Needs discovery in conversation: clarifying questions and "next question" suggestions driven by B15 patterns; works from chips when AI is off              | Eric + Tom      | P0-07 |
+| D10 | Categorisation assist: model suggests basket and necessity for unclassified rows with a reason; user confirms; stored as an override, source row untouched | Eric            | P0-04 |
 
 **Exit gate:** ≥ 18 / 20 evaluation prompts correct; zero fabricated figures; every
 cross-customer attempt blocked.
@@ -125,11 +154,22 @@ cross-customer attempt blocked.
 
 **Exit gate:** production build deployed; three-minute demo rehearsed twice end to end.
 
+## Milestone F — P1 features (only after every P0 gate passes)
+
+Pick in this order; each is independent, so stop wherever time runs out.
+
+| #   | Task                                                                                                        | Owner      |
+| --- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| F1  | Goal-based savings: one goal per session, tied to a scenario, with months-to-goal; labelled hypothetical    | Tom + Eric |
+| F2  | Proactive insight cards: unusual spend, upcoming bills, modelled shortfall — in-app, each with its evidence | Eric + Tom |
+| F3  | Recurring payments view: detected regular bills with confirm / dismiss, feeding the spending estimate       | Tom + Eric |
+
 ---
 
 ## Cut order, if time runs short
 
-Voice → benchmarks → mortgage → multi-bank → saved goals → Finnish. Never cut accuracy or
+Voice → benchmarks → mortgage → multi-bank → recurring payments view → proactive cards →
+saved goals → Finnish. Never cut accuracy or
 evidence. The smallest honest demo is one customer, three chat questions, the basket view
 and one scenario — described as a reduced prototype.
 
