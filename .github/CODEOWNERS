@@ -1,0 +1,9 @@
+# CODEOWNERS — FinSight-AI
+# Default owner for everything in the repository.
+*                       @edarko265
+
+# Governance, CI and security-sensitive code
+/.github/               @edarko265
+/src/lib/security/      @edarko265
+/LICENSE                @edarko265
+/SECURITY.md            @edarko265
