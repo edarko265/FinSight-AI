@@ -5,21 +5,8 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, isStepCount, tool, type LanguageModel } from "ai";
 import { z } from "zod";
 
-import {
-  balanceTool,
-  basketsTool,
-  peersTool,
-  PERIOD_KEYS,
-  profileTool,
-  recurringTool,
-  safeToSpendTool,
-  spendingTool,
-  TARGET_KEYS,
-  trendTool,
-  whatIfTool,
-  type CoachContext,
-  type ToolResult,
-} from "@/lib/coach/tools";
+import { runTool, TOOL_SCHEMAS } from "@/lib/coach/registry";
+import type { CoachContext, ToolResult } from "@/lib/coach/tools";
 import { getEnv } from "@/lib/env";
 import { LOCALE_INFO } from "@/lib/i18n/config";
 
@@ -51,6 +38,7 @@ export function coachSystemPrompt(ctx: CoachContext): string {
     `Today is ${ctx.asOf} in this demo. The data is synthetic and covers one account.`,
     "Every amount, count, date and comparison you state must come from a tool result in this conversation. Never calculate, estimate or recall money figures yourself, and never invent merchants, bills or income.",
     "Call a tool for any question about the user's money. Use the amounts exactly as the tool gives them.",
+    "Each tool also draws a chart (pie, bar, line or a money-flow diagram) that the app shows next to your reply. When the user asks for a chart or diagram, call the tool that draws it.",
     "The app shows the chart and the figures next to your reply, so add meaning instead of repeating every number: say what stands out and why it matters.",
     "Teach as you go. Spending falls into three baskets: mandatory and regular (rent), mandatory and irregular (a broken washing machine), and everyday spending that slips through the fingers. Never treat essentials such as food or medicine as waste, and never shame the user.",
     "Discover needs through conversation: when it helps, end with one short, specific follow-up question about their situation or goal.",
@@ -59,15 +47,6 @@ export function coachSystemPrompt(ctx: CoachContext): string {
     "If a tool returns nothing useful, say what you could not find and offer something you can do.",
   ].join("\n");
 }
-
-const target = z
-  .enum(TARGET_KEYS)
-  .describe("Kind of spending. 'taxi' and 'cafes' are picked out by merchant code.");
-const period = z
-  .union([z.enum(PERIOD_KEYS), z.string().regex(/^\d{4}-\d{2}$/)])
-  .describe(
-    "A named period, or one calendar month as YYYY-MM. Defaults to the last completed month.",
-  );
 
 /** What the model is allowed to see of a result: aggregates and wording, never transactions. */
 function forModel(result: ToolResult): Record<string, unknown> {
@@ -90,53 +69,49 @@ export function coachTools(ctx: CoachContext, collected: ToolResult[]) {
     collected.push(result);
     return forModel(result);
   };
+  const euros = z.number().min(0).max(1_000_000).optional();
   return {
     get_spending: tool({
-      description: "Total spending in a period, overall by category or for one kind of spending.",
-      inputSchema: z.object({ target: target.optional(), period: period.optional() }),
-      execute: async (input) => run(spendingTool(ctx, input as Parameters<typeof spendingTool>[1])),
+      description:
+        "Total spending in a period: overall by category (pie chart), or for one kind of spending. target 'taxi' and 'cafes' are picked out by merchant code. period is a named period or one month as YYYY-MM; default is the last completed month.",
+      inputSchema: TOOL_SCHEMAS.spending,
+      execute: async (input) => run(runTool(ctx, "spending", input)),
     }),
     get_spending_trend: tool({
       description:
-        "Spending month by month over recent months, overall or for one kind of spending.",
-      inputSchema: z.object({
-        target: target.optional(),
-        months: z.number().int().min(3).max(12).optional(),
-      }),
-      execute: async (input) => run(trendTool(ctx, input)),
+        "Spending month by month over recent months (bar or line chart), overall or for one kind.",
+      inputSchema: TOOL_SCHEMAS.trend,
+      execute: async (input) => run(runTool(ctx, "trend", input)),
     }),
     get_baskets: tool({
-      description: "The three baskets: regular bills, irregular essentials and everyday spending.",
-      inputSchema: z.object({ period: period.optional() }),
-      execute: async (input) => run(basketsTool(ctx, input as Parameters<typeof basketsTool>[1])),
+      description:
+        "The three baskets: regular bills, irregular essentials and everyday spending (pie chart).",
+      inputSchema: TOOL_SCHEMAS.baskets,
+      execute: async (input) => run(runTool(ctx, "baskets", input)),
+    }),
+    get_money_flow: tool({
+      description:
+        "A flow diagram of where income went in a period: bills, essentials, everyday spending, investing and what was left.",
+      inputSchema: TOOL_SCHEMAS.flow,
+      execute: async (input) => run(runTool(ctx, "flow", input)),
     }),
     get_balance: tool({
-      description: "Recorded account balance now and at the end of recent months.",
-      inputSchema: z.object({}),
-      execute: async () => run(balanceTool(ctx)),
+      description: "Recorded account balance now and at the end of recent months (line chart).",
+      inputSchema: TOOL_SCHEMAS.balance,
+      execute: async () => run(runTool(ctx, "balance", {})),
     }),
     get_safe_to_spend: tool({
       description:
         "Conservative estimate of what can be spent over the next days after bills, essentials and a reserve. Also use it to test a purchase or a transfer to savings by passing it as otherOutflowsEuros.",
       inputSchema: z.object({
         horizonDays: z.number().int().min(1).max(31).optional(),
-        protectedEuros: z
-          .number()
-          .min(0)
-          .max(1_000_000)
-          .optional()
-          .describe("Buffer to leave untouched"),
-        otherOutflowsEuros: z
-          .number()
-          .min(0)
-          .max(1_000_000)
-          .optional()
-          .describe("A planned purchase or transfer"),
+        protectedEuros: euros.describe("Buffer to leave untouched"),
+        otherOutflowsEuros: euros.describe("A planned purchase or transfer"),
         includeExpectedIncome: z.boolean().optional(),
       }),
       execute: async (input) =>
         run(
-          safeToSpendTool(ctx, {
+          runTool(ctx, "safe_to_spend", {
             horizonDays: input.horizonDays,
             protectedCents:
               input.protectedEuros === undefined
@@ -152,29 +127,25 @@ export function coachTools(ctx: CoachContext, collected: ToolResult[]) {
     }),
     simulate_reduction: tool({
       description: "What a percentage cut to one kind of spending would have saved. Hypothetical.",
-      inputSchema: z.object({
-        target,
-        percent: z.number().min(0).max(100),
-        period: period.optional(),
-      }),
-      execute: async (input) => run(whatIfTool(ctx, input as Parameters<typeof whatIfTool>[1])),
+      inputSchema: TOOL_SCHEMAS.what_if,
+      execute: async (input) => run(runTool(ctx, "what_if", input)),
     }),
     compare_with_peers: tool({
       description:
         "Compare the user's typical month with people of a similar age in the dataset, with Statistics Finland context where available.",
-      inputSchema: z.object({ target: target.optional() }),
-      execute: async (input) => run(peersTool(ctx, input)),
+      inputSchema: TOOL_SCHEMAS.peers,
+      execute: async (input) => run(runTool(ctx, "peers", input)),
     }),
     get_spending_pattern: tool({
       description:
         "Describe the user's spending pattern: basket shares and largest free-choice categories.",
-      inputSchema: z.object({}),
-      execute: async () => run(profileTool(ctx)),
+      inputSchema: TOOL_SCHEMAS.profile,
+      execute: async () => run(runTool(ctx, "profile", {})),
     }),
     get_regular_payments: tool({
       description: "Regular monthly bills and the usual income pattern, suggested from history.",
-      inputSchema: z.object({}),
-      execute: async () => run(recurringTool(ctx)),
+      inputSchema: TOOL_SCHEMAS.recurring,
+      execute: async () => run(runTool(ctx, "recurring", {})),
     }),
   };
 }

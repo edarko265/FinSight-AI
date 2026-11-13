@@ -228,6 +228,79 @@ export const fi: Record<MessageKey, string> = {
     "Tulo saapuu yleensä kuun {days}. päivän tienoilla, noin {amount} kerralla.",
   "coach.recurring.basis":
     "Ehdotuksia kuuden viimeisen täyden kuukauden perusteella. Datassa ei ole maksunsaajien nimiä, joten maksut on ryhmitelty tyypin mukaan.",
+  "coach.flow.title": "Mihin tulosi menivät",
+  "coach.flow.income": "Rahaa sisään",
+  "coach.flow.invested": "Sijoitettu",
+  "coach.flow.transferred": "Siirretty pois",
+  "coach.flow.left": "Jäljelle jäi",
+  "coach.flow.summary":
+    "Jaksolla {period} tuloja tuli {income} ja kulutukseen meni {spent}. Kulutuksen, sijoitusten ja siirtojen jälkeen jäi {left}.",
+  "coach.flow.summaryOver":
+    "Jaksolla {period} tuloja tuli {income} ja kulutukseen meni {spent}. Kulutus, sijoitukset ja siirrot ylittivät tulot {left}.",
+  "chat.suggest.flow": "Näytä, miten tuloni jakautuvat",
+  "views.preset.overview": "Yleiskuva",
+  "views.preset.baskets": "Kolme koria",
+  "views.preset.everyday": "Arjen kulutus",
+  "views.label": "Näkymät",
+  "views.period": "Ajanjakso",
+  "views.period.last_month": "Viime kuu",
+  "views.period.this_month": "Tämä kuu",
+  "views.period.last_3_months": "3 kk",
+  "views.period.last_6_months": "6 kk",
+  "views.period.last_12_months": "12 kk",
+  "views.saveAs": "Tallenna uutena näkymänä",
+  "views.namePlaceholder": "Anna näkymälle nimi",
+  "views.save": "Tallenna",
+  "views.delete": "Poista tämä näkymä",
+  "views.unnamed": "Oma näkymä",
+  "consent.title": "Ennen kuin käytät tekoälyvalmentajaa",
+  "consent.intro":
+    "Tekoälyvalmentaja käyttää ulkopuolista tekoälypalvelua kysymystesi ymmärtämiseen ja vastausten muotoiluun. Lue, miten tietojasi käytetään.",
+  "consent.point.sent":
+    "Mitä lähetetään: kysymyksesi sekä tapahtumistasi lasketut summat ja lyhyet yhteenvedot.",
+  "consent.point.notSent":
+    "Mitä ei koskaan lähetetä: tapahtumaluettelosi, asiakastunnuksesi, tilinumerosi, ikäsi tai postinumerosi.",
+  "consent.point.voice":
+    "Ääni: jos käytät sitä, puhuttu kysymyksesi ja valmentajan vastaus käsitellään puhepalvelussa.",
+  "consent.point.advice":
+    "Valmentaja selittää ja arvioi. Se ei ole sijoitus- tai talousneuvontaa, eivätkä arviot ole takuita.",
+  "consent.point.choice":
+    "Valinta on sinun. Ilman tekoälyä valmentaja vastaa silti yleisimpiin kysymyksiin täällä tehdyillä laskelmilla, ja voit muuttaa mieltäsi asetuksissa milloin tahansa.",
+  "consent.readMore": "Lue koko tietosuojaseloste",
+  "consent.accept": "Hyväksyn, käytä tekoälyvalmentajaa",
+  "consent.decline": "Jatka ilman tekoälyä",
+  "settings.ai": "Tekoälyvalmentaja",
+  "settings.aiOn": "Olet hyväksynyt tekoälykäsittelyn. Kytke pois peruuttaaksesi suostumuksesi.",
+  "settings.aiOff":
+    "Tekoäly on pois päältä. Valmentaja vastaa perustilassa, eikä mitään lähetetä tekoälypalveluun.",
+  "settings.download": "Lataa tietoni",
+  "settings.erase": "Poista sovellustietoni",
+  "settings.eraseConfirm":
+    "Poistetaanko tallennetut näkymäsi, luetut havainnot ja suostumus, ja kirjaudutaanko ulos? Tätä ei voi perua.",
+  "settings.eraseYes": "Kyllä, poista",
+  "settings.privacyLink": "Tietosuojaseloste",
+  "privacy.title": "Tietosuojaseloste",
+  "privacy.demo":
+    "FinSight-AI on prototyyppi, joka käyttää hackathonia varten toimitettua synteettistä dataa. Oikeita asiakastietoja ei käsitellä. Tämä seloste kuvaa, miten palvelu on suunniteltu käsittelemään henkilötietoja.",
+  "privacy.what.title": "Mitä käsittelemme",
+  "privacy.what.body":
+    "Tilitapahtumasi, perustiedot (ikä ja postinumero), tallentamasi näkymät, lukemasi havainnot ja suostumusvalintasi.",
+  "privacy.why.title": "Miksi ja millä perusteella",
+  "privacy.why.body":
+    "Näyttääksemme ja selittääksemme sinulle oman taloutesi. Laskelmat tehdään tässä palvelussa. Mitään ei lähetetä tekoäly- tai puhepalveluun ilman suostumustasi, jonka voit peruuttaa milloin tahansa.",
+  "privacy.ai.title": "Tekoäly- ja puhepalvelut",
+  "privacy.ai.body":
+    "Suostumuksellasi kysymyksesi sekä summat ja lyhyet yhteenvedot lähetetään kielimallipalveluun (OpenAI tai Google) ja ääni ElevenLabsille. Tapahtumaluetteloasi ja tunnisteitasi ei koskaan lähetetä. Oikeusvaikutuksia sisältäviä päätöksiä ei tehdä automaattisesti.",
+  "privacy.security.title": "Miten tiedot suojataan",
+  "privacy.security.body":
+    "Tietosi salataan ennen tallennusta avaimella, joka kuuluu vain sinun tilillesi, ja palvelu on suunniteltu ylläpidettäväksi EU:ssa. Yhteydet on salattu. Tietokantaan pääsevä henkilöstö ei voi lukea niitä.",
+  "privacy.rights.title": "Oikeutesi",
+  "privacy.rights.body":
+    "Voit nähdä ja ladata tietosi, peruuttaa suostumuksesi ja poistaa sovelluksen sinusta tallentamat tiedot asetuksista. Voit myös tehdä valituksen tietosuojaviranomaiselle.",
+  "privacy.retention.title": "Kuinka kauan",
+  "privacy.retention.body":
+    "Kirjautumisistunnot päättyvät kahdeksan tunnin kuluttua. Keskusteluja ei tallenneta. Tallennetut näkymät ja suostumus säilyvät, kunnes poistat ne.",
+  "privacy.back": "Takaisin",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
   "coach.statfin.title": "Sinä ja suomalaiset kotitaloudet",

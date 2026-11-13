@@ -24,7 +24,14 @@ export interface DonutChartSpec {
   points: ChartPoint[];
 }
 
-export type ChartSpec = BarChartSpec | LineChartSpec | DonutChartSpec;
+/** Where income went: one source split into destinations, drawn as a flow. */
+export interface FlowChartSpec {
+  kind: "flow";
+  source: ChartPoint;
+  points: ChartPoint[];
+}
+
+export type ChartSpec = BarChartSpec | LineChartSpec | DonutChartSpec | FlowChartSpec;
 
 export type ChartKind = ChartSpec["kind"];
 
@@ -37,6 +44,41 @@ export interface ChartCard {
   basis: string;
 }
 
+/** A saved question: which calculation to run and with what input. Re-run whenever it is shown. */
+export interface WidgetQuery {
+  tool: string;
+  input: Record<string, unknown>;
+}
+
 export interface DashboardWidget extends ChartCard {
   id: string;
+}
+
+export const VIEW_PERIODS = [
+  "last_month",
+  "this_month",
+  "last_3_months",
+  "last_6_months",
+  "last_12_months",
+] as const;
+export type ViewPeriod = (typeof VIEW_PERIODS)[number];
+
+/** A named dashboard setup: a set of widgets and the period they are shown for. */
+export interface DashboardView {
+  id: string;
+  /** Set for the built-in starting views, whose names are translated. */
+  preset?: "overview" | "baskets" | "everyday";
+  name: string;
+  period: ViewPeriod;
+  widgets: { id: string; query: WidgetQuery }[];
+}
+
+export interface DashboardState {
+  activeId: string;
+  views: DashboardView[];
+}
+
+export interface DashboardPayload extends DashboardState {
+  /** The active view's widgets, calculated for its period. */
+  cards: DashboardWidget[];
 }

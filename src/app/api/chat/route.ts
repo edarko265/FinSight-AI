@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { answerQuestion } from "@/lib/coach/answer";
+import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
 
@@ -22,6 +23,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!rateLimit(`chat:${ctx.customerRef}`, 20, 60_000)) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
-  const message = await answerQuestion(ctx, parsed.data.message, parsed.data.history ?? []);
+  const allowModel = hasAiConsent(await readConsent(ctx.customerRef));
+  const message = await answerQuestion(ctx, parsed.data.message, parsed.data.history ?? [], {
+    allowModel,
+  });
   return Response.json(message);
 }

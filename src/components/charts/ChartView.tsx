@@ -3,6 +3,7 @@
 import { BarChart } from "@/components/charts/BarChart";
 import { chartColor } from "@/components/charts/chart-palette";
 import { DonutChart } from "@/components/charts/DonutChart";
+import { FlowChart } from "@/components/charts/FlowChart";
 import { LineChart } from "@/components/charts/LineChart";
 import type { ChartCard, ChartSpec } from "@/lib/contracts/chart";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
@@ -16,6 +17,8 @@ function Plot({ chart }: { chart: ChartSpec }): React.JSX.Element {
       return <LineChart points={chart.points} />;
     case "donut":
       return <DonutChart points={chart.points} />;
+    case "flow":
+      return <FlowChart source={chart.source} points={chart.points} />;
   }
 }
 
@@ -25,7 +28,7 @@ function Plot({ chart }: { chart: ChartSpec }): React.JSX.Element {
  */
 function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const isDonut = chart.kind === "donut";
+  const isDonut = chart.kind === "donut" || chart.kind === "flow";
   const total = chart.points.reduce((sum, point) => sum + point.valueCents, 0);
 
   const list = (

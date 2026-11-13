@@ -7,10 +7,18 @@ import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { PlusIcon } from "@/components/ui/icons";
+import { CloseIcon, PlusIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
-import type { ChartCard, DashboardWidget } from "@/lib/contracts/chart";
+import {
+  VIEW_PERIODS,
+  type DashboardPayload,
+  type DashboardState,
+  type DashboardView as SavedView,
+  type ViewPeriod,
+  type WidgetQuery,
+} from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 interface InsightItem {
   id: string;
@@ -23,15 +31,17 @@ interface InsightItem {
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const { overview } = useOverview();
-  const [widgets, setWidgets] = useState<DashboardWidget[] | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [naming, setNaming] = useState(false);
+  const [newName, setNewName] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    api<{ widgets: DashboardWidget[] }>(`/api/dashboard?locale=${locale}`)
+    api<DashboardPayload>(`/api/dashboard?locale=${locale}`)
       .then((data) => {
-        if (!cancelled) setWidgets(data.widgets);
+        if (!cancelled) setDashboard(data);
       })
       .catch(() => undefined);
     api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
@@ -44,11 +54,45 @@ export function DashboardView(): React.JSX.Element {
     };
   }, [locale]);
 
-  function save(next: DashboardWidget[]): void {
-    setWidgets(next);
-    void api(`/api/dashboard?locale=${locale}`, { method: "PUT", json: { widgets: next } }).catch(
-      () => undefined,
-    );
+  const active = dashboard?.views.find((view) => view.id === dashboard.activeId);
+  const viewName = (view: SavedView): string =>
+    view.name ||
+    (view.preset ? t(`views.preset.${view.preset}` as MessageKey) : t("views.unnamed"));
+
+  function save(next: DashboardState): void {
+    void api<DashboardPayload>(`/api/dashboard?locale=${locale}`, { method: "PUT", json: next })
+      .then(setDashboard)
+      .catch(() => undefined);
+  }
+
+  function update(change: (state: DashboardState) => DashboardState): void {
+    if (!dashboard) return;
+    save(change({ activeId: dashboard.activeId, views: dashboard.views }));
+  }
+
+  const updateActive = (change: (view: SavedView) => SavedView): void =>
+    update((state) => ({
+      ...state,
+      views: state.views.map((view) => (view.id === state.activeId ? change(view) : view)),
+    }));
+
+  function saveAsNew(): void {
+    if (!active) return;
+    const id = `view-${Date.now()}`;
+    update((state) => ({
+      activeId: id,
+      views: [
+        ...state.views,
+        {
+          id,
+          name: newName.trim() || t("views.unnamed"),
+          period: active.period,
+          widgets: active.widgets,
+        },
+      ],
+    }));
+    setNaming(false);
+    setNewName("");
   }
 
   const forecast = overview?.forecast;
@@ -104,17 +148,130 @@ export function DashboardView(): React.JSX.Element {
         </button>
       </div>
 
-      {widgets && widgets.length === 0 ? (
+      {dashboard ? (
+        <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3">
+          <div
+            role="tablist"
+            aria-label={t("views.label")}
+            className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+          >
+            {dashboard.views.map((view) => (
+              <button
+                key={view.id}
+                type="button"
+                role="tab"
+                aria-selected={view.id === dashboard.activeId}
+                onClick={() => update((state) => ({ ...state, activeId: view.id }))}
+                className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium ${
+                  view.id === dashboard.activeId
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-border text-muted"
+                }`}
+              >
+                {viewName(view)}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="view-period" className="text-xs font-medium text-muted">
+              {t("views.period")}
+            </label>
+            <select
+              id="view-period"
+              value={active?.period ?? "last_month"}
+              onChange={(event) =>
+                updateActive((view) => ({ ...view, period: event.target.value as ViewPeriod }))
+              }
+              className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-2 text-sm"
+            >
+              {VIEW_PERIODS.map((period) => (
+                <option key={period} value={period}>
+                  {t(`views.period.${period}` as MessageKey)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {naming ? (
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                saveAsNew();
+              }}
+            >
+              <label htmlFor="view-name" className="sr-only">
+                {t("views.namePlaceholder")}
+              </label>
+              <input
+                id="view-name"
+                value={newName}
+                onChange={(event) => setNewName(event.target.value)}
+                placeholder={t("views.namePlaceholder")}
+                maxLength={40}
+                autoFocus
+                className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              />
+              <button
+                type="submit"
+                className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-on-brand"
+              >
+                {t("views.save")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNaming(false)}
+                aria-label={t("dashboard.cancel")}
+                className="rounded-full p-1.5 text-muted"
+              >
+                <CloseIcon className="size-5" />
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <button
+                type="button"
+                onClick={() => setNaming(true)}
+                className="font-medium text-accent"
+              >
+                {t("views.saveAs")}
+              </button>
+              {dashboard.views.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    update((state) => ({
+                      ...state,
+                      views: state.views.filter((view) => view.id !== state.activeId),
+                    }))
+                  }
+                  className="text-muted"
+                >
+                  {t("views.delete")}
+                </button>
+              ) : null}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {dashboard && dashboard.cards.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
           {t("dashboard.empty")}
         </p>
       ) : (
         <div className="flex flex-col gap-4">
-          {(widgets ?? []).map((widget) => (
+          {(dashboard?.cards ?? []).map((widget) => (
             <WidgetCard
               key={widget.id}
               widget={widget}
-              onRemove={(id) => save((widgets ?? []).filter((item) => item.id !== id))}
+              onRemove={(id) =>
+                updateActive((view) => ({
+                  ...view,
+                  widgets: view.widgets.filter((item) => item.id !== id),
+                }))
+              }
             />
           ))}
         </div>
@@ -123,8 +280,11 @@ export function DashboardView(): React.JSX.Element {
       <NewWidgetSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        onAdd={(card: ChartCard) =>
-          save([{ id: `widget-${Date.now()}`, ...card }, ...(widgets ?? [])])
+        onAdd={(query: WidgetQuery) =>
+          updateActive((view) => ({
+            ...view,
+            widgets: [{ id: `widget-${Date.now()}`, query }, ...view.widgets].slice(0, 16),
+          }))
         }
       />
     </div>

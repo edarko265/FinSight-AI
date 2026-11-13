@@ -237,6 +237,79 @@ export const en = {
     "Income usually arrives around day {days} of the month, about {amount} each time.",
   "coach.recurring.basis":
     "Suggestions from the last six full months. The data has no payee names, so these are grouped by kind of payment.",
+  "coach.flow.title": "Where your income went",
+  "coach.flow.income": "Money in",
+  "coach.flow.invested": "Invested",
+  "coach.flow.transferred": "Transferred out",
+  "coach.flow.left": "Left over",
+  "coach.flow.summary":
+    "In {period}, {income} came in and {spent} was spent. {left} was left after spending, investing and transfers.",
+  "coach.flow.summaryOver":
+    "In {period}, {income} came in and {spent} was spent. Spending, investing and transfers were {left} more than what came in.",
+  "chat.suggest.flow": "Show how my income flows",
+  "views.preset.overview": "Overview",
+  "views.preset.baskets": "Three baskets",
+  "views.preset.everyday": "Everyday spending",
+  "views.label": "Views",
+  "views.period": "Period",
+  "views.period.last_month": "Last month",
+  "views.period.this_month": "This month",
+  "views.period.last_3_months": "3 months",
+  "views.period.last_6_months": "6 months",
+  "views.period.last_12_months": "12 months",
+  "views.saveAs": "Save as new view",
+  "views.namePlaceholder": "Name this view",
+  "views.save": "Save",
+  "views.delete": "Delete this view",
+  "views.unnamed": "My view",
+  "consent.title": "Before you use the AI coach",
+  "consent.intro":
+    "The AI coach uses an outside AI service to understand your questions and word its answers. Please read how your data is used.",
+  "consent.point.sent":
+    "What is sent: your question, and totals and short summaries calculated from your transactions.",
+  "consent.point.notSent":
+    "What is never sent: your transaction list, customer ID, account number, age or postal code.",
+  "consent.point.voice":
+    "Voice: if you use it, your spoken question and the coach's answer are processed by a speech service.",
+  "consent.point.advice":
+    "The coach explains and estimates. It is not financial advice, and its estimates are not guarantees.",
+  "consent.point.choice":
+    "It is your choice. Without AI the coach still answers common questions using calculations done here, and you can change your mind in Settings at any time.",
+  "consent.readMore": "Read the full privacy notice",
+  "consent.accept": "I agree, use the AI coach",
+  "consent.decline": "Continue without AI",
+  "settings.ai": "AI coach",
+  "settings.aiOn": "You have agreed to AI processing. Switch off to withdraw your consent.",
+  "settings.aiOff":
+    "AI is off. The coach answers in basic mode and nothing is sent to an AI service.",
+  "settings.download": "Download my data",
+  "settings.erase": "Delete my app data",
+  "settings.eraseConfirm":
+    "Delete your saved views, read insights and consent, and sign out? This cannot be undone.",
+  "settings.eraseYes": "Yes, delete",
+  "settings.privacyLink": "Privacy notice",
+  "privacy.title": "Privacy notice",
+  "privacy.demo":
+    "FinSight-AI is a prototype that runs on synthetic data supplied for a hackathon. No real customer data is processed. This notice describes how the service is designed to handle personal data.",
+  "privacy.what.title": "What we process",
+  "privacy.what.body":
+    "Your account transactions, a basic profile (age and postal code), the dashboard views you save, which insights you have read, and your consent choices.",
+  "privacy.why.title": "Why, and on what basis",
+  "privacy.why.body":
+    "To show and explain your own finances to you. The calculations run in this service. Sending anything to an AI or speech provider happens only with your consent, which you can withdraw at any time.",
+  "privacy.ai.title": "AI and speech providers",
+  "privacy.ai.body":
+    "With your consent, your question plus totals and short summaries go to a language-model provider (OpenAI or Google), and voice goes to ElevenLabs. Your transaction list and identifiers are never sent. No decision with legal effect is made automatically.",
+  "privacy.security.title": "How it is protected",
+  "privacy.security.body":
+    "Your data is encrypted before it is stored, with a key that belongs only to your account, and the service is designed to be hosted in the EU. Connections are encrypted. Staff with database access cannot read it.",
+  "privacy.rights.title": "Your rights",
+  "privacy.rights.body":
+    "You can see and download your data, withdraw consent, and delete what the app has stored about you, all from Settings. You may also complain to the data protection authority.",
+  "privacy.retention.title": "How long",
+  "privacy.retention.body":
+    "Sign-in sessions end after eight hours. Conversations are not stored. Saved views and consent are kept until you delete them.",
+  "privacy.back": "Back",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
   "coach.statfin.title": "You and households in Finland",

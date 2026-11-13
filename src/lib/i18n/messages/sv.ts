@@ -229,6 +229,79 @@ export const sv: Record<MessageKey, string> = {
     "Inkomsten brukar komma runt den {days} i månaden, ungefär {amount} per gång.",
   "coach.recurring.basis":
     "Förslag från de senaste sex hela månaderna. Datan saknar mottagarnamn, så betalningarna är grupperade efter typ.",
+  "coach.flow.title": "Vart din inkomst tog vägen",
+  "coach.flow.income": "Pengar in",
+  "coach.flow.invested": "Investerat",
+  "coach.flow.transferred": "Överfört ut",
+  "coach.flow.left": "Kvar",
+  "coach.flow.summary":
+    "Under {period} kom {income} in och {spent} gick till utgifter. {left} blev kvar efter utgifter, investeringar och överföringar.",
+  "coach.flow.summaryOver":
+    "Under {period} kom {income} in och {spent} gick till utgifter. Utgifter, investeringar och överföringar var {left} mer än det som kom in.",
+  "chat.suggest.flow": "Visa hur min inkomst fördelas",
+  "views.preset.overview": "Översikt",
+  "views.preset.baskets": "Tre korgar",
+  "views.preset.everyday": "Vardagsutgifter",
+  "views.label": "Vyer",
+  "views.period": "Period",
+  "views.period.last_month": "Förra månaden",
+  "views.period.this_month": "Den här månaden",
+  "views.period.last_3_months": "3 mån",
+  "views.period.last_6_months": "6 mån",
+  "views.period.last_12_months": "12 mån",
+  "views.saveAs": "Spara som ny vy",
+  "views.namePlaceholder": "Namnge vyn",
+  "views.save": "Spara",
+  "views.delete": "Ta bort den här vyn",
+  "views.unnamed": "Min vy",
+  "consent.title": "Innan du använder AI-coachen",
+  "consent.intro":
+    "AI-coachen använder en extern AI-tjänst för att förstå dina frågor och formulera svaren. Läs hur dina uppgifter används.",
+  "consent.point.sent":
+    "Vad som skickas: din fråga samt summor och korta sammanfattningar som räknats fram ur dina transaktioner.",
+  "consent.point.notSent":
+    "Vad som aldrig skickas: din transaktionslista, ditt kund-ID, kontonummer, din ålder eller ditt postnummer.",
+  "consent.point.voice":
+    "Röst: om du använder den behandlas din talade fråga och coachens svar av en taltjänst.",
+  "consent.point.advice":
+    "Coachen förklarar och uppskattar. Det är inte finansiell rådgivning och uppskattningarna är inga garantier.",
+  "consent.point.choice":
+    "Valet är ditt. Utan AI svarar coachen ändå på vanliga frågor med beräkningar som görs här, och du kan ändra dig i Inställningar när som helst.",
+  "consent.readMore": "Läs hela integritetsmeddelandet",
+  "consent.accept": "Jag godkänner, använd AI-coachen",
+  "consent.decline": "Fortsätt utan AI",
+  "settings.ai": "AI-coach",
+  "settings.aiOn": "Du har godkänt AI-behandling. Stäng av för att återkalla ditt samtycke.",
+  "settings.aiOff":
+    "AI är avstängt. Coachen svarar i grundläge och inget skickas till en AI-tjänst.",
+  "settings.download": "Ladda ner mina uppgifter",
+  "settings.erase": "Radera mina appuppgifter",
+  "settings.eraseConfirm":
+    "Radera dina sparade vyer, lästa insikter och ditt samtycke, och logga ut? Det går inte att ångra.",
+  "settings.eraseYes": "Ja, radera",
+  "settings.privacyLink": "Integritetsmeddelande",
+  "privacy.title": "Integritetsmeddelande",
+  "privacy.demo":
+    "FinSight-AI är en prototyp som körs på syntetisk data från ett hackathon. Inga riktiga kunduppgifter behandlas. Det här meddelandet beskriver hur tjänsten är utformad för att hantera personuppgifter.",
+  "privacy.what.title": "Vad vi behandlar",
+  "privacy.what.body":
+    "Dina kontotransaktioner, en grundprofil (ålder och postnummer), de vyer du sparar, vilka insikter du har läst och dina samtyckesval.",
+  "privacy.why.title": "Varför och på vilken grund",
+  "privacy.why.body":
+    "För att visa och förklara din egen ekonomi för dig. Beräkningarna görs i den här tjänsten. Något skickas till en AI- eller taltjänst endast med ditt samtycke, som du kan återkalla när som helst.",
+  "privacy.ai.title": "AI- och taltjänster",
+  "privacy.ai.body":
+    "Med ditt samtycke skickas din fråga samt summor och korta sammanfattningar till en språkmodellstjänst (OpenAI eller Google), och röst till ElevenLabs. Din transaktionslista och dina identifierare skickas aldrig. Inga beslut med rättslig verkan fattas automatiskt.",
+  "privacy.security.title": "Hur uppgifterna skyddas",
+  "privacy.security.body":
+    "Dina uppgifter krypteras innan de lagras, med en nyckel som bara hör till ditt konto, och tjänsten är utformad för att driftas inom EU. Anslutningarna är krypterade. Personal med databasåtkomst kan inte läsa dem.",
+  "privacy.rights.title": "Dina rättigheter",
+  "privacy.rights.body":
+    "Du kan se och ladda ner dina uppgifter, återkalla samtycke och radera det appen har lagrat om dig, allt från Inställningar. Du kan också klaga hos dataskyddsmyndigheten.",
+  "privacy.retention.title": "Hur länge",
+  "privacy.retention.body":
+    "Inloggningssessioner avslutas efter åtta timmar. Samtal sparas inte. Sparade vyer och samtycke finns kvar tills du raderar dem.",
+  "privacy.back": "Tillbaka",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
   "coach.statfin.title": "Du och hushållen i Finland",

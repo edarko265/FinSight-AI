@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { useOverview } from "@/components/providers/OverviewProvider";
 import {
@@ -71,11 +73,22 @@ function Section({
 export function SettingsView(): React.JSX.Element {
   const prefs = usePreferences();
   const { t } = prefs;
-  const { me } = useOverview();
+  const { me, refresh } = useOverview();
+  const [confirmErase, setConfirmErase] = useState(false);
   const router = useRouter();
 
   async function signOut(): Promise<void> {
     await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    router.replace("/login");
+  }
+
+  async function setConsent(accepted: boolean): Promise<void> {
+    await api("/api/consent", { method: "POST", json: { accepted } }).catch(() => undefined);
+    refresh();
+  }
+
+  async function erase(): Promise<void> {
+    await api("/api/privacy/erase", { method: "POST" }).catch(() => undefined);
     router.replace("/login");
   }
 
@@ -121,10 +134,61 @@ export function SettingsView(): React.JSX.Element {
         </Section>
       ) : null}
 
+      {me?.aiEnabled ? (
+        <Section title={t("settings.ai")}>
+          <label className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+            <span className="text-muted">
+              {t(me.aiConsent ? "settings.aiOn" : "settings.aiOff")}
+            </span>
+            <input
+              type="checkbox"
+              checked={me.aiConsent}
+              onChange={(event) => void setConsent(event.target.checked)}
+              className="size-5 shrink-0 accent-(--accent)"
+            />
+          </label>
+        </Section>
+      ) : null}
+
       <Section title={t("settings.privacy")}>
-        <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted">
-          {t("settings.privacyBody")}
-        </p>
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+          <p className="text-muted">{t("settings.privacyBody")}</p>
+          <Link href="/privacy" className="font-semibold text-accent">
+            {t("settings.privacyLink")}
+          </Link>
+          <a href="/api/privacy/export" download className="font-semibold text-accent">
+            {t("settings.download")}
+          </a>
+          {confirmErase ? (
+            <div className="flex flex-col gap-2 rounded-xl bg-warning-soft p-3">
+              <p className="text-warning">{t("settings.eraseConfirm")}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void erase()}
+                  className="rounded-full bg-brand px-4 py-2 font-semibold text-on-brand"
+                >
+                  {t("settings.eraseYes")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmErase(false)}
+                  className="rounded-full border border-border px-4 py-2 font-semibold"
+                >
+                  {t("dashboard.cancel")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmErase(true)}
+              className="self-start font-semibold text-warning"
+            >
+              {t("settings.erase")}
+            </button>
+          )}
+        </div>
       </Section>
 
       <Section title={t("settings.account")}>

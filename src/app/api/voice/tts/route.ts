@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
 import { synthesizeSpeech } from "@/lib/voice/elevenlabs";
@@ -11,6 +12,10 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext(parsed.data.locale);
   if (!ctx) return unauthorized();
+  // Speech goes to an outside provider, so it needs the same consent as the AI coach.
+  if (!hasAiConsent(await readConsent(ctx.customerRef))) {
+    return Response.json({ error: "consent_required" }, { status: 403 });
+  }
   if (!rateLimit(`tts:${ctx.customerRef}`, 30, 60_000)) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }

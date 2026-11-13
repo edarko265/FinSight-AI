@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { ChatPanel } from "@/components/chat/ChatPanel";
-import type { ChartCard } from "@/lib/contracts/chart";
+import type { WidgetQuery } from "@/lib/contracts/chart";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 
 interface NewWidgetSheetProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (card: ChartCard) => void;
+  onAdd: (query: WidgetQuery) => void;
 }
 
 /** A bottom sheet where the assistant proposes a chart and the user decides whether to pin it. */
@@ -46,18 +46,20 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
       <ChatPanel
         intro={t("dashboard.widgetPrompt")}
         placeholder={t("dashboard.widgetExample")}
-        cardAction={(card) => (
-          <button
-            type="button"
-            onClick={() => {
-              onAdd(card);
-              onClose();
-            }}
-            className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary"
-          >
-            {t("chat.addToDashboard")}
-          </button>
-        )}
+        cardAction={(_card, query) =>
+          query ? (
+            <button
+              type="button"
+              onClick={() => {
+                onAdd(query);
+                onClose();
+              }}
+              className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary"
+            >
+              {t("chat.addToDashboard")}
+            </button>
+          ) : null
+        }
       />
     </dialog>
   );

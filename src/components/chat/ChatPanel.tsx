@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ChartView } from "@/components/charts/ChartView";
+import { ConsentSheet } from "@/components/chat/ConsentSheet";
 import { EvidenceSheet } from "@/components/evidence/EvidenceSheet";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { MicIcon, SendIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
 import { useVoice } from "@/components/voice/useVoice";
 import { api } from "@/lib/api-client";
-import type { ChartCard } from "@/lib/contracts/chart";
+import type { ChartCard, WidgetQuery } from "@/lib/contracts/chart";
 import type { AssistantMessage, ChatMessage, EvidenceRef } from "@/lib/contracts/chat";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -20,11 +21,12 @@ interface ChatPanelProps {
   /** A question to ask as soon as the panel opens (used by insights). */
   initialQuestion?: string;
   /** Rendered under each chart the assistant returns, e.g. an "Add to dashboard" button. */
-  cardAction?: (card: ChartCard) => React.ReactNode;
+  cardAction?: (card: ChartCard, query: WidgetQuery | undefined) => React.ReactNode;
 }
 
 const SUGGESTIONS: MessageKey[] = [
   "chat.suggest.where",
+  "chat.suggest.flow",
   "chat.suggest.taxi",
   "chat.suggest.safe",
   "chat.suggest.whatif",
@@ -40,7 +42,8 @@ export function ChatPanel({
   cardAction,
 }: ChatPanelProps): React.JSX.Element {
   const { t, locale, voiceReplies } = usePreferences();
-  const { me } = useOverview();
+  const { me, refresh } = useOverview();
+  const [declined, setDeclined] = useState(false);
   const voice = useVoice(locale);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -169,7 +172,9 @@ export function ChatPanel({
                         {t("chat.seeTransactions")} ({message.evidence.transactionCount})
                       </button>
                     ) : null}
-                    {cardAction ? <div className="mt-3">{cardAction(message.card)}</div> : null}
+                    {cardAction ? (
+                      <div className="mt-3">{cardAction(message.card, message.query)}</div>
+                    ) : null}
                   </div>
                 ) : null}
               </li>
@@ -257,6 +262,15 @@ export function ChatPanel({
       </div>
 
       <EvidenceSheet evidence={evidence} onClose={() => setEvidence(null)} />
+      <ConsentSheet
+        open={Boolean(me?.aiEnabled && !me.aiConsent && !declined)}
+        onChoose={(accepted) => {
+          setDeclined(!accepted);
+          if (accepted) {
+            void api("/api/consent", { method: "POST", json: { accepted: true } }).then(refresh);
+          }
+        }}
+      />
     </div>
   );
 }

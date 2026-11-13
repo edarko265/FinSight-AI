@@ -1,4 +1,4 @@
-import type { ChartCard } from "@/lib/contracts/chart";
+import type { ChartCard, WidgetQuery } from "@/lib/contracts/chart";
 
 /** Where a figure came from: enough to re-run the query and list the transactions behind it. */
 export interface EvidenceRef {
@@ -21,6 +21,8 @@ export type AssistantMessage = {
   role: "assistant";
   text: string;
   card?: ChartCard;
+  /** The calculation behind the card, so it can be pinned to a dashboard and refreshed. */
+  query?: WidgetQuery;
   facts?: MoneyFact[];
   evidence?: EvidenceRef;
   /** A short teaching note that goes with the answer. */

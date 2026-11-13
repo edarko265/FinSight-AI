@@ -13,6 +13,7 @@ function toMessage(result: ToolResult, text: string, mode: "ai" | "basic"): Assi
     role: "assistant",
     text,
     card: result.card,
+    query: result.card ? result.query : undefined,
     facts: result.facts.length > 0 ? result.facts : undefined,
     evidence: result.evidence,
     lesson: result.lesson,
@@ -30,10 +31,12 @@ export async function answerQuestion(
   ctx: CoachContext,
   rawQuestion: string,
   history: { role: "user" | "assistant"; text: string }[] = [],
+  options: { allowModel: boolean } = { allowModel: true },
 ): Promise<AssistantMessage> {
   const question = rawQuestion.trim().slice(0, MAX_QUESTION);
   try {
-    const answer = await askModel(ctx, question, history);
+    // Without the user's consent nothing is sent to a language model.
+    const answer = options.allowModel ? await askModel(ctx, question, history) : null;
     if (answer) {
       const primary =
         [...answer.results].reverse().find((result) => result.card) ?? answer.results.at(-1);

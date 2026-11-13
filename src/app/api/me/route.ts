@@ -1,3 +1,4 @@
+import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { getCoachModel } from "@/lib/coach/llm";
 import { getEnv } from "@/lib/env";
@@ -10,6 +11,7 @@ export async function GET(): Promise<Response> {
     customerId: ctx.record.profile.customerId,
     asOf: ctx.asOf,
     aiEnabled: getCoachModel() !== null,
+    aiConsent: hasAiConsent(await readConsent(ctx.customerRef)),
     voiceEnabled: Boolean(env.ELEVENLABS_API_KEY),
     voiceAgentEnabled: Boolean(env.ELEVENLABS_API_KEY && env.ELEVENLABS_AGENT_ID),
   });

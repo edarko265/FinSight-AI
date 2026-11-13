@@ -1,14 +1,6 @@
+import { runTool } from "@/lib/coach/registry";
 import {
-  balanceTool,
-  basketsTool,
   fallbackResult,
-  peersTool,
-  profileTool,
-  recurringTool,
-  safeToSpendTool,
-  spendingTool,
-  trendTool,
-  whatIfTool,
   type CoachContext,
   type PeriodKey,
   type TargetKey,
@@ -55,6 +47,7 @@ const PATTERNS = {
   recurring:
     /recurring|subscription|regular (bill|payment)|upcoming|coming up|bills?\b|salary|payday|lasku|säännölli|toistuva|tilauks|palkka|räkning|regelbund|prenumeration|lön/,
   baskets: /basket|mandatory|essential|kori|pakolli|välttämät|korg|obligatorisk|nödvändig/,
+  flow: /flow|income go|sankey|diagram|virta|tuloni|kaavio|flöde|min inkomst/,
   balance:
     /balance|saldo|how much (money )?do i have|paljonko (minulla|rahaa)|hur mycket (har jag|pengar)/,
   trend:
@@ -99,24 +92,28 @@ export function routeQuestion(ctx: CoachContext, question: string): ToolResult {
   const percent = /(\d{1,3})\s*%/.exec(text) ?? /(\d{1,3})\s*(percent|prosent|procent)/.exec(text);
 
   if (PATTERNS.whatIf.test(text) || percent) {
-    return whatIfTool(ctx, {
+    return runTool(ctx, "what_if", {
       target: target ?? "Restaurants",
-      percent: percent ? Number(percent[1]) : 20,
+      percent: Math.min(100, percent ? Number(percent[1]) : 20),
       period,
     });
   }
   if (PATTERNS.safe.test(text)) {
     const days = /(\d{1,2})\s*(day|päiv|dag)/.exec(text);
     const month = /month|kuukau|kuun|månad/.test(text);
-    return safeToSpendTool(ctx, { horizonDays: days ? Number(days[1]) : month ? 30 : 7 });
+    return runTool(ctx, "safe_to_spend", {
+      horizonDays: Math.min(31, Math.max(1, days ? Number(days[1]) : month ? 30 : 7)),
+    });
   }
-  if (PATTERNS.peers.test(text)) return peersTool(ctx, { target });
-  if (PATTERNS.profile.test(text)) return profileTool(ctx);
-  if (PATTERNS.baskets.test(text)) return basketsTool(ctx, { period });
-  if (PATTERNS.balance.test(text)) return balanceTool(ctx);
-  if (PATTERNS.trend.test(text)) return trendTool(ctx, { target });
-  if (target) return spendingTool(ctx, { target, period });
-  if (PATTERNS.recurring.test(text)) return recurringTool(ctx);
-  if (PATTERNS.where.test(text) || PATTERNS.spend.test(text)) return spendingTool(ctx, { period });
+  if (PATTERNS.flow.test(text)) return runTool(ctx, "flow", { period });
+  if (PATTERNS.peers.test(text)) return runTool(ctx, "peers", { target });
+  if (PATTERNS.profile.test(text)) return runTool(ctx, "profile", {});
+  if (PATTERNS.baskets.test(text)) return runTool(ctx, "baskets", { period });
+  if (PATTERNS.balance.test(text)) return runTool(ctx, "balance", {});
+  if (PATTERNS.trend.test(text)) return runTool(ctx, "trend", { target });
+  if (target) return runTool(ctx, "spending", { target, period });
+  if (PATTERNS.recurring.test(text)) return runTool(ctx, "recurring", {});
+  if (PATTERNS.where.test(text) || PATTERNS.spend.test(text))
+    return runTool(ctx, "spending", { period });
   return fallbackResult(ctx);
 }

@@ -22,11 +22,12 @@ import { simulateReduction } from "@/lib/analytics/scenario";
 import {
   balanceByMonth,
   basketBreakdown,
+  cashFlow,
   monthlySpending,
   recordedBalance,
   summariseSpending,
 } from "@/lib/analytics/spending";
-import type { ChartCard } from "@/lib/contracts/chart";
+import type { ChartCard, WidgetQuery } from "@/lib/contracts/chart";
 import type { EvidenceRef, MoneyFact } from "@/lib/contracts/chat";
 import type { CustomerRecord } from "@/lib/data/types";
 import { formatDay, formatMoney, formatMonth, type Locale } from "@/lib/i18n/config";
@@ -49,6 +50,8 @@ export interface CoachContext {
 
 export interface ToolResult {
   tool: string;
+  /** Set by the registry: the validated call that produced this result. */
+  query?: WidgetQuery;
   text: string;
   card?: ChartCard;
   facts: MoneyFact[];
@@ -649,6 +652,62 @@ export function recurringTool(ctx: CoachContext): ToolResult {
     })),
     lesson: h.t("basket.regular.lesson"),
     followUps: [h.t("chat.suggest.safe"), h.t("chat.suggest.where")],
+  };
+}
+
+/** Where income went in a period: bills, essentials, everyday spending, investing, and what was left. */
+export function flowTool(ctx: CoachContext, input: { period?: PeriodKey }): ToolResult {
+  const h = makeHelpers(ctx);
+  const period = resolvePeriod(input.period, ctx.asOf);
+  const flow = cashFlow(ctx.record.transactions, period);
+  const breakdown = basketBreakdown(ctx.record.transactions, period);
+  const income = flow.salaryCents + flow.otherIncomeCents + flow.investmentWithdrawnCents;
+  const basket = (name: string): number =>
+    breakdown.baskets.find((b) => b.basket === name)?.totalCents ?? 0;
+  const out = flow.consumptionCents + flow.investedCents + flow.salarySweepCents;
+  const destinations: [MessageKey, number][] = [
+    ["basket.regular", basket("regular")],
+    ["basket.irregular", basket("irregular")],
+    ["basket.everyday", basket("everyday") + basket("unclassified")],
+    ["coach.flow.invested", flow.investedCents],
+    ["coach.flow.transferred", flow.salarySweepCents],
+    ["coach.flow.left", Math.max(0, income - out)],
+  ];
+  const points = destinations
+    .filter(([, cents]) => cents > 0)
+    .map(([key, cents]) => ({ label: h.t(key), valueCents: cents }));
+  const count = breakdown.baskets.reduce((sum, b) => sum + b.transactionCount, 0);
+  if (income === 0 && count === 0) {
+    return {
+      tool: "flow",
+      text: h.t("coach.none", { period: h.periodLabel(period) }),
+      facts: [],
+      followUps: [],
+    };
+  }
+  const text = h.t(income >= out ? "coach.flow.summary" : "coach.flow.summaryOver", {
+    period: h.periodLabel(period),
+    income: h.money(income),
+    spent: h.money(flow.consumptionCents),
+    left: h.money(Math.abs(income - out)),
+  });
+  return {
+    tool: "flow",
+    text,
+    card: {
+      title: h.t("coach.flow.title"),
+      summary: text,
+      chart: {
+        kind: "flow",
+        source: { label: h.t("coach.flow.income"), valueCents: income },
+        points,
+      },
+      basis: h.basis(period),
+    },
+    facts: [{ label: h.t("coach.flow.income"), valueCents: income }, ...points],
+    evidence: h.evidence(period, count),
+    lesson: h.t("basket.regular.lesson"),
+    followUps: [h.t("chat.suggest.safe"), h.t("chat.suggest.whatif")],
   };
 }
 

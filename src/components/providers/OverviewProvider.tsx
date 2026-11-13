@@ -22,6 +22,7 @@ export interface Me {
   customerId: string;
   asOf: string;
   aiEnabled: boolean;
+  aiConsent: boolean;
   voiceEnabled: boolean;
   voiceAgentEnabled: boolean;
 }
@@ -68,7 +69,7 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tick]);
 
   useEffect(() => {
     const toSignIn = (): void => router.replace("/login");

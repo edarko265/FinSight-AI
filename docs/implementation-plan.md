@@ -11,12 +11,17 @@ accuracy or evidence.
 
 ## Where we are
 
-|         |                                                                               |
-| ------- | ----------------------------------------------------------------------------- |
-| ✅ Done | Repository, branches, CI and security pipeline, licence, conventions          |
-| ✅ Done | Next.js 16 + TypeScript strict scaffold; lint, typecheck, test and build pass |
-| ✅ Done | Integer-cent money parsing and field-level encryption, both tested            |
-| ⏭️ Next | Milestone A remainder: database connection, schema, migrations                |
+Updated 14 November.
+
+|                |                                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| ✅ Done        | Milestones A and B: scaffold, CI, encrypted database, ingestion of all 5,100 customers, analytics with golden tests |
+| ✅ Done        | Milestone C: sign-in, dashboard with saved views and period filter, coach, evidence sheet, insights, settings       |
+| ✅ Done        | Basic-mode coach (no AI) in English, Finnish and Swedish; language-model path for OpenAI and Gemini                 |
+| ✅ Done        | Peer benchmarks from the dataset and national context from Statistics Finland                                       |
+| ✅ Done        | AI consent, privacy notice, data export and erasure ([privacy.md](privacy.md))                                      |
+| 🟡 Needs a key | Live AI answers (provider credits or a Gemini key), ElevenLabs voice                                                |
+| ⏭️ Next        | Hosted database and deployment, realtime voice agent, end-to-end tests, demo script                                 |
 
 ## Feature roadmap (team proposal, 13 Nov)
 
