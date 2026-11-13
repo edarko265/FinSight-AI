@@ -1,24 +1,44 @@
 @import "tailwindcss";
 
+/* Palette follows S-Pankki's published design system: deep green, mint accent, neutral greys. */
 :root {
-  --background: #f6f8f6;
+  --background: #f5f5f5;
   --surface: #ffffff;
-  --foreground: #14201a;
-  --muted: #55645c;
-  --border: #dbe3de;
-  --accent: #1b7f4b;
-  --accent-soft: #e4f3ea;
+  --foreground: #1f1f1f;
+  --muted: #626363;
+  --border: #e6e6e6;
+  --accent: #007841;
+  --accent-soft: #ebf7ec;
+  --brand: #004628;
+  --on-brand: #ffffff;
+  --primary: #91fa9b;
+  --on-primary: #004628;
+
+  --chart-1: #007841;
+  --chart-2: #006e87;
+  --chart-3: #885600;
+  --chart-4: #757575;
+  --chart-5: #91fa9b;
+  --chart-bar-muted: #b7d9c4;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0e1411;
-    --surface: #161e1a;
-    --foreground: #e8efea;
-    --muted: #9aaba1;
-    --border: #26322c;
+    --background: #0c1a13;
+    --surface: #14261c;
+    --foreground: #eff0f1;
+    --muted: #a3b3aa;
+    --border: #25382d;
     --accent: #4cc486;
     --accent-soft: #17301f;
+    --brand: #004628;
+
+    --chart-1: #4cc486;
+    --chart-2: #4fb3d1;
+    --chart-3: #d9a441;
+    --chart-4: #9aa3a8;
+    --chart-5: #91fa9b;
+    --chart-bar-muted: #2c5a43;
   }
 }
 
@@ -30,6 +50,10 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
