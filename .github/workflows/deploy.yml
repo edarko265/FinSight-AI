@@ -1,0 +1,81 @@
+# Deploys the app to Vercel.
+#
+#   push to dev  -> "development" GitHub Environment -> preview deployment
+#   push to main -> "production"  GitHub Environment -> production deployment
+#
+# Deployment is OFF until the team switches it on. Nothing is published until
+# the repository variable DEPLOY_ENABLED is set to "true"
+# (Settings -> Secrets and variables -> Actions -> Variables).
+#
+# Each Environment needs these secrets:
+#   VERCEL_TOKEN        Vercel access token
+#   VERCEL_ORG_ID       Vercel team / user id
+#   VERCEL_PROJECT_ID   Vercel project id
+#
+# Runtime secrets (DATABASE_URL, DATA_ENCRYPTION_KEY, BLIND_INDEX_KEY,
+# SESSION_SECRET, AI_API_KEY) are configured in Vercel's own environment
+# settings. They are never build arguments and never appear in this file.
+name: Deploy
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy (${{ github.ref_name }})
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ENV: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+      GIT_SHA: ${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel environment
+        run: pnpm dlx vercel pull --yes --environment="$VERCEL_ENV" --token="$VERCEL_TOKEN"
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "$VERCEL_ENV" = "production" ]; then
+            pnpm dlx vercel build --prod --token="$VERCEL_TOKEN"
+          else
+            pnpm dlx vercel build --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Deploy
+        shell: bash
+        run: |
+          if [ "$VERCEL_ENV" = "production" ]; then
+            pnpm dlx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          else
+            pnpm dlx vercel deploy --prebuilt --token="$VERCEL_TOKEN"
+          fi

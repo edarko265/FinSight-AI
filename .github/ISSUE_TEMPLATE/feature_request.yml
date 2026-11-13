@@ -1,0 +1,41 @@
+name: Feature / task
+description: Propose a feature or track a planned task
+title: "[Task]: "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: requirement
+    attributes:
+      label: Requirement ID
+      description: The scope requirement this delivers, if any (e.g. P0-04).
+    validations:
+      required: false
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should exist when this is done, and who benefits?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Independently testable conditions.
+      placeholder: |
+        - Given ... when ... then ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 — required for the MVP
+        - P1 — only after P0 passes
+        - P2 — stretch
+    validations:
+      required: true

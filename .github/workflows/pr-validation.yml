@@ -1,0 +1,71 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  branch-policy:
+    name: Branch policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Only dev (or a hotfix) may be promoted to main
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        shell: bash
+        run: |
+          if [ "$BASE_REF" = "main" ] && [ "$HEAD_REF" != "dev" ] && [[ "$HEAD_REF" != hotfix/* ]]; then
+            echo "::error::Pull requests into main must come from dev (or hotfix/*). Retarget this PR to dev."
+            exit 1
+          fi
+          echo "OK: $HEAD_REF -> $BASE_REF"
+
+  validate:
+    name: Lint / Typecheck / Test / Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+        env:
+          # CI never calls a paid model and never needs real credentials.
+          AI_PROCESSING_ALLOWED: "false"
+          DEMO_MODE: "true"
