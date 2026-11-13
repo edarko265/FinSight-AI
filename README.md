@@ -1,6 +1,15 @@
 # FinSight-AI
 We combine banking expertise, data analytics and AI to help people understand spending patterns, forecast expenses and make smarter financial decisions through natural-language conversations.
 
+Official Judging Criteria
+Judging Criteria
+Impact on financial literacy (including the pedagogical angle) (20%)
+Originality of AI integration (20%)
+Clarity of the mobile user experience (20%)
+Feasibility (20%)
+Potential to integrate into S-mobiili (20%)
+
+Official Challenge Requirements
 The Challenge
 Explore how AI can turn personal banking data into a trusted financial coach for everyday life.
 
