@@ -7,7 +7,7 @@ import { ChartView } from "@/components/charts/ChartView";
 import { dragStartDelay } from "@/components/dashboard/widget-drag";
 import { nextWidgetMode, type WidgetMode } from "@/components/dashboard/widget-edit-mode";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { CloseIcon } from "@/components/ui/icons";
+import { CloseIcon, SettingsIcon } from "@/components/ui/icons";
 import {
   CHART_STYLES,
   type ChartStyle,
@@ -96,6 +96,7 @@ export function WidgetCard({
   const pendingDrag = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   // Dragging uses pointer events, so it works the same with a mouse, a pen and a finger.
   const [grabbing, setGrabbing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [editing, setEditing] = useState<WidgetMode>("view");
   const isEditing = editing === "editing";
   // While the edge is being pulled, the size it would snap to.
@@ -126,6 +127,36 @@ export function WidgetCard({
     },
     [],
   );
+
+  useEffect(() => {
+    // Native capture prevents Chrome's menu before it can be shown, even when a
+    // pointer is captured by this header during a long press.
+    function blockWidgetContextMenu(event: MouseEvent): void {
+      if (event.target instanceof Element && event.target.closest("[data-widget-id]")) {
+        event.preventDefault();
+      }
+    }
+
+    window.addEventListener("contextmenu", blockWidgetContextMenu, true);
+    return () => window.removeEventListener("contextmenu", blockWidgetContextMenu, true);
+  }, []);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    function close(event: Event): void {
+      if (event.target instanceof Node && frame.current?.contains(event.target)) return;
+      setSettingsOpen(false);
+    }
+    function escape(event: KeyboardEvent): void {
+      if (event.key === "Escape") setSettingsOpen(false);
+    }
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [settingsOpen]);
 
   function clearPendingDrag(): void {
     pendingDrag.current = null;
@@ -195,7 +226,9 @@ export function WidgetCard({
     <article
       ref={frame}
       data-widget-id={widget.id}
-      className={`${span} relative min-w-0 rounded-2xl border bg-surface transition-[box-shadow,opacity,transform] duration-150 motion-reduce:transition-none ${
+      onContextMenu={(event) => event.preventDefault()}
+      onContextMenuCapture={(event) => event.preventDefault()}
+      className={`${span} relative min-w-0 [-webkit-touch-callout:none] rounded-2xl border bg-surface transition-[box-shadow,opacity,transform] duration-150 motion-reduce:transition-none ${
         over ? "border-accent ring-2 ring-accent" : "border-border"
       } ${dragged ? "opacity-60" : ""} ${grabbing ? "z-10 scale-[1.02] border-accent shadow-xl" : ""} ${isEditing ? "ring-1 ring-accent" : ""} ${compact ? "p-3" : "p-4"}`}
     >
@@ -214,6 +247,18 @@ export function WidgetCard({
         >
           {title}
         </h2>
+        {card && card.chart.kind !== "flow" ? (
+          <button
+            type="button"
+            aria-expanded={settingsOpen}
+            aria-label={`${t("nav.settings")}: ${title}`}
+            title={t("nav.settings")}
+            onClick={() => setSettingsOpen((open) => !open)}
+            className={`${control} ${settingsOpen ? "bg-background" : ""}`}
+          >
+            <SettingsIcon className="size-4" />
+          </button>
+        ) : null}
         {isEditing ? (
           <>
             <button
@@ -248,30 +293,32 @@ export function WidgetCard({
         ) : null}
       </header>
 
+      {settingsOpen && card && card.chart.kind !== "flow" ? (
+        <div className="absolute right-3 top-12 z-20 w-56 rounded-xl border border-border bg-surface p-3 shadow-lg">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted">{t("chart.type")}</span>
+            <select
+              value={card.chart.kind}
+              onChange={(event) => onChart(widget.id, event.target.value as ChartStyle)}
+              className="w-full rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground"
+            >
+              {CHART_STYLES.map((style) => (
+                <option key={style} value={style}>
+                  {t(`chart.type.${style}` as MessageKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
+
       {widget.collapsed ? null : card ? (
         <div className="mt-1">
-          <ChartLabelsProvider value={false}>
+          <ChartLabelsProvider value>
             <ChartView card={card} compact />
           </ChartLabelsProvider>
-          {card.chart.kind === "flow" ? null : (
-            <label className="mt-3 block">
-              <span className="sr-only">{t("chart.type")}</span>
-              <select
-                value={card.chart.kind}
-                onChange={(event) => onChart(widget.id, event.target.value as ChartStyle)}
-                className="w-full rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground"
-              >
-                {CHART_STYLES.map((style) => (
-                  <option key={style} value={style}>
-                    {t(`chart.type.${style}` as MessageKey)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
           <InfoTip className="mt-1">
-            <span className="block">{t(`chart.help.${card.chart.kind}` as MessageKey)}</span>
-            <span className="mt-2 block">{card.basis}</span>
+            <span className="block">{card.basis}</span>
           </InfoTip>
         </div>
       ) : (

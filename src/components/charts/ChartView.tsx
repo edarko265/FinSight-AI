@@ -79,6 +79,9 @@ const SELF_EXPLAINING = new Set(["table", "stat", "hbar"]);
 /** Shares of a whole: the list also gives each part's percentage. */
 const SHARES = new Set(["donut", "pie", "stack", "treemap", "radial", "flow"]);
 
+/** Shapes with no names on the marks themselves: compact widgets still show the list as a legend. */
+const UNLABELLED = new Set(["donut", "pie", "radial", "flow"]);
+
 function isSelfExplaining(chart: ChartSpec): boolean {
   if (SELF_EXPLAINING.has(chart.kind)) return true;
   return chart.kind === "bar" && barVariant(chart.points) === "rows";
@@ -87,7 +90,7 @@ function isSelfExplaining(chart: ChartSpec): boolean {
 /**
  * A chart is never the only carrier of the numbers: unless the marks are labelled with their
  * amounts, every chart is paired with a values list, readable without colour and by screen
- * readers. Compact widgets keep that list screen-reader-only to avoid repeating the chart.
+ * readers. Compact widgets keep that list screen-reader-only, except for shapes that carry no names on the marks.
  */
 function Values({
   chart,
@@ -144,7 +147,10 @@ export function ChartView({
       <ChartPlot chart={card.chart} />
       <figcaption className="sr-only">{card.summary}</figcaption>
       {isSelfExplaining(card.chart) ? null : (
-        <Values chart={card.chart} className={compact ? "sr-only" : ""} />
+        <Values
+          chart={card.chart}
+          className={compact && !UNLABELLED.has(card.chart.kind) ? "sr-only" : ""}
+        />
       )}
     </figure>
   );
