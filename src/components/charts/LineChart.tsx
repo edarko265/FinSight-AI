@@ -1,9 +1,8 @@
 "use client";
 
-import { CHART_LABEL_SIZE } from "@/components/charts/chart-palette";
+import { CHART_EMPHASIS, CHART_LABEL_SIZE } from "@/components/charts/chart-palette";
 import { useChartLabels } from "@/components/charts/chart-labels";
 import { averageCents } from "@/components/charts/chart-data";
-import { CHART_EMPHASIS } from "@/components/charts/chart-palette";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import type { ChartPoint } from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
@@ -35,8 +34,21 @@ export function LineChart({ points }: { points: ChartPoint[] }): React.JSX.Eleme
   const average = averageCents(points);
   const averageY = PAD_TOP + plotHeight - ((average - min) / span) * plotHeight;
 
+  // The average label sits at the left edge and the latest value ends at the last point, so they
+  // only meet on very short series; each flips below its mark when there is no room above.
+  const averageLabelY = averageY < PAD_TOP + 12 ? averageY + 14 : averageY - 4;
+  const latestLabelY = last ? (last.y < 18 ? last.y + 20 : last.y - 11) : 0;
+
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-auto w-full" aria-hidden="true">
+      <path
+        d={path}
+        fill="none"
+        stroke="var(--chart-1)"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <line
         x1={0}
         x2={WIDTH}
@@ -48,20 +60,12 @@ export function LineChart({ points }: { points: ChartPoint[] }): React.JSX.Eleme
         strokeDasharray="5 4"
       />
       {labels ? (
-        <text x={WIDTH} y={averageY - 4} textAnchor="end" fontSize={12} fill="var(--muted)">
+        <text x={2} y={averageLabelY} textAnchor="start" fontSize={12} fill="var(--muted)">
           {t("chart.average", { amount: formatMoney(average, locale) })}
         </text>
       ) : null}
-      <path
-        d={path}
-        fill="none"
-        stroke="var(--chart-1)"
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {coordinates.map((c) => (
-        <g key={c.label}>
+      {coordinates.map((c, index) => (
+        <g key={`${index}-${c.label}`}>
           <circle
             cx={c.x}
             cy={c.y}
@@ -87,7 +91,7 @@ export function LineChart({ points }: { points: ChartPoint[] }): React.JSX.Eleme
       {labels && last && lastPoint ? (
         <text
           x={last.x}
-          y={Math.max(last.y - 11, 12)}
+          y={latestLabelY}
           textAnchor="end"
           fontSize={13}
           fontWeight={600}

@@ -1,6 +1,12 @@
 "use client";
 
-import { averageCents, barPercent, barVariant, sortRanked } from "@/components/charts/chart-data";
+import {
+  averageCents,
+  barPercent,
+  barVariant,
+  sortRanked,
+  visibleLabelIndexes,
+} from "@/components/charts/chart-data";
 import { CHART_EMPHASIS, CHART_REST, chartColor } from "@/components/charts/chart-palette";
 import { useChartLabels } from "@/components/charts/chart-labels";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
@@ -15,24 +21,28 @@ import { formatMoney } from "@/lib/i18n/config";
 export function RankedBars({
   points,
   keyed = false,
+  sort = false,
 }: {
   points: ChartPoint[];
   keyed?: boolean;
+  /** Largest first. Only for rankings: a series the user picked keeps its own order. */
+  sort?: boolean;
 }): React.JSX.Element {
   const { locale } = usePreferences();
-  const rows = sortRanked(points);
+  const rows = sort ? sortRanked(points) : points;
   const max = Math.max(...rows.map((point) => point.valueCents), 1);
+  const top = rows.findIndex((point) => point.valueCents === max);
   return (
     <ul className="flex flex-col gap-3">
       {rows.map((point, index) => (
-        <li key={point.label} className="flex flex-col gap-1">
+        <li key={`${index}-${point.label}`} className="flex flex-col gap-1">
           <span className="flex items-baseline justify-between gap-3 text-sm">
-            <span className={`min-w-0 break-words ${index === 0 ? "font-semibold" : ""}`}>
+            <span className={`min-w-0 break-words ${index === top ? "font-semibold" : ""}`}>
               {point.label}
             </span>
             <span
               className={`shrink-0 whitespace-nowrap text-right tabular-nums ${
-                index === 0 ? "font-semibold" : "text-muted"
+                index === top ? "font-semibold" : "text-muted"
               }`}
             >
               {formatMoney(point.valueCents, locale)}
@@ -43,7 +53,7 @@ export function RankedBars({
               className="fs-grow-x block h-full rounded-full"
               style={{
                 width: `${barPercent(point.valueCents, max)}%`,
-                background: keyed ? chartColor(index) : index === 0 ? CHART_EMPHASIS : CHART_REST,
+                background: keyed ? chartColor(index) : index === top ? CHART_EMPHASIS : CHART_REST,
               }}
             />
           </span>
@@ -68,6 +78,7 @@ export function Columns({ points }: { points: ChartPoint[] }): React.JSX.Element
   const max = Math.max(...points.map((point) => point.valueCents), 1);
   const average = averageCents(points);
   const averageY = (barPercent(average, max) / 100) * COLUMN_HEIGHT;
+  const shownLabels = new Set(visibleLabelIndexes(points.length));
   const showValues = labels && points.length <= VALUES_ON_COLUMNS;
   return (
     <div>
@@ -82,10 +93,13 @@ export function Columns({ points }: { points: ChartPoint[] }): React.JSX.Element
             const height = (barPercent(point.valueCents, max) / 100) * COLUMN_HEIGHT;
             const latest = index === points.length - 1;
             return (
-              <div key={point.label} className="flex min-w-0 flex-1 flex-col items-center">
+              <div
+                key={`${index}-${point.label}`}
+                className="flex min-w-0 flex-1 flex-col items-center"
+              >
                 {showValues ? (
                   <span
-                    className={`mb-1 text-xs tabular-nums ${latest ? "font-semibold" : "text-muted"}`}
+                    className={`relative mb-1 rounded bg-surface px-0.5 text-xs tabular-nums ${latest ? "font-semibold" : "text-muted"}`}
                   >
                     {formatMoney(point.valueCents, locale)}
                   </span>
@@ -105,9 +119,9 @@ export function Columns({ points }: { points: ChartPoint[] }): React.JSX.Element
       </div>
       {labels ? (
         <div className="mt-1 flex gap-2 text-xs text-muted" aria-hidden="true">
-          {points.map((point) => (
-            <span key={point.label} className="min-w-0 flex-1 text-center">
-              {point.label}
+          {points.map((point, index) => (
+            <span key={`${index}-${point.label}`} className="min-w-0 flex-1 text-center">
+              {shownLabels.has(index) ? point.label : ""}
             </span>
           ))}
         </div>
@@ -126,6 +140,6 @@ export function BarChart({ points }: { points: ChartPoint[] }): React.JSX.Elemen
   return barVariant(points) === "columns" ? (
     <Columns points={points} />
   ) : (
-    <RankedBars points={points} />
+    <RankedBars points={points} sort />
   );
 }

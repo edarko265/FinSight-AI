@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart } from "@/components/charts/BarChart";
-import { barVariant, sharePercents } from "@/components/charts/chart-data";
+import { barVariant, formatPercent, sharePercents } from "@/components/charts/chart-data";
 import { chartColor } from "@/components/charts/chart-palette";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { FlowChart } from "@/components/charts/FlowChart";
@@ -100,7 +100,7 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
   return (
     <ul className="mt-3 grid grid-cols-1 gap-1.5 text-sm">
       {chart.points.map((point, index) => (
-        <li key={point.label} className="flex items-baseline justify-between gap-3">
+        <li key={`${index}-${point.label}`} className="flex items-baseline justify-between gap-3">
           <span className="flex min-w-0 items-baseline gap-2 break-words">
             {keyed ? (
               <span
@@ -117,7 +117,7 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
             }`}
           >
             {formatMoney(point.valueCents, locale)}
-            {percents ? ` · ${percents[index]} %` : null}
+            {percents ? ` · ${formatPercent(percents[index] ?? 0, locale)}` : null}
           </span>
         </li>
       ))}

@@ -7,6 +7,7 @@ import {
   fitLabel,
 } from "@/components/charts/chart-palette";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { formatPercent } from "@/components/charts/chart-data";
 import { RankedBars } from "@/components/charts/BarChart";
 import { useChartLabels } from "@/components/charts/chart-labels";
 import type { ChartPoint } from "@/lib/contracts/chart";
@@ -29,13 +30,15 @@ function useTip(): (point: ChartPoint, total?: number) => string {
   const { locale } = usePreferences();
   return (point, total) =>
     `${point.label}: ${formatMoney(point.valueCents, locale)}${
-      total && total > 0 ? ` · ${Math.round((point.valueCents / total) * 100)} %` : ""
+      total && total > 0
+        ? ` · ${formatPercent(Math.round((point.valueCents / total) * 100), locale)}`
+        : ""
     }`;
 }
 
-/** Rows: the readable choice when names are long. Each row keeps its series colour. */
+/** Rows: the readable choice when names are long. Keeps the data order and each row's colour. */
 export function HBarChart({ points }: Props): React.JSX.Element {
-  return <RankedBars points={positive(points)} keyed />;
+  return <RankedBars points={points} keyed />;
 }
 
 const W = 300;
@@ -182,6 +185,7 @@ export function PieChart({ points }: Props): React.JSX.Element {
 /** One bar split into parts: the quickest read of shares of a whole. */
 export function StackChart({ points }: Props): React.JSX.Element {
   const labels = useChartLabels();
+  const { locale } = usePreferences();
   const tip = useTip();
   const data = positive(points).filter((point) => point.valueCents > 0);
   const total = Math.max(1, sum(data));
@@ -199,7 +203,7 @@ export function StackChart({ points }: Props): React.JSX.Element {
           }}
         >
           {labels && point.valueCents / total >= 0.12
-            ? `${Math.round((point.valueCents / total) * 100)}%`
+            ? formatPercent(Math.round((point.valueCents / total) * 100), locale)
             : ""}
         </span>
       ))}
@@ -237,6 +241,7 @@ function layout(
 /** Boxes sized by amount: shows at a glance what dominates. */
 export function TreemapChart({ points }: Props): React.JSX.Element {
   const labels = useChartLabels();
+  const { locale } = usePreferences();
   const tip = useTip();
   const data = positive(points)
     .map((point, index) => ({ point, index }))
@@ -277,7 +282,7 @@ export function TreemapChart({ points }: Props): React.JSX.Element {
                 fill={chartInk(box.index)}
                 opacity={0.85}
               >
-                {Math.round((box.point.valueCents / total) * 100)} %
+                {formatPercent(Math.round((box.point.valueCents / total) * 100), locale)}
               </text>
             </>
           ) : null}
@@ -490,7 +495,7 @@ export function TableChart({ points }: Props): React.JSX.Element {
               {formatMoney(point.valueCents, locale)}
             </td>
             <td className="w-14 py-1.5 pl-2 text-right text-xs text-muted tabular-nums">
-              {Math.round((Math.max(0, point.valueCents) / total) * 100)} %
+              {formatPercent(Math.round((Math.max(0, point.valueCents) / total) * 100), locale)}
             </td>
           </tr>
         ))}

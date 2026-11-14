@@ -9,8 +9,12 @@ export const CHART_COLORS: readonly string[] = [
 
 /** The one item that matters: the largest row, or the latest month. */
 export const CHART_EMPHASIS = "var(--chart-1)";
-/** The rest of the items: calmer, but still above 3:1 against the card in light and dark. */
-export const CHART_REST = "color-mix(in srgb, var(--chart-1) 58%, var(--surface))";
+/**
+ * The rest of the items: calmer than the emphasis, set per theme in globals.css (--chart-rest).
+ * Measured against the card: light #4da07a on #fff 3.17:1 (emphasis 5.7:1); dark #348259 on
+ * #14261c 3.39:1 (emphasis 6.2:1 there). Both clear the 3:1 minimum for graphics.
+ */
+export const CHART_REST = "var(--chart-rest)";
 
 export function chartColor(index: number): string {
   return CHART_COLORS[index % CHART_COLORS.length] ?? "var(--chart-1)";

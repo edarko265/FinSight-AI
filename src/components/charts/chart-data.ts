@@ -1,5 +1,5 @@
 import type { ChartPoint } from "@/lib/contracts/chart";
-import { formatMonth, LOCALES } from "@/lib/i18n/config";
+import { formatMonth, LOCALE_INFO, LOCALES, type Locale } from "@/lib/i18n/config";
 
 /** Largest-remainder rounding: whole percentages, in the same order, that always add up to 100. */
 export function sharePercents(valuesCents: number[]): number[] {
@@ -60,4 +60,30 @@ export function averageCents(points: ChartPoint[]): number {
 export function barPercent(valueCents: number, maxCents: number): number {
   if (maxCents <= 0) return 1;
   return Math.max(Math.min((Math.max(valueCents, 0) / maxCents) * 100, 100), 1);
+}
+
+/** A whole percentage (0 to 100) written for the locale, e.g. "60 %" in Finnish. */
+export function formatPercent(percent: number, locale: Locale): string {
+  return new Intl.NumberFormat(LOCALE_INFO[locale].intl, { style: "percent" }).format(
+    percent / 100,
+  );
+}
+
+/** Sizes for the donut: negatives are left out, so arcs, centre total and shares agree. */
+export function donutShares(points: ChartPoint[]): { positiveCents: number; fractions: number[] } {
+  const values = points.map((point) => Math.max(0, point.valueCents));
+  const positiveCents = values.reduce((sum, value) => sum + value, 0);
+  return {
+    positiveCents,
+    fractions: values.map((v) => (positiveCents > 0 ? v / positiveCents : 0)),
+  };
+}
+
+/** Which labels to write under a long column series: all up to 6, then every other one. */
+export function visibleLabelIndexes(count: number): number[] {
+  const all = Array.from({ length: count }, (_, index) => index);
+  if (count <= 6) return all;
+  const lastIndex = count - 1;
+  // Count back from the latest so it is always labelled.
+  return all.filter((index) => (lastIndex - index) % 2 === 0);
 }

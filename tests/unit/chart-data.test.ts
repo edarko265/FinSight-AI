@@ -6,7 +6,10 @@ import {
   barVariant,
   isTimeSeries,
   sharePercents,
+  donutShares,
+  formatPercent,
   sortRanked,
+  visibleLabelIndexes,
 } from "@/components/charts/chart-data";
 import { formatMonth } from "@/lib/i18n/config";
 
@@ -46,6 +49,14 @@ describe("time series detection", () => {
     expect(isTimeSeries([p("Restaurants", 1), p("Lifestyle", 2)])).toBe(false);
     expect(isTimeSeries([p(formatMonth("2026-10", "en"), 1)])).toBe(false);
   });
+  it("does not mistake a lone or mixed month-like label for a series", () => {
+    expect(isTimeSeries([p("May", 1)])).toBe(false);
+    expect(isTimeSeries([p("May", 1), p("Restaurants", 2)])).toBe(false);
+    expect(isTimeSeries([p(formatMonth("2026-05", "sv"), 1)])).toBe(false);
+    expect(
+      isTimeSeries([p(formatMonth("2026-05", "sv"), 1), p(formatMonth("2026-06", "sv"), 2)]),
+    ).toBe(true);
+  });
   it("picks columns for months and rows for categories", () => {
     expect(
       barVariant([p(formatMonth("2026-09", "en"), 1), p(formatMonth("2026-10", "en"), 2)]),
@@ -65,5 +76,21 @@ describe("averageCents and barPercent", () => {
     expect(barPercent(0, 100)).toBe(1);
     expect(barPercent(-10, 100)).toBe(1);
     expect(barPercent(5, 0)).toBe(1);
+  });
+});
+
+describe("formatPercent, donutShares, visibleLabelIndexes", () => {
+  it("writes percentages for the locale", () => {
+    expect(formatPercent(60, "en")).toBe("60%");
+    expect(formatPercent(60, "fi").replace(/\s/g, " ")).toBe("60 %");
+  });
+  it("leaves refunds out of the donut so shares sum to 1", () => {
+    const { positiveCents, fractions } = donutShares([p("a", 300), p("b", -50), p("c", 100)]);
+    expect(positiveCents).toBe(400);
+    expect(fractions).toEqual([0.75, 0, 0.25]);
+  });
+  it("labels every month up to 6, then every other counting back from the latest", () => {
+    expect(visibleLabelIndexes(6)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(visibleLabelIndexes(12)).toEqual([1, 3, 5, 7, 9, 11]);
   });
 });
