@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
+import { assertSignedIn } from "@/components/admin/admin-api";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
@@ -57,6 +59,7 @@ export function AdminControls({
   onSaved: (next: AppSettings) => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const [editing, setEditing] = useState<Editing>(null);
   const [fee, setFee] = useState("");
   const [limit, setLimit] = useState("");
@@ -71,6 +74,7 @@ export function AdminControls({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(next),
       });
+      assertSignedIn(response);
       if (!response.ok) throw new Error("settings failed");
       onSaved(((await response.json()) as { settings: AppSettings }).settings);
       setEditing(null);
@@ -80,7 +84,10 @@ export function AdminControls({
 
   /** True when saved; false keeps a wizard open on its last step. */
   async function save(next: AppSettings): Promise<boolean> {
-    return (await saver.run(next)).ok;
+    const result = await saver.run(next);
+    // A run dropped because a save is still pending says nothing by itself, so say so.
+    if (!result.ok && result.dropped) toast.fail("common.saveFailed");
+    return result.ok;
   }
 
   const feeEuros = Number(fee.replace(",", "."));
@@ -136,7 +143,7 @@ export function AdminControls({
                     features: { ...settings.features, [flag]: event.target.checked },
                   })
                 }
-                className="size-5 shrink-0 accent-(--accent)"
+                className="size-5 shrink-0 accent-(--accent) aria-disabled:opacity-60"
               />
             </label>
           </li>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { adminCall, requireResult } from "@/components/admin/admin-api";
+import { adminCall, requireResult, unlessSignedOut } from "@/components/admin/admin-api";
 import { LoadState } from "@/components/admin/LoadState";
 import { RowButton } from "@/components/admin/RowButton";
 import { useAdminLoad } from "@/components/admin/use-admin-load";
@@ -85,7 +85,7 @@ export function Announcements(): React.JSX.Element {
         title={t(editingId ? "admin.announcements.editTitle" : "admin.announcements.new")}
         finishLabel={t(editingId ? "common.save" : "admin.announcements.publish")}
         onClose={close}
-        onFinish={submit}
+        onFinish={() => unlessSignedOut(submit)}
         steps={[
           {
             title: t("admin.announcements.step.type"),

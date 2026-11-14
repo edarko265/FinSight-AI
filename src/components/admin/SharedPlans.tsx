@@ -40,39 +40,43 @@ export function SharedPlans(): React.JSX.Element {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("admin.plans.shared")} value={String(all.length)} />
-        <Stat
-          label={t("admin.plans.listed")}
-          value={String(all.filter((plan) => plan.listed).length)}
-        />
-        <Stat
-          label={t("admin.plans.copies")}
-          value={String(all.reduce((sum, plan) => sum + plan.copies, 0))}
-        />
-      </div>
-      <div className="grid gap-5 md:grid-cols-2">
-        <Panel title={t("admin.plans.average")}>
-          <Bars
-            share={false}
-            rows={SLICES.map((key) => ({
-              label: t(`plan.slice.${key}` as MessageKey),
-              count: average(key),
-              note: `${average(key)} %`,
-            }))}
-          />
-          <p className="text-xs text-muted">{t("admin.plans.average.note")}</p>
-        </Panel>
-        <Panel title={t("admin.plans.top")}>
-          <Bars
-            share={false}
-            rows={[...all]
-              .sort((a, b) => b.copies - a.copies)
-              .slice(0, 6)
-              .map((plan) => ({ label: `${plan.name} (${plan.code})`, count: plan.copies }))}
-          />
-        </Panel>
-      </div>
+      {plans ? (
+        <>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Stat label={t("admin.plans.shared")} value={String(all.length)} />
+            <Stat
+              label={t("admin.plans.listed")}
+              value={String(all.filter((plan) => plan.listed).length)}
+            />
+            <Stat
+              label={t("admin.plans.copies")}
+              value={String(all.reduce((sum, plan) => sum + plan.copies, 0))}
+            />
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            <Panel title={t("admin.plans.average")}>
+              <Bars
+                share={false}
+                rows={SLICES.map((key) => ({
+                  label: t(`plan.slice.${key}` as MessageKey),
+                  count: average(key),
+                  note: `${average(key)} %`,
+                }))}
+              />
+              <p className="text-xs text-muted">{t("admin.plans.average.note")}</p>
+            </Panel>
+            <Panel title={t("admin.plans.top")}>
+              <Bars
+                share={false}
+                rows={[...all]
+                  .sort((a, b) => b.copies - a.copies)
+                  .slice(0, 6)
+                  .map((plan) => ({ label: `${plan.name} (${plan.code})`, count: plan.copies }))}
+              />
+            </Panel>
+          </div>
+        </>
+      ) : null}
       <Panel title={t("admin.nav.plans")}>
         <LoadState show={!plans} failed={failed} onRetry={reload} />
         {plans && plans.length === 0 ? (

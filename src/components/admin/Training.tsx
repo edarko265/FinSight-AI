@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { adminCall, requireResult } from "@/components/admin/admin-api";
+import { adminCall, requireResult, unlessSignedOut } from "@/components/admin/admin-api";
 import { LoadState } from "@/components/admin/LoadState";
 import { Panel } from "@/components/admin/parts";
 import { RowButton } from "@/components/admin/RowButton";
@@ -219,7 +219,7 @@ export function Training({
         title={t(editingId ? "admin.training.edit" : "admin.training.new")}
         finishLabel={t("common.save")}
         onClose={close}
-        onFinish={submit}
+        onFinish={() => unlessSignedOut(submit)}
         steps={[
           {
             title: t("admin.training.step.theme"),

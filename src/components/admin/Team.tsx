@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-import { adminCall, adminSubmit, requireResult } from "@/components/admin/admin-api";
+import {
+  adminCall,
+  adminSubmit,
+  requireResult,
+  unlessSignedOut,
+} from "@/components/admin/admin-api";
 import { LoadState } from "@/components/admin/LoadState";
 import { Panel, Stat } from "@/components/admin/parts";
 import { RowButton } from "@/components/admin/RowButton";
@@ -111,16 +116,18 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("admin.team.count")} value={String(live.length)} />
-        {ROLES.map((value) => (
-          <Stat
-            key={value}
-            label={role(value)}
-            value={String(live.filter((member) => member.role === value).length)}
-          />
-        ))}
-      </div>
+      {items ? (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat label={t("admin.team.count")} value={String(live.length)} />
+          {ROLES.map((value) => (
+            <Stat
+              key={value}
+              label={role(value)}
+              value={String(live.filter((member) => member.role === value).length)}
+            />
+          ))}
+        </div>
+      ) : null}
       <Panel title={t("admin.team.members")}>
         <button
           type="button"
@@ -191,7 +198,7 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
         finishLabel={t("common.save")}
         error={error ? t(error) : null}
         onClose={close}
-        onFinish={submit}
+        onFinish={() => unlessSignedOut(submit)}
         steps={[
           {
             title: t("admin.team.name"),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { adminCall, requireResult } from "@/components/admin/admin-api";
 import { LoadState } from "@/components/admin/LoadState";
@@ -11,6 +11,7 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { LoadError } from "@/components/ui/LoadError";
 import { PendingLabel } from "@/components/ui/Spinner";
 import { useAsyncAction } from "@/components/ui/useAsyncAction";
+import { isApiError } from "@/lib/async-action";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
 type Kind = "announcement" | "request" | "staff" | "training";
@@ -39,31 +40,60 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
   const [items, setItems] = useState<BinItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [rowsBusy, setRowsBusy] = useState(0);
+  const latest = useRef(0);
+  const trackRow = useCallback((delta: number) => setRowsBusy((count) => count + delta), []);
 
   const load = useCallback(async (): Promise<void> => {
+    // An older response must not overwrite a newer one.
+    const ticket = ++latest.current;
     const theme = (name: string): string =>
       hasMessage(`admin.theme.${name}`) ? t(`admin.theme.${name}` as MessageKey) : name;
-    const [announcements, queue, staff, training] = await Promise.all([
-      manager
-        ? adminCall<{ announcements: { id: string; title: string; deletedAt: string | null }[] }>(
-            PATHS.announcement,
-          )
-        : null,
-      adminCall<{
-        queue: { id: string; alias: string; topic: string; deleted: boolean }[];
-      }>(PATHS.request),
-      manager
-        ? adminCall<{ staff: { id: string; name: string; deletedAt: string | null }[] }>(
-            PATHS.staff,
-          )
-        : null,
-      adminCall<{
-        answers: { id: string; theme: string; keywords: string[]; deletedAt: string | null }[];
-      }>(PATHS.training),
-    ]);
-    if (!queue || !training || (manager && (!announcements || !staff))) setFailed(true);
-    else setFailed(false);
+    const fetchAll = (): Promise<
+      [
+        { announcements: { id: string; title: string; deletedAt: string | null }[] } | null,
+        { queue: { id: string; alias: string; topic: string; deleted: boolean }[] } | null,
+        { staff: { id: string; name: string; deletedAt: string | null }[] } | null,
+        {
+          answers: { id: string; theme: string; keywords: string[]; deletedAt: string | null }[];
+        } | null,
+      ]
+    > =>
+      Promise.all([
+        manager
+          ? adminCall<{ announcements: { id: string; title: string; deletedAt: string | null }[] }>(
+              PATHS.announcement,
+            )
+          : null,
+        adminCall<{
+          queue: { id: string; alias: string; topic: string; deleted: boolean }[];
+        }>(PATHS.request),
+        manager
+          ? adminCall<{ staff: { id: string; name: string; deletedAt: string | null }[] }>(
+              PATHS.staff,
+            )
+          : null,
+        adminCall<{
+          answers: { id: string; theme: string; keywords: string[]; deletedAt: string | null }[];
+        }>(PATHS.training),
+      ]);
+    let loaded: Awaited<ReturnType<typeof fetchAll>>;
+    try {
+      loaded = await fetchAll();
+    } catch (error) {
+      // A 401 is handled by the shell, which sends the user to sign in.
+      if (latest.current === ticket && !isApiError(error, 401)) setFailed(true);
+      return;
+    }
+    if (latest.current !== ticket) return;
+    const [announcements, queue, staff, training] = loaded;
+    const none = !queue && !training && (!manager || (!announcements && !staff));
+    if (none) {
+      // Nothing arrived: keep what was shown (or the skeleton) and offer a retry.
+      setFailed(true);
+      return;
+    }
+    setFailed(!queue || !training || (manager && (!announcements || !staff)));
     setItems([
       ...(announcements?.announcements ?? [])
         .filter((item) => item.deletedAt)
@@ -93,28 +123,29 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
     void load();
   }, [load]);
 
-  async function emptyBin(): Promise<void> {
+  const { run: emptyBin, pending: emptying } = useAsyncAction(async (): Promise<void> => {
     if (!items) return;
-    if (busy) return;
-    setBusy(true);
     const results = await Promise.all(
       items.map((item) => adminCall(`${PATHS[item.kind]}/${item.id}`, "POST", { action: "purge" })),
     );
-    setBusy(false);
     setConfirming(false);
-    if (results.some((result) => !result)) toast.fail();
-    else toast.notify("toast.binEmptied");
     await load();
-  }
+    if (results.some((result) => !result)) throw new Error("request_failed");
+    toast.notify("toast.binEmptied");
+  });
+  const retry = (): void => {
+    setFailed(false);
+    void load();
+  };
 
   return (
     <Panel title={t("admin.bin")}>
-      {failed && items ? (
-        <LoadError onRetry={() => void load()} messageKey="admin.loadFailed" />
-      ) : null}
-      <LoadState show={items === null} failed={false} onRetry={() => void load()} />
+      {failed && items ? <LoadError onRetry={retry} messageKey="admin.loadFailed" /> : null}
+      <LoadState show={items === null} failed={failed} onRetry={retry} />
       {items === null ? null : items.length === 0 ? (
-        <p className="text-sm text-muted">{t("admin.bin.empty")}</p>
+        failed ? null : (
+          <p className="text-sm text-muted">{t("admin.bin.empty")}</p>
+        )
       ) : (
         <>
           <ul className="flex flex-col gap-2">
@@ -123,6 +154,8 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
                 key={`${item.kind}-${item.id}`}
                 item={item}
                 label={t(`admin.trash.kind.${item.kind}` as MessageKey)}
+                locked={emptying}
+                onBusy={trackRow}
                 onDone={load}
               />
             ))}
@@ -140,11 +173,13 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
                 </button>
                 <button
                   type="button"
-                  aria-disabled={busy}
+                  aria-disabled={emptying || rowsBusy > 0}
                   className="min-h-11 text-warning"
-                  onClick={() => void emptyBin()}
+                  onClick={() => {
+                    if (!emptying && rowsBusy === 0) void emptyBin();
+                  }}
                 >
-                  {busy ? (
+                  {emptying ? (
                     <PendingLabel>{t("common.deleting")}</PendingLabel>
                   ) : (
                     t("common.deleteForever")
@@ -171,10 +206,16 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
 function TrashRow({
   item,
   label,
+  locked,
+  onBusy,
   onDone,
 }: {
   item: BinItem;
   label: string;
+  /** The whole bin is being emptied. */
+  locked: boolean;
+  /** Reports +1 when this row's action starts and -1 when it ends. */
+  onBusy: (delta: number) => void;
   onDone: () => Promise<void>;
 }): React.JSX.Element {
   const { t } = usePreferences();
@@ -185,6 +226,11 @@ function TrashRow({
     toast.notify(action === "restore" ? "toast.restored" : "toast.deleted");
     await onDone();
   });
+  useEffect(() => {
+    if (!pending) return;
+    onBusy(1);
+    return () => onBusy(-1);
+  }, [pending, onBusy]);
   const start = (action: "restore" | "purge"): void => {
     setWhich(action);
     void run(action);
@@ -197,8 +243,8 @@ function TrashRow({
       </span>
       <span className="flex gap-4 font-semibold">
         <RowButton
-          pending={pending}
-          active={which === "restore"}
+          pending={pending || locked}
+          active={pending && which === "restore"}
           pendingLabel={t("common.restoring")}
           className="min-h-11 text-accent"
           onClick={() => start("restore")}
@@ -206,8 +252,8 @@ function TrashRow({
           {t("common.restore")}
         </RowButton>
         <RowButton
-          pending={pending}
-          active={which === "purge"}
+          pending={pending || locked}
+          active={pending && which === "purge"}
           pendingLabel={t("common.deleting")}
           className="min-h-11 text-warning"
           onClick={() => start("purge")}

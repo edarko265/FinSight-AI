@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { assertSignedIn } from "@/components/admin/admin-api";
+import { applyQueueAction, type QueueAction } from "@/components/admin/queue-state";
 import { LoadState } from "@/components/admin/LoadState";
 import { RowButton } from "@/components/admin/RowButton";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
@@ -28,19 +30,25 @@ interface Thread extends QueueItem {
 
 const POLL_MS = 4000;
 
-/** Null when the request failed, whether by status or by network. */
+/** Null when the request failed, whether by status or by network. A 401 throws (see `assertSignedIn`). */
 async function getJson<T>(path: string, init?: RequestInit): Promise<T | null> {
+  let response: Response;
   try {
-    const response = await fetch(path, { credentials: "same-origin", ...init });
+    response = await fetch(path, { credentials: "same-origin", ...init });
+  } catch {
+    return null;
+  }
+  assertSignedIn(response);
+  try {
     return response.ok ? ((await response.json()) as T) : null;
   } catch {
     return null;
   }
 }
 
-type Action = "close" | "reopen" | "trash" | "restore" | "purge";
+type Action = QueueAction;
 
-/** Posts an action for one request and returns the fresh queue; throws when the action failed. */
+/** Posts an action for one request and returns the fresh queue (null if only the refresh failed); throws when the action failed. */
 async function postAction(id: string, action: Action): Promise<QueueItem[] | null> {
   const done = await getJson(`/api/admin/advisor/${id}`, {
     method: "POST",
@@ -61,29 +69,37 @@ export function AdvisorQueue(): React.JSX.Element {
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<Thread | null>(null);
   const [draft, setDraft] = useState("");
+  const epoch = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     let first = true;
     const load = (): void => {
-      void getJson<{ queue: QueueItem[] }>("/api/admin/advisor").then((data) => {
-        if (cancelled) return;
-        if (data) {
-          setQueue(data.queue);
-          setFailed(false);
-        } else setFailed(true);
-      });
+      // A response that started before a change that has since completed is stale: drop it.
+      const startedAt = epoch.current;
+      const fresh = (): boolean => !cancelled && epoch.current === startedAt;
+      void getJson<{ queue: QueueItem[] }>("/api/admin/advisor")
+        .catch(() => null)
+        .then((data) => {
+          if (!fresh()) return;
+          if (data) {
+            setQueue(data.queue);
+            setFailed(false);
+          } else setFailed(true);
+        });
       if (openId) {
         const opening = first;
-        void getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`).then((data) => {
-          if (cancelled) return;
-          if (data) setThread(data.thread);
-          else if (opening) {
-            // The thread never arrived: go back to the queue instead of waiting forever.
-            toast.fail("common.loadFailed");
-            setOpenId(null);
-          }
-        });
+        void getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`)
+          .catch(() => null)
+          .then((data) => {
+            if (!fresh()) return;
+            if (data) setThread(data.thread);
+            else if (opening) {
+              // The thread never arrived: go back to the queue instead of waiting forever.
+              toast.fail("common.loadFailed");
+              setOpenId(null);
+            }
+          });
       }
       first = false;
     };
@@ -94,6 +110,12 @@ export function AdvisorQueue(): React.JSX.Element {
       window.clearInterval(timer);
     };
   }, [openId, tick, toast]);
+
+  /** Takes the refreshed queue after an action, or applies the action locally if only the refresh failed. */
+  const applyToQueue = (id: string, action: Action, fresh: QueueItem[] | null): void => {
+    epoch.current += 1;
+    setQueue((current) => fresh ?? (current ? applyQueueAction(current, id, action) : current));
+  };
 
   const retry = (): void => {
     setFailed(false);
@@ -108,6 +130,7 @@ export function AdvisorQueue(): React.JSX.Element {
         body: JSON.stringify({ text }),
       });
       if (!data) throw new Error("request_failed");
+      epoch.current += 1;
       setThread(data.thread);
       setDraft("");
     },
@@ -121,6 +144,7 @@ export function AdvisorQueue(): React.JSX.Element {
         body: JSON.stringify({ action }),
       });
       if (!data) throw new Error("request_failed");
+      epoch.current += 1;
       setThread(data.thread);
     },
     { errorKey: "common.saveFailed" },
@@ -246,7 +270,7 @@ export function AdvisorQueue(): React.JSX.Element {
             busyOpening={openId !== null}
             fee={fee(item.feeCents)}
             onOpen={() => setOpenId(item.id)}
-            onQueue={setQueue}
+            onApplied={applyToQueue}
           />
         ))}
       </ul>
@@ -256,7 +280,7 @@ export function AdvisorQueue(): React.JSX.Element {
           <h3 className="text-sm font-semibold">{t("admin.bin")}</h3>
           <ul className="flex flex-col gap-2">
             {binned.map((item) => (
-              <QueueRow key={item.id} item={item} fee="" onQueue={setQueue} />
+              <QueueRow key={item.id} item={item} fee="" onApplied={applyToQueue} />
             ))}
           </ul>
         </div>
@@ -271,7 +295,7 @@ function QueueRow({
   opening = false,
   busyOpening = false,
   onOpen,
-  onQueue,
+  onApplied,
 }: {
   item: QueueItem;
   fee: string;
@@ -280,14 +304,14 @@ function QueueRow({
   /** Some row's thread is being fetched, so opening another is ignored. */
   busyOpening?: boolean;
   onOpen?: () => void;
-  onQueue: (queue: QueueItem[]) => void;
+  onApplied: (id: string, action: Action, fresh: QueueItem[] | null) => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const [which, setWhich] = useState<Action>("trash");
   const { run, pending } = useAsyncAction(async (action: Action): Promise<void> => {
     const fresh = await postAction(item.id, action);
-    if (fresh) onQueue(fresh);
+    onApplied(item.id, action, fresh);
     toast.notify(
       action === "trash"
         ? "toast.movedToBin"

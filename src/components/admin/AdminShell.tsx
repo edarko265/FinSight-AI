@@ -10,6 +10,7 @@ import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
 import { PendingLabel } from "@/components/ui/Spinner";
 import { useAsyncAction } from "@/components/ui/useAsyncAction";
+import { SIGNED_OUT_EVENT } from "@/lib/api-client";
 import { LOCALE_INFO } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -191,6 +192,14 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
     };
   }, [isLogin, router, tick]);
 
+  useEffect(() => {
+    if (isLogin) return;
+    // Any admin call that meets a lost session fires this: go and sign in again.
+    const toSignIn = (): void => router.replace("/admin/login");
+    window.addEventListener(SIGNED_OUT_EVENT, toSignIn);
+    return () => window.removeEventListener(SIGNED_OUT_EVENT, toSignIn);
+  }, [isLogin, router]);
+
   const reload = useCallback(() => {
     setLoading(true);
     setTick((value) => value + 1);
@@ -206,7 +215,8 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
         method: "POST",
         credentials: "same-origin",
       });
-      if (!response.ok) throw new Error("logout failed");
+      // A 401 means the session is already gone, which is what signing out wanted.
+      if (!response.ok && response.status !== 401) throw new Error("logout failed");
       router.replace("/admin/login");
     },
     { errorKey: "common.saveFailed" },
@@ -265,7 +275,7 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
               type="button"
               onClick={signOut}
               aria-disabled={signingOut}
-              className="rounded-full border border-border px-4 py-2 text-sm font-semibold"
+              className="min-h-11 rounded-full border border-border px-4 py-2 text-sm font-semibold aria-disabled:opacity-60"
             >
               {signingOut ? (
                 <PendingLabel>{t("common.signingOut")}</PendingLabel>
@@ -299,9 +309,13 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
                 type="button"
                 onClick={signOut}
                 aria-disabled={signingOut}
-                className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold lg:hidden"
+                className="min-h-11 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold aria-disabled:opacity-60 lg:hidden"
               >
-                {t("admin.signOut")}
+                {signingOut ? (
+                  <PendingLabel>{t("common.signingOut")}</PendingLabel>
+                ) : (
+                  t("admin.signOut")
+                )}
               </button>
             </div>
           </div>

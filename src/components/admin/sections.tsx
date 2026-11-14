@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { assertSignedIn } from "@/components/admin/admin-api";
 import { AdminControls } from "@/components/admin/AdminControls";
 import { AdminTrash } from "@/components/admin/AdminTrash";
 import { SharedPlans } from "@/components/admin/SharedPlans";
@@ -13,6 +14,7 @@ import { AdvisorQueue } from "@/components/admin/AdvisorQueue";
 import { Announcements } from "@/components/admin/Announcements";
 import { Bars, DailyChart, Meter, Panel, Ring, Stat } from "@/components/admin/parts";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { isApiError } from "@/lib/async-action";
 import { LoadError } from "@/components/ui/LoadError";
 import { LoadingRegion, SkeletonText } from "@/components/ui/Skeleton";
 import { PendingLabel } from "@/components/ui/Spinner";
@@ -515,6 +517,7 @@ export function NotificationsSection(): React.JSX.Element {
     let cancelled = false;
     fetch("/api/admin/reminders", { credentials: "same-origin" })
       .then((response) => {
+        assertSignedIn(response);
         if (!response.ok) throw new Error("reminders failed");
         return response.json() as Promise<{ customers: number }>;
       })
@@ -523,8 +526,8 @@ export function NotificationsSection(): React.JSX.Element {
         setCustomers(payload.customers);
         setFailed(false);
       })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
+      .catch((error: unknown) => {
+        if (!cancelled && !isApiError(error, 401)) setFailed(true);
       });
     return () => {
       cancelled = true;
@@ -537,6 +540,7 @@ export function NotificationsSection(): React.JSX.Element {
         method: "POST",
         credentials: "same-origin",
       });
+      assertSignedIn(response);
       if (!response.ok) throw new Error("failed");
       const payload = (await response.json()) as { sent: number; customers: number };
       setResult(payload);
