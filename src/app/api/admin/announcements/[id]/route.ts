@@ -6,6 +6,7 @@ import {
   updateAnnouncement,
 } from "@/lib/admin/announcements";
 import { isAdmin } from "@/lib/admin/auth";
+import { audit } from "@/lib/admin/settings";
 
 const unauthorized = (): Response => Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -25,6 +26,7 @@ export async function PATCH(
   const parsed = edit.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   await updateAnnouncement((await context.params).id, parsed.data);
+  await audit("announcement.edit", parsed.data.title);
   return Response.json({ announcements: await listAnnouncements() });
 }
 
@@ -37,5 +39,6 @@ export async function POST(
   const parsed = action.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   await setAnnouncementState((await context.params).id, parsed.data.action);
+  await audit(`announcement.${parsed.data.action}`);
   return Response.json({ announcements: await listAnnouncements() });
 }

@@ -15,12 +15,14 @@
     "test:watch": "vitest",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:migrate": "tsx scripts/migrate.ts",
-    "data:ingest": "tsx scripts/ingest.ts"
+    "data:ingest": "tsx scripts/ingest.ts",
+    "voice:setup": "tsx scripts/setup-voice-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.119",
     "@ai-sdk/openai": "^4.0.116",
     "@electric-sql/pglite": "^0.5.16",
+    "@elevenlabs/react": "^1.22.0",
     "ai": "^7.0.171",
     "csv-parse": "^7.0.3",
     "next": "16.4.6",

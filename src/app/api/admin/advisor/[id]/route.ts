@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isAdmin } from "@/lib/admin/auth";
+import { audit } from "@/lib/admin/settings";
 import { advisorReply, advisorThread, setRequestState } from "@/lib/advisor/handoff";
 
 const unauthorized = (): Response => Response.json({ error: "unauthorized" }, { status: 401 });
@@ -32,8 +33,10 @@ export async function POST(
   const { id } = await context.params;
   if ("action" in parsed.data) {
     await setRequestState(id, parsed.data.action);
+    await audit(`adviser_request.${parsed.data.action}`);
   } else if (!(await advisorReply(id, parsed.data.text))) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
+  if ("text" in parsed.data) await audit("adviser_request.reply");
   return Response.json({ thread: await advisorThread(id) });
 }

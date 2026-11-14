@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { SendIcon } from "@/components/ui/icons";
 import { Suggestions, Wizard, WizardChoices, WizardReview } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
@@ -36,6 +37,7 @@ const POLL_MS = 4000;
 /** Hand-over to a human adviser: request one and book a call, then continue the conversation with them. */
 export function AdvisorView(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const [data, setData] = useState<Payload | null>(null);
   const [topic, setTopic] = useState<"general" | "investment">("general");
   const [slot, setSlot] = useState("");
@@ -74,6 +76,7 @@ export function AdvisorView(): React.JSX.Element {
     });
     setOpen(false);
     setData({ ...data, request: created });
+    toast.notify("toast.requestSent");
   }
 
   async function send(event: React.FormEvent): Promise<void> {

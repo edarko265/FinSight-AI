@@ -6,7 +6,8 @@ import { getDb } from "@/lib/db/client";
  * Anonymous usage counting. Records only what kind of thing happened, in which
  * language, and whether AI was used: never who asked or what they typed.
  */
-export type UsageKind = "question" | "consent" | "goal" | "voice" | "widget" | "advisor";
+export type UsageKind =
+  "question" | "consent" | "goal" | "voice" | "widget" | "advisor" | "unanswered";
 
 export async function recordUsage(
   kind: UsageKind,
@@ -40,6 +41,8 @@ export interface UsageSummary {
   voiceUses: number;
   widgetsPinned: number;
   advisorRequests: number;
+  /** Questions the coach had no calculation for, by broad theme. */
+  unansweredThemes: { topic: string; count: number }[];
 }
 
 export async function usageSummary(): Promise<UsageSummary> {
@@ -62,9 +65,11 @@ export async function usageSummary(): Promise<UsageSummary> {
   const modes = new Map<string, number>();
   const days = new Map<string, number>();
   const kinds = new Map<string, number>();
+  const themes = new Map<string, number>();
   for (const row of rows) {
     const count = Number(row.count);
     sum(kinds, row.kind === "consent" ? `consent:${row.topic}` : row.kind, count);
+    if (row.kind === "unanswered") sum(themes, row.topic, count);
     if (row.kind !== "question") continue;
     sum(topics, row.topic, count);
     sum(locales, row.locale, count);
@@ -94,5 +99,6 @@ export async function usageSummary(): Promise<UsageSummary> {
     voiceUses: kinds.get("voice") ?? 0,
     widgetsPinned: kinds.get("widget") ?? 0,
     advisorRequests: kinds.get("advisor") ?? 0,
+    unansweredThemes: list(themes, "topic"),
   };
 }

@@ -6,6 +6,8 @@ import {
   PreferencesProvider,
 } from "@/components/providers/PreferencesProvider";
 
+import { ToastProvider } from "@/components/providers/ToastProvider";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,7 +43,9 @@ export default function RootLayout({ children }: LayoutProps<"/">): React.JSX.El
         <script dangerouslySetInnerHTML={{ __html: PREFERENCES_BOOT_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col font-sans">
-        <PreferencesProvider>{children}</PreferencesProvider>
+        <PreferencesProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </PreferencesProvider>
       </body>
     </html>
   );

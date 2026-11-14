@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { api } from "@/lib/api-client";
 
 interface InsightItem {
@@ -25,6 +26,7 @@ const TONE = {
 /** In-app notifications: each one comes from the user's own data and opens the coach on that topic. */
 export function InsightsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const { refresh } = useOverview();
   const [insights, setInsights] = useState<InsightItem[] | null>(null);
 
@@ -42,6 +44,7 @@ export function InsightsView(): React.JSX.Element {
 
   async function markAllRead(): Promise<void> {
     await api("/api/insights", { method: "POST" });
+    toast.notify("toast.markedRead");
     setInsights((current) => current?.map((insight) => ({ ...insight, read: true })) ?? null);
     refresh();
   }

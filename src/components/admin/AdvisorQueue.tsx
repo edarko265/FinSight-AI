@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { formatMoney, formatSlot } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -31,6 +32,7 @@ async function getJson<T>(path: string, init?: RequestInit): Promise<T | null> {
 /** The adviser's side of a hand-over: the queue of requests, and the conversation with one customer. */
 export function AdvisorQueue(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const [queue, setQueue] = useState<QueueItem[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<Thread | null>(null);
@@ -65,6 +67,10 @@ export function AdvisorQueue(): React.JSX.Element {
       body: JSON.stringify({ action }),
     });
     const data = await getJson<{ queue: QueueItem[] }>("/api/admin/advisor");
+    if (action === "trash") toast.notify("toast.movedToBin");
+    else if (action === "restore") toast.notify("toast.restored");
+    else if (action === "purge") toast.notify("toast.deleted");
+    else toast.notify("toast.updated");
     if (data) setQueue(data.queue);
   }
 
@@ -135,6 +141,7 @@ export function AdvisorQueue(): React.JSX.Element {
               if (!text) return;
               setDraft("");
               void post({ text });
+              toast.notify("toast.sent");
             }}
           >
             <label htmlFor="adviser-reply" className="sr-only">

@@ -13,6 +13,8 @@ export interface Announcement {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  /** How many customers have seen it. */
+  views: number;
 }
 
 type Row = {
@@ -23,9 +25,10 @@ type Row = {
   created_at: string | Date;
   updated_at: string | Date;
   deleted_at: string | Date | null;
+  views: number | string;
 };
 
-const COLUMNS = "id, title, body, severity, created_at, updated_at, deleted_at";
+const COLUMNS = "id, title, body, severity, created_at, updated_at, deleted_at, views";
 const toAnnouncement = (row: Row): Announcement => ({
   id: row.id,
   title: row.title,
@@ -34,6 +37,7 @@ const toAnnouncement = (row: Row): Announcement => ({
   createdAt: new Date(row.created_at).toISOString(),
   updatedAt: new Date(row.updated_at).toISOString(),
   deletedAt: row.deleted_at ? new Date(row.deleted_at).toISOString() : null,
+  views: Number(row.views),
 });
 
 export type AnnouncementInput = Pick<Announcement, "title" | "body" | "severity">;
@@ -87,5 +91,14 @@ export async function setAnnouncementState(
       `UPDATE announcements SET deleted_at = ${action === "trash" ? "now()" : "NULL"}, updated_at = now() WHERE id = $1`,
       [id],
     );
+  }
+}
+
+/** Counts one more customer as having seen each of these announcements. */
+export async function countAnnouncementViews(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  for (const id of ids) {
+    await db.query("UPDATE announcements SET views = views + 1 WHERE id = $1", [id]);
   }
 }

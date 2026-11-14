@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { api } from "@/lib/api-client";
 import { formatDay } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
@@ -17,6 +18,7 @@ interface TrashEntry {
 /** The customer's recycle bin: restore a deleted goal, view or widget, or delete it for good. */
 export function TrashView(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const [items, setItems] = useState<TrashEntry[] | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -36,6 +38,13 @@ export function TrashView(): React.JSX.Element {
     payload: { id: string; action: "restore" | "delete" } | { action: "empty" },
   ): Promise<void> {
     await api("/api/trash", { method: "POST", json: payload }).catch(() => undefined);
+    toast.notify(
+      payload.action === "restore"
+        ? "toast.restored"
+        : payload.action === "empty"
+          ? "toast.binEmptied"
+          : "toast.deleted",
+    );
     setTick((value) => value + 1);
   }
 

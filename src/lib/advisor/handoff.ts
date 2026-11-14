@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 
 import { addDays, parts } from "@/lib/analytics/periods";
+import { getSettings } from "@/lib/admin/settings";
 import { getDb } from "@/lib/db/client";
 import { decryptField, encryptField } from "@/lib/security/crypto";
 import { customerKey } from "@/lib/security/keys";
@@ -14,7 +15,6 @@ import { customerKey } from "@/lib/security/keys";
  */
 export const ADVISOR_TOPICS = ["general", "investment"] as const;
 export type AdvisorTopic = (typeof ADVISOR_TOPICS)[number];
-export const EXAMPLE_FEE_CENTS = 1900;
 
 const DETAILS = "advisor_requests.sealed_details";
 const MESSAGE = "advisor_messages.sealed_text";
@@ -110,7 +110,7 @@ export async function nextFeeCents(customerRef: string): Promise<number> {
     "SELECT count(*) AS n FROM advisor_requests WHERE customer_ref = $1",
     [customerRef],
   );
-  return Number(rows[0]?.n ?? 0) === 0 ? 0 : EXAMPLE_FEE_CENTS;
+  return Number(rows[0]?.n ?? 0) === 0 ? 0 : (await getSettings()).advisorFeeCents;
 }
 
 /** The customer's current (not closed) request with its messages, if any. */
@@ -271,4 +271,43 @@ export async function setRequestState(
       await db.query("DELETE FROM advisor_requests WHERE id = $1 AND deleted_at IS NOT NULL", [id]);
       break;
   }
+}
+
+export interface AdvisorWorkload {
+  open: number;
+  needsReply: number;
+  closed: number;
+  byTopic: { topic: AdvisorTopic; count: number }[];
+  free: number;
+  paid: number;
+  /** Average minutes from a request to the adviser's first reply, over answered requests. */
+  averageFirstReplyMinutes: number | null;
+}
+
+/** Adviser workload from the request queue. Counts and averages only. */
+export async function advisorWorkload(): Promise<AdvisorWorkload> {
+  const queue = await advisorQueue();
+  const live = queue.filter((item) => !item.deleted);
+  const db = await getDb();
+  const waits = await db.query<{ minutes: number | string | null }>(
+    `SELECT avg(extract(epoch FROM (first.at - r.created_at)) / 60) AS minutes
+     FROM advisor_requests r
+     JOIN (SELECT request_id, min(created_at) AS at FROM advisor_messages WHERE sender = 'advisor' GROUP BY request_id) first
+       ON first.request_id = r.id
+     WHERE r.deleted_at IS NULL`,
+  );
+  const minutes = waits[0]?.minutes;
+  return {
+    open: live.filter((item) => item.status !== "closed").length,
+    needsReply: live.filter((item) => item.waitingForAdvisor).length,
+    closed: live.filter((item) => item.status === "closed").length,
+    byTopic: ADVISOR_TOPICS.map((topic) => ({
+      topic,
+      count: live.filter((item) => item.topic === topic).length,
+    })),
+    free: live.filter((item) => item.feeCents === 0).length,
+    paid: live.filter((item) => item.feeCents > 0).length,
+    averageFirstReplyMinutes:
+      minutes === null || minutes === undefined ? null : Math.round(Number(minutes)),
+  };
 }

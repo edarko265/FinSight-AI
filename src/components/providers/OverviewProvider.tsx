@@ -25,6 +25,8 @@ export interface Me {
   aiConsent: boolean;
   voiceEnabled: boolean;
   voiceAgentEnabled: boolean;
+  advisorEnabled: boolean;
+  rewardsEnabled: boolean;
 }
 
 interface OverviewValue {

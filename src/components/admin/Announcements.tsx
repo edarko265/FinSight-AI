@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import {
   Suggestions,
   Wizard,
@@ -20,6 +21,7 @@ interface Announcement {
   body: string;
   severity: Severity;
   deletedAt: string | null;
+  views: number;
 }
 
 const EMPTY = { title: "", body: "", severity: "info" as Severity };
@@ -44,6 +46,7 @@ async function call(
 /** Notices staff publish to every customer: create, edit, bin, restore and delete for good. */
 export function Announcements(): React.JSX.Element {
   const { t } = usePreferences();
+  const toast = useToast();
   const [items, setItems] = useState<Announcement[] | null>(null);
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -69,6 +72,7 @@ export function Announcements(): React.JSX.Element {
         ? await call(`/api/admin/announcements/${editingId}`, "PATCH", form)
         : await call("/api/admin/announcements", "POST", form),
     );
+    toast.notify(editingId ? "toast.updated" : "toast.published");
     close();
   }
 
@@ -78,8 +82,16 @@ export function Announcements(): React.JSX.Element {
     setEditingId(null);
   }
 
-  const act = async (id: string, action: "trash" | "restore" | "purge"): Promise<void> =>
+  const act = async (id: string, action: "trash" | "restore" | "purge"): Promise<void> => {
     apply(await call(`/api/admin/announcements/${id}`, "POST", { action }));
+    toast.notify(
+      action === "trash"
+        ? "toast.movedToBin"
+        : action === "restore"
+          ? "toast.restored"
+          : "toast.deleted",
+    );
+  };
 
   const live = items?.filter((item) => !item.deletedAt) ?? [];
   const binned = items?.filter((item) => item.deletedAt) ?? [];
@@ -203,6 +215,7 @@ export function Announcements(): React.JSX.Element {
               </span>
             </p>
             <p className="mt-0.5 text-muted">{item.body}</p>
+            <p className="mt-1 text-xs text-muted">{t("admin.reach", { count: item.views })}</p>
             <div className="mt-2 flex gap-4 font-semibold">
               <button
                 type="button"

@@ -1,10 +1,23 @@
 import { z } from "zod";
 
+import { themeOf } from "@/lib/admin/themes";
 import { recordUsage } from "@/lib/admin/usage";
 import { answerQuestion } from "@/lib/coach/answer";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
+
+/** Subjects the coach cannot calculate, whatever tool the model reached for. */
+const OUTSIDE_THEMES = new Set([
+  "loans",
+  "investing",
+  "insurance",
+  "cards",
+  "taxes",
+  "pension",
+  "benefits",
+  "account",
+]);
 
 const body = z.object({
   message: z.string().trim().min(1).max(4000),
@@ -34,5 +47,11 @@ export async function POST(request: Request): Promise<Response> {
     },
   );
   await recordUsage("question", topic, ctx.locale, message.mode ?? "basic");
+  // What customers ask for that the coach has no calculation for. Only the broad theme is
+  // counted; the question itself is not stored.
+  const theme = themeOf(parsed.data.message);
+  if (topic === "none" || topic === "conversation" || OUTSIDE_THEMES.has(theme)) {
+    await recordUsage("unanswered", theme, ctx.locale, message.mode ?? "basic");
+  }
   return Response.json(message);
 }

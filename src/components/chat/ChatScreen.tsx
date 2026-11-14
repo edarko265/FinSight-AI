@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { api } from "@/lib/api-client";
 import type { DashboardPayload, WidgetQuery } from "@/lib/contracts/chart";
 
@@ -33,6 +34,7 @@ async function pinToDashboard(query: WidgetQuery, locale: string): Promise<void>
 /** The coach tab. A question can be passed in the URL, which is how insights open the coach. */
 export function ChatScreen(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const question = useSearchParams().get("q") ?? undefined;
   const [added, setAdded] = useState<Set<string>>(new Set());
 
@@ -48,9 +50,10 @@ export function ChatScreen(): React.JSX.Element {
             type="button"
             disabled={done}
             onClick={() =>
-              void pinToDashboard(query, locale).then(() =>
-                setAdded((current) => new Set(current).add(key)),
-              )
+              void pinToDashboard(query, locale).then(() => {
+                setAdded((current) => new Set(current).add(key));
+                toast.notify("toast.added");
+              })
             }
             className="w-full rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-accent disabled:opacity-60"
           >

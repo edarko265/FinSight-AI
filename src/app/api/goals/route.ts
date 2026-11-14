@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { getSettings } from "@/lib/admin/settings";
 import { buildRecommendations, buildRewards } from "@/lib/coach/advice";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { deleteGoal, listGoalPlans, setGoal, updateGoal } from "@/lib/coach/goals";
@@ -9,9 +10,10 @@ export async function GET(request: Request): Promise<Response> {
   const ctx = await getSessionContext(new URL(request.url).searchParams.get("locale"));
   if (!ctx) return unauthorized();
   const plans = await listGoalPlans(ctx);
+  const settings = await getSettings();
   return Response.json({
     goals: plans,
-    rewards: buildRewards(ctx, plans.length),
+    rewards: settings.features.rewards ? buildRewards(ctx, plans.length, settings.rewards) : null,
     recommendations: buildRecommendations(ctx),
   });
 }

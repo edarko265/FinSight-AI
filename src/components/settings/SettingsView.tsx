@@ -11,6 +11,7 @@ import {
   type FontSize,
   type Theme,
 } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { api } from "@/lib/api-client";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -73,6 +74,7 @@ function Section({
 export function SettingsView(): React.JSX.Element {
   const prefs = usePreferences();
   const { t } = prefs;
+  const toast = useToast();
   const { me, refresh } = useOverview();
   const [confirmErase, setConfirmErase] = useState(false);
   const router = useRouter();
@@ -84,6 +86,7 @@ export function SettingsView(): React.JSX.Element {
 
   async function setConsent(accepted: boolean): Promise<void> {
     await api("/api/consent", { method: "POST", json: { accepted } }).catch(() => undefined);
+    toast.notify(accepted ? "toast.consentOn" : "toast.consentOff");
     refresh();
   }
 

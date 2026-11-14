@@ -8,8 +8,9 @@ import { ConsentSheet } from "@/components/chat/ConsentSheet";
 import { EvidenceSheet } from "@/components/evidence/EvidenceSheet";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { MicIcon, SendIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
+import { MicIcon, PhoneIcon, SendIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
 import { useVoice } from "@/components/voice/useVoice";
+import { VoiceCall } from "@/components/voice/VoiceCall";
 import { api } from "@/lib/api-client";
 import type { ChartCard, WidgetQuery } from "@/lib/contracts/chart";
 import type { AssistantMessage, ChatMessage, EvidenceRef } from "@/lib/contracts/chat";
@@ -47,6 +48,7 @@ export function ChatPanel({
   const { t, locale, voiceReplies } = usePreferences();
   const { me, refresh } = useOverview();
   const [declined, setDeclined] = useState(false);
+  const [calling, setCalling] = useState(false);
   const voice = useVoice(locale);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -213,9 +215,32 @@ export function ChatPanel({
           </ul>
         ) : null}
 
-        <Link href="/advisor" className="mb-2 block text-center text-xs font-semibold text-accent">
-          {t("advisor.cta")} →
-        </Link>
+        {calling ? (
+          <VoiceCall
+            onEnd={() => setCalling(false)}
+            onExchange={(question, reply) =>
+              setMessages((current) => [
+                ...current,
+                { id: `user-voice-${reply.id}`, role: "user", text: question },
+                reply,
+              ])
+            }
+          />
+        ) : null}
+
+        <div className="mb-2 flex items-center justify-center gap-5 text-xs font-semibold text-accent">
+          {me?.voiceAgentEnabled && me.aiConsent && !calling ? (
+            <button
+              type="button"
+              onClick={() => setCalling(true)}
+              className="flex items-center gap-1.5"
+            >
+              <PhoneIcon className="size-4" />
+              {t("voice.call.start")}
+            </button>
+          ) : null}
+          {me?.advisorEnabled !== false ? <Link href="/advisor">{t("advisor.cta")} →</Link> : null}
+        </div>
 
         {voice.error === "mic" ? (
           <p className="mb-2 text-xs text-warning">{t("chat.micDenied")}</p>

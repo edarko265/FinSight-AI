@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { api } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -39,6 +40,7 @@ const FIT_TONE = {
 /** Goals set in conversation with the coach, what would help most, and rewards for real progress. */
 export function GoalsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const [data, setData] = useState<GoalsPayload | null>(null);
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<GoalDraft | null>(null);
@@ -57,6 +59,7 @@ export function GoalsView(): React.JSX.Element {
 
   async function remove(id: string): Promise<void> {
     await api("/api/goals", { method: "DELETE", json: { id } }).catch(() => undefined);
+    toast.notify("toast.movedToBin");
     setTick((value) => value + 1);
   }
 
@@ -142,6 +145,7 @@ export function GoalsView(): React.JSX.Element {
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null);
+          toast.notify("toast.saved");
           setTick((value) => value + 1);
         }}
       />

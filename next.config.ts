@@ -11,12 +11,15 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // blob: lets the voice SDK load its audio worklets.
+  `script-src 'self' 'unsafe-inline' blob:${isDev ? " 'unsafe-eval'" : ""}`,
+  "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' blob:",
-  `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  // Realtime voice calls connect from the browser to the speech provider.
+  `connect-src 'self' https://*.elevenlabs.io wss://*.elevenlabs.io${isDev ? " ws: wss:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -8,6 +8,7 @@ import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { PlusIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import {
@@ -31,6 +32,7 @@ interface InsightItem {
 
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const toast = useToast();
   const { overview } = useOverview();
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [banner, setBanner] = useState<InsightItem | null>(null);
@@ -87,6 +89,7 @@ export function DashboardView(): React.JSX.Element {
         views: [...state.views, { id, name, period, widgets: active.widgets }],
       }));
     }
+    toast.notify("toast.saved");
     setViewDraft(null);
   }
 
@@ -214,12 +217,13 @@ export function DashboardView(): React.JSX.Element {
             {dashboard.views.length > 1 ? (
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   update((state) => ({
                     ...state,
                     views: state.views.filter((view) => view.id !== state.activeId),
-                  }))
-                }
+                  }));
+                  toast.notify("toast.movedToBin");
+                }}
                 className="text-muted"
               >
                 {t("common.moveToBin")}
@@ -239,12 +243,13 @@ export function DashboardView(): React.JSX.Element {
             <WidgetCard
               key={widget.id}
               widget={widget}
-              onRemove={(id) =>
+              onRemove={(id) => {
                 updateActive((view) => ({
                   ...view,
                   widgets: view.widgets.filter((item) => item.id !== id),
-                }))
-              }
+                }));
+                toast.notify("toast.movedToBin");
+              }}
               onChart={(id, chart) =>
                 updateActive((view) => ({
                   ...view,
@@ -263,12 +268,13 @@ export function DashboardView(): React.JSX.Element {
       <NewWidgetSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        onAdd={(query: WidgetQuery) =>
+        onAdd={(query: WidgetQuery) => {
           updateActive((view) => ({
             ...view,
             widgets: [{ id: `widget-${Date.now()}`, query }, ...view.widgets].slice(0, 16),
-          }))
-        }
+          }));
+          toast.notify("toast.added");
+        }}
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AdminControls, type AppSettings } from "@/components/admin/AdminControls";
 import { AdvisorQueue } from "@/components/admin/AdvisorQueue";
 import { Announcements } from "@/components/admin/Announcements";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
@@ -38,7 +39,25 @@ interface AdminPayload {
     voiceUses: number;
     widgetsPinned: number;
     advisorRequests: number;
+    unansweredThemes: { topic: string; count: number }[];
   };
+  ai: {
+    requestsToday: number;
+    today: { requests: number; inputTokens: number; outputTokens: number };
+    last30: { requests: number; inputTokens: number; outputTokens: number };
+    byModel: { model: string; requests: number; inputTokens: number; outputTokens: number }[];
+  };
+  workload: {
+    open: number;
+    needsReply: number;
+    closed: number;
+    byTopic: { topic: "general" | "investment"; count: number }[];
+    free: number;
+    paid: number;
+    averageFirstReplyMinutes: number | null;
+  };
+  settings: AppSettings;
+  audit: { id: string; at: string; action: string; detail: string }[];
 }
 
 function Stat({ label, value }: { label: string; value: string }): React.JSX.Element {
@@ -169,7 +188,7 @@ export function AdminDashboard(): React.JSX.Element {
         {t("admin.anonymous")}
       </p>
 
-      {usage && system ? (
+      {data && usage && system ? (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat label={t("admin.questions")} value={number(total)} />
@@ -181,6 +200,95 @@ export function AdminDashboard(): React.JSX.Element {
             <Stat label={t("admin.withdrawn")} value={number(usage.consentWithdrawn)} />
             <Stat label={t("admin.sessions")} value={number(system.activeSessions)} />
           </div>
+
+          <Panel title={t("admin.controls")}>
+            <AdminControls
+              settings={data.settings}
+              requestsToday={data.ai.requestsToday}
+              onSaved={(settings) => setData({ ...data, settings })}
+            />
+          </Panel>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <Panel title={t("admin.aiUsage")}>
+              {data.ai.last30.requests === 0 ? (
+                <p className="text-sm text-muted">{t("admin.aiUsage.empty")}</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-muted">
+                      <th className="py-1 font-medium" />
+                      <th className="py-1 text-right font-medium">{t("admin.aiUsage.requests")}</th>
+                      <th className="py-1 text-right font-medium">{t("admin.aiUsage.input")}</th>
+                      <th className="py-1 text-right font-medium">{t("admin.aiUsage.output")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="tabular-nums">
+                    {[
+                      { label: t("admin.aiUsage.today"), ...data.ai.today },
+                      { label: t("admin.aiUsage.month"), ...data.ai.last30 },
+                      ...data.ai.byModel.map((row) => ({ label: row.model, ...row })),
+                    ].map((row) => (
+                      <tr key={row.label} className="border-t border-border">
+                        <td className="py-1.5">{row.label}</td>
+                        <td className="py-1.5 text-right">{number(row.requests)}</td>
+                        <td className="py-1.5 text-right">{number(row.inputTokens)}</td>
+                        <td className="py-1.5 text-right">{number(row.outputTokens)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className="text-xs text-muted">{t("admin.aiUsage.note")}</p>
+            </Panel>
+
+            <Panel title={t("admin.themes")}>
+              {usage.unansweredThemes.length === 0 ? (
+                <p className="text-sm text-muted">{t("admin.themes.empty")}</p>
+              ) : (
+                <Bars
+                  rows={usage.unansweredThemes.map((row) => ({
+                    label: hasMessage(`admin.theme.${row.topic}`)
+                      ? t(`admin.theme.${row.topic}` as MessageKey)
+                      : row.topic,
+                    count: row.count,
+                  }))}
+                />
+              )}
+              <p className="text-xs text-muted">{t("admin.themes.note")}</p>
+            </Panel>
+          </div>
+
+          <Panel title={t("admin.workload")}>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <Stat label={t("admin.workload.open")} value={number(data.workload.open)} />
+              <Stat
+                label={t("admin.workload.needsReply")}
+                value={number(data.workload.needsReply)}
+              />
+              <Stat label={t("admin.workload.closed")} value={number(data.workload.closed)} />
+              <Stat
+                label={t("admin.workload.firstReply")}
+                value={
+                  data.workload.averageFirstReplyMinutes === null
+                    ? "—"
+                    : t("admin.workload.minutes", {
+                        minutes: data.workload.averageFirstReplyMinutes,
+                      })
+                }
+              />
+            </div>
+            <Bars
+              rows={[
+                ...data.workload.byTopic.map((row) => ({
+                  label: t(`advisor.topic.${row.topic}` as MessageKey),
+                  count: row.count,
+                })),
+                { label: t("admin.workload.free"), count: data.workload.free },
+                { label: t("admin.workload.paid"), count: data.workload.paid },
+              ]}
+            />
+          </Panel>
 
           <Panel title={t("admin.advisor")}>
             <AdvisorQueue />
@@ -293,6 +401,34 @@ export function AdminDashboard(): React.JSX.Element {
               }))}
             />
             <p className="text-xs text-muted">{t("admin.spendingByAge.note")}</p>
+          </Panel>
+
+          <Panel title={t("admin.audit")}>
+            {data.audit.length === 0 ? (
+              <p className="text-sm text-muted">{t("admin.audit.empty")}</p>
+            ) : (
+              <ul className="flex max-h-72 flex-col divide-y divide-border overflow-y-auto text-sm">
+                {data.audit.map((entry) => (
+                  <li
+                    key={entry.id}
+                    className="flex flex-wrap items-baseline justify-between gap-x-4 py-2"
+                  >
+                    <span>
+                      {hasMessage(`admin.audit.${entry.action}`)
+                        ? t(`admin.audit.${entry.action}` as MessageKey)
+                        : entry.action}
+                      {entry.detail ? <span className="text-muted"> · {entry.detail}</span> : null}
+                    </span>
+                    <time className="text-xs text-muted tabular-nums">
+                      {new Intl.DateTimeFormat(LOCALE_INFO[locale].intl, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(entry.at))}
+                    </time>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Panel>
         </>
       ) : null}

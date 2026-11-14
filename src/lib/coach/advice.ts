@@ -321,6 +321,31 @@ export interface RewardsSummary {
   coupons: { id: string; title: string; body: string; unlockAt: number; unlocked: boolean }[];
 }
 
+/** Points and coupon thresholds. Staff can change these from the admin area. */
+export interface RewardRules {
+  points: {
+    under_average: number;
+    choice_down: number;
+    buffer: number;
+    surplus_streak: number;
+    investing: number;
+    goal: number;
+  };
+  couponUnlockAt: { coffee: number; groceries: number; voucher: number };
+}
+
+export const DEFAULT_REWARD_RULES: RewardRules = {
+  points: {
+    under_average: 75,
+    choice_down: 75,
+    buffer: 100,
+    surplus_streak: 20,
+    investing: 50,
+    goal: 25,
+  },
+  couponUnlockAt: { coffee: 100, groceries: 200, voucher: 350 },
+};
+
 const LEVELS: [RewardsSummary["level"], number][] = [
   ["starter", 0],
   ["bronze", 100],
@@ -334,7 +359,11 @@ const LEVELS: [RewardsSummary["level"], number][] = [
  * never against other people. The coupons are examples of what a bank's
  * bonus programme could attach.
  */
-export function buildRewards(ctx: CoachContext, goalCount: number): RewardsSummary {
+export function buildRewards(
+  ctx: CoachContext,
+  goalCount: number,
+  rules: RewardRules = DEFAULT_REWARD_RULES,
+): RewardsSummary {
   const { t, money } = helpers(ctx);
   const txs = ctx.record.transactions;
   const last = lastCompletedMonth(ctx.asOf);
@@ -372,7 +401,7 @@ export function buildRewards(ctx: CoachContext, goalCount: number): RewardsSumma
         amount: money(lastSpend),
         average: money(averageSpend),
       }),
-      points: 75,
+      points: rules.points.under_average,
       earned: averageSpend > 0 && lastSpend < averageSpend,
     },
     {
@@ -382,35 +411,35 @@ export function buildRewards(ctx: CoachContext, goalCount: number): RewardsSumma
         amount: money(lastChoice),
         average: money(averageChoice),
       }),
-      points: 75,
+      points: rules.points.choice_down,
       earned: averageChoice > 0 && lastChoice <= averageChoice * 0.9,
     },
     {
       id: "buffer",
       title: t("reward.buffer.title"),
       body: t("reward.buffer.body", { bills: money(bills) }),
-      points: 100,
+      points: rules.points.buffer,
       earned: bills > 0 && balance >= bills,
     },
     {
       id: "surplus_streak",
       title: t("reward.streak.title", { months: streak }),
       body: t("reward.streak.body"),
-      points: Math.min(6, streak) * 20,
+      points: Math.min(6, streak) * rules.points.surplus_streak,
       earned: streak >= 2,
     },
     {
       id: "investing",
       title: t("reward.investing.title"),
       body: t("reward.investing.body", { amount: money(invested) }),
-      points: 50,
+      points: rules.points.investing,
       earned: invested > 0,
     },
     {
       id: "goal",
       title: t("reward.goal.title"),
       body: t("reward.goal.body"),
-      points: 25,
+      points: rules.points.goal,
       earned: goalCount > 0,
     },
   ];
@@ -429,6 +458,10 @@ export function buildRewards(ctx: CoachContext, goalCount: number): RewardsSumma
     level,
     nextLevelAt: next?.[1] ?? null,
     achievements,
-    coupons: [coupon("coffee", 100), coupon("groceries", 200), coupon("voucher", 350)],
+    coupons: [
+      coupon("coffee", rules.couponUnlockAt.coffee),
+      coupon("groceries", rules.couponUnlockAt.groceries),
+      coupon("voucher", rules.couponUnlockAt.voucher),
+    ],
   };
 }

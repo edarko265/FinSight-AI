@@ -5,6 +5,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, isStepCount, tool, type LanguageModel } from "ai";
 import { z } from "zod";
 
+import { aiRequestsToday, getSettings, recordAiUsage } from "@/lib/admin/settings";
 import type { SessionContext } from "@/lib/coach/context";
 import { CHART_STYLES } from "@/lib/contracts/chart";
 import { goalsResult, setGoal } from "@/lib/coach/goals";
@@ -206,6 +207,14 @@ export async function askModel(
 ): Promise<LlmAnswer | null> {
   const coach = getCoachModel();
   if (!coach) return null;
+  const settings = await getSettings();
+  if (!settings.features.ai) return null;
+  if (
+    settings.aiDailyRequestLimit > 0 &&
+    (await aiRequestsToday()) >= settings.aiDailyRequestLimit
+  ) {
+    return null;
+  }
   const env = getEnv();
   const results: ToolResult[] = [];
   const response = await generateText({
@@ -221,6 +230,11 @@ export async function askModel(
     maxRetries: 0,
     abortSignal: AbortSignal.timeout(env.CHAT_TIMEOUT_MS),
   });
+  await recordAiUsage(
+    coach.name,
+    response.usage.inputTokens ?? 0,
+    response.usage.outputTokens ?? 0,
+  );
   const text = response.text.trim();
   if (!text) return null;
   return { text, results };

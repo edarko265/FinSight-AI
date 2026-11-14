@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { getSettings } from "@/lib/admin/settings";
 import { recordUsage } from "@/lib/admin/usage";
 import {
   ADVISOR_TOPICS,
@@ -32,6 +33,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  if (!(await getSettings()).features.advisor) {
+    return Response.json({ error: "unavailable" }, { status: 503 });
+  }
   if (!callSlots(ctx.asOf).includes(parsed.data.slot)) {
     return Response.json({ error: "invalid_request" }, { status: 400 });
   }

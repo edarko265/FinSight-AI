@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { adminPasswordMatches, createAdminSession } from "@/lib/admin/auth";
+import { audit } from "@/lib/admin/settings";
 import { rateLimit } from "@/lib/security/session";
 
 const body = z.object({ password: z.string().min(1).max(200) });
@@ -15,5 +16,6 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "invalid_credentials" }, { status: 401 });
   }
   await createAdminSession();
+  await audit("admin.sign_in");
   return Response.json({ ok: true });
 }

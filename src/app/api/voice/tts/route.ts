@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { getSettings } from "@/lib/admin/settings";
 import { recordUsage } from "@/lib/admin/usage";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
@@ -19,6 +20,9 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!rateLimit(`tts:${ctx.customerRef}`, 30, 60_000)) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
+  }
+  if (!(await getSettings()).features.voice) {
+    return Response.json({ error: "voice_unavailable" }, { status: 503 });
   }
   await recordUsage("voice", "speak", ctx.locale);
   try {
