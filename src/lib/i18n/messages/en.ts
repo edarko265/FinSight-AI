@@ -1782,6 +1782,22 @@ export const en = {
   "admin.audit.shared_plan.dismiss_reports": "Reports on a shared plan dismissed",
   "admin.audit.staff.two_step_on": "A member turned on two-step sign-in",
   "admin.audit.staff.two_step_off": "A member turned off two-step sign-in",
+  "widget.resize": "Change size",
+  "widget.size.medium": "Medium",
+  "widget.size.medium.note": "Two columns.",
+  "goals.step.started": "When did you start?",
+  "goals.step.startedHint":
+    "If you were already saving for this, say since when, and record what you have set aside so far.",
+  "goals.started.0": "Starting now",
+  "goals.started.3": "3 months ago",
+  "goals.started.6": "6 months ago",
+  "goals.started.12": "A year ago",
+  "goals.aside.date": "When? (leave empty for today)",
+  "goals.aside.dateHint":
+    "Money you set aside earlier can be recorded with its date. Only money set aside today is checked against what is safe.",
+  "goals.curve": "Progress month by month",
+  "goals.curve.caption":
+    "Solid: set aside so far ({saved}). Dashed: where the plan expected you to be ({planned}).",
 } as const;
 
 export type MessageKey = keyof typeof en;

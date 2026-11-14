@@ -52,6 +52,7 @@ export function DashboardView(): React.JSX.Element {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const [affordOpen, setAffordOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
@@ -349,12 +350,14 @@ export function DashboardView(): React.JSX.Element {
               widget={widget}
               first={index === 0}
               last={index === all.length - 1}
-              dragging={dragId !== null && dragId !== widget.id}
+              over={overId === widget.id}
+              dragged={dragId === widget.id}
               onDragStart={setDragId}
-              onDragEnd={() => setDragId(null)}
-              onDropOn={(targetId) => {
-                if (dragId) reorder(dragId, targetId);
+              onDragOver={setOverId}
+              onDrop={() => {
+                if (dragId && overId) reorder(dragId, overId);
                 setDragId(null);
+                setOverId(null);
               }}
               onMove={(id, by) => {
                 const neighbour = all[index + by];

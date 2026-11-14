@@ -4,15 +4,23 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
+import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
 import { api, ApiError } from "@/lib/api-client";
-import { formatDay, formatMoney } from "@/lib/i18n/config";
+import { formatDay, formatMoney, formatMonth } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 interface GoalPlan {
-  goal: { id: string; name: string; targetCents: number; months: number; monthlyCents: number };
+  goal: {
+    id: string;
+    name: string;
+    targetCents: number;
+    months: number;
+    monthlyCents: number;
+    createdOn: string;
+  };
   roomCents: number;
   fromCutsCents: number;
   fit: "fits" | "stretch" | "hard";
@@ -21,6 +29,7 @@ interface GoalPlan {
   monthsLeft: number;
   pace: "ahead" | "on_track" | "behind";
   setAsides: { id: string; cents: number; date: string }[];
+  curve: { month: string; plannedCents: number; savedCents: number }[];
 }
 
 interface Rewards {
@@ -46,14 +55,89 @@ const FIT_TONE = {
   hard: "bg-warning-soft text-warning",
 } as const;
 
+/**
+ * Progress month by month: what the plan expected (dashed) against what was
+ * actually set aside (solid). The numbers are in the list beside it.
+ */
+function GoalCurve({
+  curve,
+  target,
+}: {
+  curve: { month: string; plannedCents: number; savedCents: number }[];
+  target: number;
+}): React.JSX.Element {
+  const { t, locale } = usePreferences();
+  const width = 300;
+  const height = 110;
+  const top = Math.max(target, 1);
+  const x = (index: number): number => 6 + (index / (curve.length - 1)) * (width - 12);
+  const y = (cents: number): number => height - 18 - (Math.min(cents, top) / top) * (height - 30);
+  const line = (key: "plannedCents" | "savedCents"): string =>
+    curve.map((point, index) => `${index === 0 ? "M" : "L"}${x(index)},${y(point[key])}`).join(" ");
+  const last = curve.at(-1);
+  return (
+    <figure className="mt-3">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-auto w-full"
+        role="img"
+        aria-label={t("goals.curve")}
+      >
+        <line
+          x1={6}
+          x2={width - 6}
+          y1={y(target)}
+          y2={y(target)}
+          stroke="var(--border)"
+          strokeDasharray="2 4"
+        />
+        <path
+          d={line("plannedCents")}
+          fill="none"
+          stroke="var(--muted)"
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+        />
+        <path d={line("savedCents")} fill="none" stroke="var(--chart-1)" strokeWidth={2.5} />
+        {curve.map((point, index) => (
+          <circle
+            key={point.month}
+            cx={x(index)}
+            cy={y(point.savedCents)}
+            r={3}
+            fill="var(--chart-1)"
+          >
+            <title>{`${formatMonth(point.month, locale)}: ${formatMoney(point.savedCents, locale)}`}</title>
+          </circle>
+        ))}
+        <text x={6} y={height - 3} fontSize={10} fill="var(--muted)">
+          {formatMonth(curve[0]?.month ?? "", locale)}
+        </text>
+        <text x={width - 6} y={height - 3} fontSize={10} fill="var(--muted)" textAnchor="end">
+          {formatMonth(last?.month ?? "", locale)}
+        </text>
+      </svg>
+      <figcaption className="mt-1 text-xs text-muted">
+        {t("goals.curve.caption", {
+          saved: formatMoney(last?.savedCents ?? 0, locale),
+          planned: formatMoney(last?.plannedCents ?? 0, locale),
+        })}
+      </figcaption>
+    </figure>
+  );
+}
+
 /** Goals set in conversation with the coach, what would help most, and rewards for real progress. */
 export function GoalsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
+  const { overview } = useOverview();
+  const asOf = overview?.asOf ?? "";
   const [data, setData] = useState<GoalsPayload | null>(null);
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<GoalDraft | null>(null);
-  const [saving, setSaving] = useState<{ id: string; name: string } | null>(null);
+  const [saving, setSaving] = useState<{ id: string; name: string; from: string } | null>(null);
+  const [when, setWhen] = useState("");
   const [euros, setEuros] = useState("");
   const [saveError, setSaveError] = useState<MessageKey | null>(null);
   const [redeemed, setRedeemed] = useState<Record<string, string>>({});
@@ -90,7 +174,8 @@ export function GoalsView(): React.JSX.Element {
   const safe = data?.safeToSave ?? 0;
   const amount = Number(euros.replace(",", "."));
   const amountValid = euros.trim() !== "" && Number.isFinite(amount) && amount >= 1;
-  const withinSafe = amountValid && Math.round(amount * 100) <= safe;
+  // Money recorded as set aside earlier is a fact about the past: only today's is tested.
+  const withinSafe = amountValid && (when !== "" || Math.round(amount * 100) <= safe);
 
   async function confirmSetAside(): Promise<boolean> {
     if (!saving) return false;
@@ -98,7 +183,7 @@ export function GoalsView(): React.JSX.Element {
     try {
       await api("/api/goals/set-aside", {
         method: "POST",
-        json: { goalId: saving.id, cents: Math.round(amount * 100) },
+        json: { goalId: saving.id, cents: Math.round(amount * 100), date: when || undefined },
       });
     } catch (failure) {
       setSaveError(
@@ -189,7 +274,7 @@ export function GoalsView(): React.JSX.Element {
           </p>
         ) : null}
         {data?.goals.map(
-          ({ goal, fit, roomCents, savedCents, percent, monthsLeft, pace, setAsides }) => (
+          ({ goal, fit, roomCents, savedCents, percent, monthsLeft, pace, setAsides, curve }) => (
             <article key={goal.id} className="rounded-2xl border border-border bg-surface p-4">
               <h3 className="text-base font-semibold">{goal.name}</h3>
               <p className="text-2xl font-semibold tabular-nums">{money(goal.targetCents)}</p>
@@ -246,6 +331,7 @@ export function GoalsView(): React.JSX.Element {
                     ? t("goals.reached")
                     : t("goals.monthsLeft", { months: monthsLeft })}
                 </p>
+                {curve.length >= 2 ? <GoalCurve curve={curve} target={goal.targetCents} /> : null}
                 {setAsides.length > 0 ? (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-xs font-semibold text-accent">
@@ -280,7 +366,8 @@ export function GoalsView(): React.JSX.Element {
                   onClick={() => {
                     setEuros("");
                     setSaveError(null);
-                    setSaving({ id: goal.id, name: goal.name });
+                    setWhen("");
+                    setSaving({ id: goal.id, name: goal.name, from: goal.createdOn });
                   }}
                   className="text-accent"
                 >
@@ -487,6 +574,22 @@ export function GoalsView(): React.JSX.Element {
                     onPick={setEuros}
                   />
                 ) : null}
+                <label className="flex flex-col gap-1.5 text-sm font-medium">
+                  {t("goals.aside.date")}
+                  <input
+                    type="date"
+                    value={when}
+                    min={saving?.from}
+                    max={asOf}
+                    onChange={(event) =>
+                      setWhen(event.target.value === asOf ? "" : event.target.value)
+                    }
+                    className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal"
+                  />
+                  <span className="text-xs font-normal text-muted">
+                    {t("goals.aside.dateHint")}
+                  </span>
+                </label>
                 {amountValid && !withinSafe ? (
                   <p className="rounded-xl bg-warning-soft px-3 py-2 text-sm text-warning">
                     {t("goals.aside.aboveSafe")}

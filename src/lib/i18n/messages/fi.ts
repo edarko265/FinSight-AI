@@ -1778,4 +1778,20 @@ export const fi: Record<MessageKey, string> = {
   "admin.audit.shared_plan.dismiss_reports": "Jaetun suunnitelman ilmoitukset hylätty",
   "admin.audit.staff.two_step_on": "Jäsen otti käyttöön kaksivaiheisen kirjautumisen",
   "admin.audit.staff.two_step_off": "Jäsen poisti kaksivaiheisen kirjautumisen",
+  "widget.resize": "Muuta kokoa",
+  "widget.size.medium": "Keskikokoinen",
+  "widget.size.medium.note": "Kaksi saraketta.",
+  "goals.step.started": "Milloin aloitit?",
+  "goals.step.startedHint":
+    "Jos olet jo säästänyt tähän, kerro mistä lähtien ja kirjaa tähän mennessä sivuun laittamasi.",
+  "goals.started.0": "Aloitan nyt",
+  "goals.started.3": "3 kuukautta sitten",
+  "goals.started.6": "6 kuukautta sitten",
+  "goals.started.12": "Vuosi sitten",
+  "goals.aside.date": "Milloin? (jätä tyhjäksi, jos tänään)",
+  "goals.aside.dateHint":
+    "Aiemmin sivuun laittamasi rahan voi kirjata päivämäärällään. Vain tänään sivuun laitettava tarkistetaan turvarajaa vasten.",
+  "goals.curve": "Edistyminen kuukausittain",
+  "goals.curve.caption":
+    "Yhtenäinen: tähän mennessä sivussa ({saved}). Katkoviiva: missä suunnitelman mukaan pitäisi olla ({planned}).",
 };

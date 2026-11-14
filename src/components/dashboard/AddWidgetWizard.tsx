@@ -377,6 +377,11 @@ export function AddWidgetWizard({
                   label: t("widget.size.small"),
                   note: t("widget.size.small.note"),
                 },
+                {
+                  value: "medium",
+                  label: t("widget.size.medium"),
+                  note: t("widget.size.medium.note"),
+                },
                 { value: "wide", label: t("widget.size.wide"), note: t("widget.size.wide.note") },
               ]}
             />

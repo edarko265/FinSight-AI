@@ -1771,4 +1771,20 @@ export const sv: Record<MessageKey, string> = {
   "admin.audit.shared_plan.dismiss_reports": "Anmälningar om en delad plan avfärdade",
   "admin.audit.staff.two_step_on": "En medlem slog på tvåstegsinloggning",
   "admin.audit.staff.two_step_off": "En medlem stängde av tvåstegsinloggning",
+  "widget.resize": "Ändra storlek",
+  "widget.size.medium": "Mellan",
+  "widget.size.medium.note": "Två kolumner.",
+  "goals.step.started": "När började du?",
+  "goals.step.startedHint":
+    "Om du redan sparat till detta, ange sedan när och registrera vad du lagt undan hittills.",
+  "goals.started.0": "Börjar nu",
+  "goals.started.3": "För 3 månader sedan",
+  "goals.started.6": "För 6 månader sedan",
+  "goals.started.12": "För ett år sedan",
+  "goals.aside.date": "När? (lämna tomt för i dag)",
+  "goals.aside.dateHint":
+    "Pengar du lagt undan tidigare kan registreras med datum. Bara pengar som läggs undan i dag kontrolleras mot vad som är tryggt.",
+  "goals.curve": "Framsteg månad för månad",
+  "goals.curve.caption":
+    "Heldragen: undanlagt hittills ({saved}). Streckad: var planen väntade sig att du skulle vara ({planned}).",
 };
