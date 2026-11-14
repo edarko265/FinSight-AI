@@ -349,8 +349,9 @@ estimated monthly value; the list is sorted by that value and the top five are s
 
 ## 9. Rewards
 
-[`advice.ts`](../src/lib/coach/advice.ts) — `buildRewards`. Point values and coupon
-thresholds are set by staff in Admin → Controls.
+[`advice.ts`](../src/lib/coach/advice.ts) — `buildRewards`. Point values are set by staff in Admin → Controls.
+Voucher targets are not staff thresholds: they come from the user's regular income
+× the Statistics Finland household saving rate (3% floor).
 
 | Achievement               | Earned when…                                                | Default points   |
 | ------------------------- | ----------------------------------------------------------- | ---------------- |
