@@ -9,6 +9,9 @@ import { CloseIcon, MicIcon, PhoneIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import type { AssistantMessage } from "@/lib/contracts/chat";
 
+/** A pinned copy of libsamplerate-js 2.1.2 (MIT); see public/voice/README.md. */
+const RESAMPLER_PATH = "/voice/libsamplerate.worklet.js";
+
 interface VoiceCallProps {
   /** Called for each question the customer asks aloud and the coach's answer, so both appear in the chat. */
   onExchange: (question: string, reply: AssistantMessage) => void;
@@ -74,7 +77,11 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
       const role = (payload.role ?? payload.source) === "user" ? "user" : "agent";
       setCaptions((current) => [...current.slice(-5), { id: captionId.current, role, text }]);
     },
-    onError: () => setFailed(true),
+    onError: (message: unknown) => {
+      // The reason only, for whoever is looking at the console; nothing about the customer.
+      console.error("voice call:", typeof message === "string" ? message : "failed");
+      setFailed(true);
+    },
   });
   const {
     startSession,
@@ -92,7 +99,14 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
     started.current = true;
     api<{ signedUrl: string }>("/api/voice/agent")
       .then(({ signedUrl }) =>
-        startSession({ signedUrl, overrides: { agent: { language: localeRef.current } } }),
+        startSession({
+          signedUrl,
+          overrides: { agent: { language: localeRef.current } },
+          // Safari cannot ask the microphone for a sample rate, so the voice library converts
+          // the sound itself with this helper. It is served from this site: the library's
+          // default is a public CDN, which the content security policy rightly refuses.
+          libsampleratePath: RESAMPLER_PATH,
+        }),
       )
       .catch(() => setFailed(true));
     return () => endSession();

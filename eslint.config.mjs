@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // A third-party audio helper, served as it was published.
+    "public/voice/**",
   ]),
 ]);
 
