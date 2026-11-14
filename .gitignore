@@ -72,3 +72,6 @@ tmp/
 /video/renders/
 /video/.hyperframes/
 /video/node_modules/
+
+# ---- Claude orchestrator: per-session task board ----
+/.claude/orchestrator/
