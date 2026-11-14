@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { recordUsage } from "@/lib/admin/usage";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
@@ -19,6 +20,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!rateLimit(`tts:${ctx.customerRef}`, 30, 60_000)) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
+  await recordUsage("voice", "speak", ctx.locale);
   try {
     const speech = await synthesizeSpeech(parsed.data.text, ctx.locale);
     return new Response(speech.body, {

@@ -26,6 +26,8 @@ interface ChatPanelProps {
 
 const SUGGESTIONS: MessageKey[] = [
   "chat.suggest.where",
+  "chat.suggest.recommend",
+  "chat.suggest.goal",
   "chat.suggest.flow",
   "chat.suggest.taxi",
   "chat.suggest.safe",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { recordUsage } from "@/lib/admin/usage";
 import { AI_TERMS_VERSION, hasAiConsent, readConsent, setAiConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 
@@ -23,6 +24,7 @@ export async function POST(request: Request): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
   const record = await setAiConsent(ctx.customerRef, parsed.data.accepted);
+  await recordUsage("consent", parsed.data.accepted ? "accepted" : "withdrawn", ctx.locale);
   return Response.json({
     termsVersion: AI_TERMS_VERSION,
     accepted: hasAiConsent(record),

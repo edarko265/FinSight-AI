@@ -2,3 +2,7 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
   esbuild: true
+
+# Security: minimatch 7.0.0-11.0.0 has a denial-of-service advisory. Pulled in by lint tooling only.
+overrides:
+  "minimatch@>=7.0.0 <11.0.1": ^11.0.8

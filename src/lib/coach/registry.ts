@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { recommendTool } from "@/lib/coach/advice";
 import {
   balanceTool,
   basketsTool,
@@ -51,6 +52,7 @@ export const TOOL_SCHEMAS = {
   peers: z.object({ target: target.optional() }),
   profile: z.object({}),
   recurring: z.object({}),
+  recommend: z.object({}),
 } as const;
 
 export type ToolName = keyof typeof TOOL_SCHEMAS;
@@ -92,6 +94,8 @@ function execute<T extends ToolName>(ctx: CoachContext, tool: T, raw: unknown): 
       return profileTool(ctx);
     case "recurring":
       return recurringTool(ctx);
+    case "recommend":
+      return recommendTool(ctx);
     default:
       return fallbackResult(ctx);
   }

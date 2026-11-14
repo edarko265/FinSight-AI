@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { recordUsage } from "@/lib/admin/usage";
 import { answerQuestion } from "@/lib/coach/answer";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
@@ -24,8 +25,14 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
   const allowModel = hasAiConsent(await readConsent(ctx.customerRef));
-  const message = await answerQuestion(ctx, parsed.data.message, parsed.data.history ?? [], {
-    allowModel,
-  });
+  const { message, topic } = await answerQuestion(
+    ctx,
+    parsed.data.message,
+    parsed.data.history ?? [],
+    {
+      allowModel,
+    },
+  );
+  await recordUsage("question", topic, ctx.locale, message.mode ?? "basic");
   return Response.json(message);
 }

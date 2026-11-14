@@ -17,6 +17,7 @@ export async function GET(): Promise<Response> {
     profile: ctx.record.profile,
     consent: await readConsent(ctx.customerRef),
     dashboard: await readState(ctx.customerRef, "views"),
+    goals: await readState(ctx.customerRef, "goals"),
     readInsights: await readState(ctx.customerRef, "insights_read"),
     transactions: ctx.record.transactions.map((tx) => ({ ...tx, classification: classify(tx) })),
   };

@@ -1,3 +1,4 @@
+import { recordUsage } from "@/lib/admin/usage";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
@@ -20,6 +21,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!rateLimit(`stt:${ctx.customerRef}`, 20, 60_000)) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
+  await recordUsage("voice", "listen", ctx.locale);
   try {
     return Response.json({ text: await transcribeSpeech(audio, ctx.locale) });
   } catch (error) {

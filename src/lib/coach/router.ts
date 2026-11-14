@@ -44,6 +44,8 @@ const PATTERNS = {
     /kind of spender|what kind|spender|habit|pattern|millainen|kuluttaja|tottumu|vilken sorts|konsument|vanor|mönster/,
   peers:
     /compar|people my age|my age|average person|others|peers|benchmark|ikäis|vertaa|vertaudu|keskiver|muihin|jämför|jämnårig|genomsnitt|andra/,
+  recommend:
+    /recommend|advice|advise|suggest|tips?\b|improve|better with|what should i|suosit|neuvo|vinkk|paranta|mitä minun|rekommend|råd\b|tips|förbättra|vad borde/,
   recurring:
     /recurring|subscription|regular (bill|payment)|upcoming|coming up|bills?\b|salary|payday|lasku|säännölli|toistuva|tilauks|palkka|räkning|regelbund|prenumeration|lön/,
   baskets: /basket|mandatory|essential|kori|pakolli|välttämät|korg|obligatorisk|nödvändig/,
@@ -112,8 +114,35 @@ export function routeQuestion(ctx: CoachContext, question: string): ToolResult {
   if (PATTERNS.balance.test(text)) return runTool(ctx, "balance", {});
   if (PATTERNS.trend.test(text)) return runTool(ctx, "trend", { target });
   if (target) return runTool(ctx, "spending", { target, period });
+  if (PATTERNS.recommend.test(text)) return runTool(ctx, "recommend", {});
   if (PATTERNS.recurring.test(text)) return runTool(ctx, "recurring", {});
   if (PATTERNS.where.test(text) || PATTERNS.spend.test(text))
     return runTool(ctx, "spending", { period });
   return fallbackResult(ctx);
+}
+
+const GOAL_WORDS =
+  /\b(save|saving|goal|put aside|set aside)\b|säästä|säästö|tavoit|spara|sparmål|\bmål\b/;
+const AMOUNT = /(?:€\s*)?(\d[\d\s.,]*\d|\d)\s*(?:€|eur\w*|e\b)|€\s*(\d[\d\s.,]*\d|\d)/;
+
+/**
+ * Basic-mode reading of a savings goal from free text, e.g. "I want to save
+ * 1 200 € for a trip in 8 months". Returns "list" when goals are mentioned
+ * without an amount.
+ */
+export function detectGoal(
+  question: string,
+): { targetCents: number; months?: number } | "list" | null {
+  const text = question.toLowerCase();
+  if (!GOAL_WORDS.test(text) || /%|percent|prosent|procent/.test(text)) return null;
+  const amount = AMOUNT.exec(text);
+  const raw = (amount?.[1] ?? amount?.[2] ?? "").replace(/[\s.]/g, "").replace(",", ".");
+  const euros = Number(raw);
+  if (!amount || !Number.isFinite(euros) || euros <= 0) {
+    return /goal|tavoit|sparmål|\bmål\b/.test(text) ? "list" : null;
+  }
+  const span =
+    /(\d{1,3})\s*(month|kuukau|kk\b|mån)/.exec(text) ?? /(\d{1,2})\s*(year|vuo|år)/.exec(text);
+  const months = span ? Number(span[1]) * (/year|vuo|år/.test(span[2] ?? "") ? 12 : 1) : undefined;
+  return { targetCents: Math.round(euros * 100), months };
 }
