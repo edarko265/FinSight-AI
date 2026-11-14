@@ -144,6 +144,10 @@ All notable changes to this project are documented here. The format follows
 - Widget controls can be reached from the keyboard through an Edit widget button.
 - Each form dialog has its own title, so a screen reader no longer reads another form's name.
 
+- The voice call is offered wherever calls are possible. If the AI coach has not been agreed
+  to, starting a call asks for that first and then starts the call, instead of the option
+  not being shown.
+
 ### Security
 
 - **Benchmark download.** The script that fetches Statistics Finland's figures now writes only
