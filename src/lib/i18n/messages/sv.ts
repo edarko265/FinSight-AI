@@ -106,8 +106,10 @@ export const sv: Record<MessageKey, string> = {
   "dashboard.noChart":
     "Jag kunde inte göra ett diagram av det. Prova att nämna en kategori eller en tidsperiod.",
 
-  "chart.showValues": "Visa värden",
   "evidence.title": "Transaktionerna bakom svaret",
+  "chart.average": "Genomsnitt {amount}",
+  "chart.caption.columns":
+    "Senaste månaden är mörkare; den streckade linjen är månadsgenomsnittet, {average}.",
   "evidence.count": "{count} transaktioner",
   "evidence.empty": "Inga matchande transaktioner i den här datan och perioden.",
   "evidence.close": "Stäng",
@@ -510,7 +512,7 @@ export const sv: Record<MessageKey, string> = {
   "info.show": "Mer information",
   "info.hide": "Dölj information",
   "chart.help.bar":
-    "Varje stapel är en period. En högre stapel betyder mer pengar, och den mörka stapeln är den senaste. Beloppen finns i listan under diagrammet.",
+    "En längre eller högre stapel betyder mer pengar. Den mörkare stapeln är den största posten, eller den senaste månaden när staplarna är månader. Beloppen står utskrivna vid diagrammet.",
   "chart.help.hbar":
     "Varje rad är en post, och en längre stapel betyder mer pengar. Färgerna motsvarar listan under diagrammet.",
   "chart.help.line":

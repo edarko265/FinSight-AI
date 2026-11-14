@@ -26,6 +26,7 @@
   --chart-5: #91fa9b;
   --chart-ink: #ffffff;
   --chart-bar-muted: #b7d9c4;
+  --chart-rest: #4da07a;
 }
 
 /* Dark theme: follows the system unless the user picks a theme in Settings. */
@@ -49,6 +50,7 @@
     --chart-5: #91fa9b;
     --chart-ink: #04291a;
     --chart-bar-muted: #2c5a43;
+    --chart-rest: #348259;
   }
 }
 
@@ -71,6 +73,7 @@
   --chart-5: #91fa9b;
   --chart-ink: #04291a;
   --chart-bar-muted: #2c5a43;
+  --chart-rest: #348259;
 }
 
 @theme inline {

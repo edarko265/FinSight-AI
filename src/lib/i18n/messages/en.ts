@@ -110,7 +110,9 @@ export const en = {
   "dashboard.noChart": "I could not make a chart from that. Try naming a category or a time span.",
 
   // Evidence sheet
-  "chart.showValues": "Show values",
+  "chart.average": "Average {amount}",
+  "chart.caption.columns":
+    "Latest month in the darker colour; dashed line is the monthly average, {average}.",
   "evidence.title": "Transactions behind this answer",
   "evidence.count": "{count} transactions",
   "evidence.empty": "No matching transactions in this data and period.",
@@ -520,7 +522,7 @@ export const en = {
   "info.show": "More information",
   "info.hide": "Hide information",
   "chart.help.bar":
-    "Each bar is one period. A taller bar means more money, and the dark bar is the latest. The amounts are listed under the chart.",
+    "A longer or taller bar means more money. The darker bar is the largest item, or the latest month when the bars are months. The amounts are written out with the chart.",
   "chart.help.hbar":
     "Each row is one item, and a longer bar means more money. The colours match the list under the chart.",
   "chart.help.line":

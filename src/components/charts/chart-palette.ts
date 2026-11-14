@@ -7,6 +7,15 @@ export const CHART_COLORS: readonly string[] = [
   "var(--chart-5)",
 ];
 
+/** The one item that matters: the largest row, or the latest month. */
+export const CHART_EMPHASIS = "var(--chart-1)";
+/**
+ * The rest of the items: calmer than the emphasis, set per theme in globals.css (--chart-rest).
+ * Measured against the card: light #4da07a on #fff 3.17:1 (emphasis 5.58:1); dark #348259 on
+ * #14261c 3.39:1 (emphasis #4cc486 7.21:1). Both clear the 3:1 minimum for graphics.
+ */
+export const CHART_REST = "var(--chart-rest)";
+
 export function chartColor(index: number): string {
   return CHART_COLORS[index % CHART_COLORS.length] ?? "var(--chart-1)";
 }
