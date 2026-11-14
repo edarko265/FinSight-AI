@@ -26,7 +26,6 @@ export interface AppSettings {
       "under_average" | "choice_down" | "buffer" | "surplus_streak" | "investing" | "goal",
       number
     >;
-    couponUnlockAt: Record<"coffee" | "groceries" | "voucher", number>;
   };
 }
 
@@ -39,7 +38,6 @@ const RULES = [
   "investing",
   "goal",
 ] as const;
-const COUPONS = ["coffee", "groceries", "voucher"] as const;
 type Editing = "fee" | "limit" | "rules" | "provider" | null;
 
 /** What staff can change without a deploy: feature switches, the adviser fee, the AI budget and reward rules. */
@@ -208,9 +206,6 @@ export function AdminControls({
           <span className="text-xs text-muted">
             {t("admin.rules.summary", {
               count: RULES.length,
-              a: settings.rewards.couponUnlockAt.coffee,
-              b: settings.rewards.couponUnlockAt.groceries,
-              c: settings.rewards.couponUnlockAt.voucher,
             })}
           </span>
         </span>
@@ -398,26 +393,6 @@ export function AdminControls({
             ),
           },
           {
-            title: t("admin.rules.coupons"),
-            hint: t("admin.rules.couponsHint"),
-            valid: true,
-            content: (
-              <div className="flex flex-col gap-3">
-                {COUPONS.map((coupon) =>
-                  numberField(
-                    rules.couponUnlockAt[coupon],
-                    (next) =>
-                      setRules({
-                        ...rules,
-                        couponUnlockAt: { ...rules.couponUnlockAt, [coupon]: next },
-                      }),
-                    t(`reward.coupon.${coupon}.title` as MessageKey),
-                  ),
-                )}
-              </div>
-            ),
-          },
-          {
             title: t("wizard.review"),
             hint: t("wizard.reviewHint"),
             valid: true,
@@ -427,10 +402,6 @@ export function AdminControls({
                   ...RULES.map((rule) => ({
                     label: t(`admin.rule.${rule}` as MessageKey),
                     value: String(rules.points[rule]),
-                  })),
-                  ...COUPONS.map((coupon) => ({
-                    label: t(`reward.coupon.${coupon}.title` as MessageKey),
-                    value: String(rules.couponUnlockAt[coupon]),
                   })),
                 ]}
               />

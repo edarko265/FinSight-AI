@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_SETTINGS, settingsSchema } from "@/lib/admin/settings";
 import { themeOf } from "@/lib/admin/themes";
 import { classify, classifyByRules } from "@/lib/analytics/classify";
+import { lastCompletedMonth } from "@/lib/analytics/periods";
+import { cashFlow } from "@/lib/analytics/spending";
 import {
   detectRegularBills,
   detectRegularBillsUnadjusted,
@@ -13,6 +16,7 @@ import { generateLinked, mergeAccounts, type LinkedAccount } from "@/lib/data/li
 import {
   buildRewards,
   DEFAULT_REWARD_RULES,
+  monthlyRoom,
   planGoal,
   safeToSave,
   type Goal,
@@ -272,6 +276,51 @@ describe("rewards", () => {
     const none = buildRewards(ctx, 0);
     expect(none.achievements.find((item) => item.id === "goal")?.earned).toBe(false);
     expect(none.achievements.find((item) => item.id === "buffer")?.earned).toBe(true);
+  });
+});
+
+describe("voucher ladder in rewards", () => {
+  it("is built for the last completed month from income and consumption", () => {
+    const { vouchers } = buildRewards(ctx, 0);
+    const flow = cashFlow(ctx.record.transactions, lastCompletedMonth(ctx.asOf));
+    expect(vouchers.month).toBe("2026-08");
+    expect(vouchers.savedCents).toBe(
+      flow.salaryCents + flow.otherIncomeCents - flow.consumptionCents,
+    );
+    expect(vouchers.incomeCents).toBe(monthlyRoom(ctx).incomeCents);
+    expect(Number.isInteger(vouchers.incomeCents)).toBe(true);
+    expect(vouchers.available).toBe(true);
+    expect(vouchers.source.id).toBe("statfin-15ac");
+    expect(vouchers.selected).toBeNull();
+    expect("coupons" in buildRewards(ctx, 0)).toBe(false);
+  });
+
+  it("honours a pick for the evaluated month and ignores one for another month", () => {
+    const free = buildRewards(ctx, 0).vouchers;
+    const unlocked = free.tiers.find((tier) => tier.unlocked);
+    expect(unlocked).toBeDefined();
+    const option = unlocked?.options[0];
+    const pick = { month: "2026-08", tierId: unlocked!.id, optionId: option!.id };
+    const picked = buildRewards(ctx, 0, DEFAULT_REWARD_RULES, pick).vouchers;
+    expect(picked.selected).toEqual(pick);
+    expect(picked.selectedValid).toBe(true);
+    const stale = buildRewards(ctx, 0, DEFAULT_REWARD_RULES, { ...pick, month: "2026-07" });
+    expect(stale.vouchers.selected).toBeNull();
+  });
+});
+
+describe("settings", () => {
+  it("still parses a stored document that has the removed coupon thresholds", () => {
+    const legacy = {
+      ...DEFAULT_SETTINGS,
+      rewards: {
+        ...DEFAULT_SETTINGS.rewards,
+        couponUnlockAt: { coffee: 100, groceries: 200, voucher: 350 },
+      },
+    };
+    const parsed = settingsSchema.safeParse(legacy);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && "couponUnlockAt" in parsed.data.rewards).toBe(false);
   });
 });
 

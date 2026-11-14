@@ -156,13 +156,13 @@ Changes apply within a few seconds, with no deploy, and each is written to the a
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | **AI coach**       | Off: every customer gets basic mode and nothing is sent to an AI service                                          |
 | **Voice**          | Spoken questions, spoken answers and voice calls                                                                  |
-| **Rewards**        | Points, levels and coupons on the Goals page                                                                      |
+| **Rewards**        | Points, levels and the voucher ladder on the Goals page                                                           |
 | **Human adviser**  | Lets customers request an adviser                                                                                 |
 | **Shared plans**   | Lets customers share plans as percentages and copy each other's                                                   |
 | **AI provider**    | Automatic, OpenAI or Google Gemini. A provider with no key configured cannot be chosen                            |
 | **Adviser fee**    | Price of an adviser conversation after a customer's first, which is always free                                   |
 | **Daily AI limit** | AI answers per day across all customers. Once reached, the coach uses basic mode until midnight. 0 means no limit |
-| **Reward rules**   | Points for each achievement, and the points at which each coupon unlocks                                          |
+| **Reward rules**   | Points for each achievement                                                                                       |
 
 ### System _(administrators)_
 
