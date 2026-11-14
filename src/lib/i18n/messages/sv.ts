@@ -719,6 +719,18 @@ export const sv: Record<MessageKey, string> = {
   "admin.audit.adviser_request.trash": "Rådgivarförfrågan flyttad till papperskorgen",
   "admin.audit.adviser_request.restore": "Rådgivarförfrågan återställd",
   "admin.audit.adviser_request.purge": "Rådgivarförfrågan raderad permanent",
+  "admin.provider": "AI-leverantör",
+  "admin.provider.current": "Svarar nu: {model}",
+  "admin.provider.change": "Byt leverantör",
+  "admin.provider.step": "Vilken AI ska svara?",
+  "admin.provider.stepHint":
+    "Välj leverantören som coachen använder för alla kunder. Ändringen gäller inom några sekunder. En leverantör utan nyckel kan inte väljas.",
+  "admin.provider.auto": "Automatisk",
+  "admin.provider.autoNote": "Använd den som är satt i serverkonfigurationen",
+  "admin.provider.openai": "OpenAI",
+  "admin.provider.gemini": "Google Gemini",
+  "admin.provider.ready": "Nyckel konfigurerad",
+  "admin.provider.noKey": "Ingen nyckel konfigurerad",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
   "coach.statfin.title": "Du och hushållen i Finland",

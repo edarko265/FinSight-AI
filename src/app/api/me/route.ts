@@ -8,11 +8,11 @@ export async function GET(): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
   const env = getEnv();
-  const { features } = await getSettings();
+  const { features, aiProvider } = await getSettings();
   return Response.json({
     customerId: ctx.record.profile.customerId,
     asOf: ctx.asOf,
-    aiEnabled: features.ai && getCoachModel() !== null,
+    aiEnabled: features.ai && getCoachModel(aiProvider) !== null,
     aiConsent: hasAiConsent(await readConsent(ctx.customerRef)),
     voiceEnabled: features.voice && Boolean(env.ELEVENLABS_API_KEY),
     voiceAgentEnabled: features.voice && Boolean(env.ELEVENLABS_API_KEY && env.ELEVENLABS_AGENT_ID),

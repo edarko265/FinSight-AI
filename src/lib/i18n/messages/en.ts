@@ -729,6 +729,18 @@ export const en = {
   "admin.audit.adviser_request.trash": "Adviser request moved to the bin",
   "admin.audit.adviser_request.restore": "Adviser request restored",
   "admin.audit.adviser_request.purge": "Adviser request deleted permanently",
+  "admin.provider": "AI provider",
+  "admin.provider.current": "Answering now: {model}",
+  "admin.provider.change": "Change provider",
+  "admin.provider.step": "Which AI should answer?",
+  "admin.provider.stepHint":
+    "Pick the provider the coach uses for every customer. The change applies within a few seconds. A provider without a key cannot be chosen.",
+  "admin.provider.auto": "Automatic",
+  "admin.provider.autoNote": "Use the one set in the server configuration",
+  "admin.provider.openai": "OpenAI",
+  "admin.provider.gemini": "Google Gemini",
+  "admin.provider.ready": "Key configured",
+  "admin.provider.noKey": "No key configured",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
   "coach.statfin.title": "You and households in Finland",

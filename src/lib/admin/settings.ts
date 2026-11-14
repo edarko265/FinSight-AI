@@ -29,6 +29,8 @@ export const settingsSchema = z.object({
     rewards: z.boolean(),
     advisor: z.boolean(),
   }),
+  /** Which AI provider answers. "auto" follows the AI_PROVIDER environment variable. */
+  aiProvider: z.enum(["auto", "openai", "gemini"]),
   /** Price of an adviser conversation after the first, which is free. */
   advisorFeeCents: z.number().int().min(0).max(100_000),
   /** AI answers per day across all customers; beyond it the coach uses basic mode. 0 means no limit. */
@@ -50,6 +52,7 @@ export type AppSettings = z.infer<typeof settingsSchema>;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   features: { ai: true, voice: true, rewards: true, advisor: true },
+  aiProvider: "auto",
   advisorFeeCents: 1900,
   aiDailyRequestLimit: 2000,
   rewards: {

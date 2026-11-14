@@ -4,11 +4,20 @@ import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
-import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
+import {
+  Suggestions,
+  Wizard,
+  WizardChoices,
+  WizardField,
+  WizardReview,
+} from "@/components/ui/Wizard";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
+export type ProviderChoice = "auto" | "openai" | "gemini";
+
 export interface AppSettings {
+  aiProvider: ProviderChoice;
   features: { ai: boolean; voice: boolean; rewards: boolean; advisor: boolean };
   advisorFeeCents: number;
   aiDailyRequestLimit: number;
@@ -31,16 +40,22 @@ const RULES = [
   "goal",
 ] as const;
 const COUPONS = ["coffee", "groceries", "voucher"] as const;
-type Editing = "fee" | "limit" | "rules" | null;
+type Editing = "fee" | "limit" | "rules" | "provider" | null;
 
 /** What staff can change without a deploy: feature switches, the adviser fee, the AI budget and reward rules. */
 export function AdminControls({
   settings,
   requestsToday,
+  model,
+  providers,
   onSaved,
 }: {
   settings: AppSettings;
   requestsToday: number;
+  /** The model answering right now, or null when AI is off. */
+  model: string | null;
+  /** Providers that have a key configured. */
+  providers: string[];
   onSaved: (next: AppSettings) => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
@@ -49,6 +64,7 @@ export function AdminControls({
   const [fee, setFee] = useState("");
   const [limit, setLimit] = useState("");
   const [rules, setRules] = useState(settings.rewards);
+  const [provider, setProvider] = useState<ProviderChoice>(settings.aiProvider);
 
   async function save(next: AppSettings): Promise<void> {
     const response = await fetch("/api/admin/settings", {
@@ -126,6 +142,25 @@ export function AdminControls({
 
       <div className={row}>
         <span className="flex flex-col">
+          <span className="font-semibold">{t("admin.provider")}</span>
+          <span className="text-xs text-muted">
+            {model ? t("admin.provider.current", { model }) : t("admin.ai.off")}
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setProvider(settings.aiProvider);
+            setEditing("provider");
+          }}
+          className={link}
+        >
+          {t("admin.provider.change")}
+        </button>
+      </div>
+
+      <div className={row}>
+        <span className="flex flex-col">
           <span className="font-semibold">{t("admin.fee")}</span>
           <span className="text-xs text-muted">
             {t("admin.fee.value", { fee: formatMoney(settings.advisorFeeCents, locale) })}
@@ -190,6 +225,57 @@ export function AdminControls({
           {t("admin.rules.change")}
         </button>
       </div>
+
+      <Wizard
+        open={editing === "provider"}
+        title={t("admin.provider")}
+        finishLabel={t("common.save")}
+        onClose={() => setEditing(null)}
+        onFinish={() => save({ ...settings, aiProvider: provider })}
+        steps={[
+          {
+            title: t("admin.provider.step"),
+            hint: t("admin.provider.stepHint"),
+            valid: provider === "auto" || providers.includes(provider),
+            content: (
+              <WizardChoices
+                name="ai-provider"
+                value={provider}
+                onChange={setProvider}
+                options={[
+                  {
+                    value: "auto" as const,
+                    label: t("admin.provider.auto"),
+                    note: t("admin.provider.autoNote"),
+                  },
+                  ...(["openai", "gemini"] as const).map((name) => ({
+                    value: name,
+                    label: t(`admin.provider.${name}` as MessageKey),
+                    note: t(
+                      providers.includes(name) ? "admin.provider.ready" : "admin.provider.noKey",
+                    ),
+                  })),
+                ]}
+              />
+            ),
+          },
+          {
+            title: t("wizard.review"),
+            hint: t("wizard.reviewHint"),
+            valid: provider === "auto" || providers.includes(provider),
+            content: (
+              <WizardReview
+                rows={[
+                  {
+                    label: t("admin.provider"),
+                    value: t(`admin.provider.${provider}` as MessageKey),
+                  },
+                ]}
+              />
+            ),
+          },
+        ]}
+      />
 
       <Wizard
         open={editing === "fee"}

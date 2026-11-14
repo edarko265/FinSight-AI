@@ -720,6 +720,18 @@ export const fi: Record<MessageKey, string> = {
   "admin.audit.adviser_request.trash": "Neuvojapyyntö siirretty roskakoriin",
   "admin.audit.adviser_request.restore": "Neuvojapyyntö palautettu",
   "admin.audit.adviser_request.purge": "Neuvojapyyntö poistettu pysyvästi",
+  "admin.provider": "Tekoälypalvelu",
+  "admin.provider.current": "Vastaa nyt: {model}",
+  "admin.provider.change": "Vaihda palvelua",
+  "admin.provider.step": "Mikä tekoäly vastaa?",
+  "admin.provider.stepHint":
+    "Valitse palvelu, jota valmentaja käyttää kaikille asiakkaille. Muutos tulee voimaan muutamassa sekunnissa. Palvelua ilman avainta ei voi valita.",
+  "admin.provider.auto": "Automaattinen",
+  "admin.provider.autoNote": "Käytä palvelimen asetuksissa määritettyä",
+  "admin.provider.openai": "OpenAI",
+  "admin.provider.gemini": "Google Gemini",
+  "admin.provider.ready": "Avain määritetty",
+  "admin.provider.noKey": "Avainta ei ole määritetty",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
   "coach.statfin.title": "Sinä ja suomalaiset kotitaloudet",

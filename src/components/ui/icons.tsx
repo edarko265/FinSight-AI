@@ -99,17 +99,18 @@ export const PlusIcon = (p: IconProps): React.JSX.Element => (
   </Svg>
 );
 
-/** The FinSight mark: a rising bar chart inside a speech bubble. */
+/** The FinSight mark: rising bars inside a speech bubble. Matches the app icon. */
 export function Logo({ className = "size-9" }: { className?: string }): React.JSX.Element {
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+    <svg viewBox="0 0 512 512" className={className} aria-hidden="true">
+      <rect width="512" height="512" rx="112" fill="#004628" />
       <path
-        d="M8 6h32a6 6 0 016 6v20a6 6 0 01-6 6H22l-10 8v-8H8a6 6 0 01-6-6V12a6 6 0 016-6z"
-        fill="#004628"
+        d="M112 132h288a40 40 0 0 1 40 40v152a40 40 0 0 1-40 40H250l-82 62v-62h-56a40 40 0 0 1-40-40V172a40 40 0 0 1 40-40z"
+        fill="#0a5a36"
       />
-      <rect x="12" y="23" width="5" height="9" rx="1.5" fill="#91fa9b" />
-      <rect x="21.5" y="17" width="5" height="15" rx="1.5" fill="#91fa9b" />
-      <rect x="31" y="11" width="5" height="21" rx="1.5" fill="#91fa9b" />
+      <rect x="140" y="252" width="52" height="76" rx="14" fill="#91fa9b" />
+      <rect x="230" y="206" width="52" height="122" rx="14" fill="#91fa9b" />
+      <rect x="320" y="160" width="52" height="168" rx="14" fill="#91fa9b" />
     </svg>
   );
 }

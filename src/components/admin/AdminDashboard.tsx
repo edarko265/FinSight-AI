@@ -23,7 +23,7 @@ interface AdminPayload {
     asOf: string;
     database: "postgres" | "embedded";
     encryption: { algorithm: string; keyId: string };
-    ai: { enabled: boolean; model: string | null };
+    ai: { enabled: boolean; model: string | null; available: string[] };
     voice: boolean;
     spendingByAge: { ageBand: string; groupSize: number; medianCents: number }[];
   };
@@ -123,6 +123,7 @@ export function AdminDashboard(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const router = useRouter();
   const [data, setData] = useState<AdminPayload | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,7 +140,7 @@ export function AdminDashboard(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, reload]);
 
   async function signOut(): Promise<void> {
     await fetch("/api/admin/logout", { method: "POST", credentials: "same-origin" }).catch(
@@ -205,7 +206,12 @@ export function AdminDashboard(): React.JSX.Element {
             <AdminControls
               settings={data.settings}
               requestsToday={data.ai.requestsToday}
-              onSaved={(settings) => setData({ ...data, settings })}
+              model={system.ai.enabled ? system.ai.model : null}
+              providers={system.ai.available}
+              onSaved={(settings) => {
+                setData({ ...data, settings });
+                setReload((value) => value + 1);
+              }}
             />
           </Panel>
 

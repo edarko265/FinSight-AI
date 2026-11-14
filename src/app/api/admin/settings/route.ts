@@ -14,6 +14,7 @@ function describe(before: AppSettings, after: AppSettings): string {
     if (before.features[key] !== after.features[key])
       changes.push(`${key} ${after.features[key] ? "on" : "off"}`);
   }
+  if (before.aiProvider !== after.aiProvider) changes.push(`AI provider ${after.aiProvider}`);
   if (before.advisorFeeCents !== after.advisorFeeCents) {
     changes.push(`adviser fee ${(after.advisorFeeCents / 100).toFixed(2)} EUR`);
   }

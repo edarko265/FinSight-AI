@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getCoachModel } from "@/lib/coach/llm";
+import { getSettings } from "@/lib/admin/settings";
+import { availableProviders, getCoachModel } from "@/lib/coach/llm";
 import { AI_TERMS_VERSION } from "@/lib/coach/consent";
 import { getDb } from "@/lib/db/client";
 import { getEnv } from "@/lib/env";
@@ -15,7 +16,7 @@ export interface SystemStatus {
   asOf: string;
   database: "postgres" | "embedded";
   encryption: { algorithm: string; keyId: string; perCustomerKeys: boolean };
-  ai: { enabled: boolean; model: string | null; termsVersion: string };
+  ai: { enabled: boolean; model: string | null; termsVersion: string; available: string[] };
   voice: boolean;
   /** Typical monthly spending by age group, from the anonymous benchmarks. */
   spendingByAge: { ageBand: string; groupSize: number; medianCents: number }[];
@@ -52,7 +53,7 @@ export async function systemStatus(): Promise<SystemStatus> {
   const groups = (
     await db.query<{ n: number | string }>("SELECT count(*) AS n FROM peer_benchmarks")
   )[0];
-  const model = getCoachModel();
+  const model = getCoachModel((await getSettings()).aiProvider);
   return {
     customers: Number(customers?.n ?? 0),
     transactions: Number(ingestion?.row_count ?? 0),
@@ -67,7 +68,12 @@ export async function systemStatus(): Promise<SystemStatus> {
       keyId: env.DATA_ENCRYPTION_KEY_ID,
       perCustomerKeys: true,
     },
-    ai: { enabled: model !== null, model: model?.name ?? null, termsVersion: AI_TERMS_VERSION },
+    ai: {
+      enabled: model !== null,
+      model: model?.name ?? null,
+      termsVersion: AI_TERMS_VERSION,
+      available: availableProviders(),
+    },
     voice: Boolean(env.ELEVENLABS_API_KEY),
     spendingByAge: benchmarks
       .filter((row) => row.age_band !== "all")

@@ -16,21 +16,41 @@ import { LOCALE_INFO } from "@/lib/i18n/config";
 
 const DEFAULT_MODELS = { openai: "gpt-6.1-terra", gemini: "gemini-flash-latest" } as const;
 
-/** The configured model, or null when AI is off or has no key. Provider is chosen by AI_PROVIDER. */
-export function getCoachModel(): { model: LanguageModel; name: string } | null {
+export type AiProvider = "openai" | "gemini";
+
+/** Which providers have a key configured. */
+export function availableProviders(): AiProvider[] {
+  const env = getEnv();
+  const list: AiProvider[] = [];
+  if (env.OPENAI_API_KEY) list.push("openai");
+  if (env.GEMINI_API_KEY) list.push("gemini");
+  return list;
+}
+
+/**
+ * The model that answers, or null when AI is off or has no key. The provider is
+ * the one chosen in the admin area, else AI_PROVIDER; if that one has no key the
+ * other is used.
+ */
+export function getCoachModel(
+  preferred?: AiProvider | "auto",
+): { model: LanguageModel; name: string; provider: AiProvider } | null {
   const env = getEnv();
   if (!env.AI_PROCESSING_ALLOWED) return null;
-  if (env.AI_PROVIDER === "gemini" && env.GEMINI_API_KEY) {
+  const available = availableProviders();
+  const wanted = preferred && preferred !== "auto" ? preferred : env.AI_PROVIDER;
+  const provider = available.includes(wanted) ? wanted : available[0];
+  if (provider === "gemini" && env.GEMINI_API_KEY) {
     const name = env.GEMINI_MODEL ?? DEFAULT_MODELS.gemini;
-    return { model: createGoogleGenerativeAI({ apiKey: env.GEMINI_API_KEY })(name), name };
+    return {
+      model: createGoogleGenerativeAI({ apiKey: env.GEMINI_API_KEY })(name),
+      name,
+      provider,
+    };
   }
-  if (env.OPENAI_API_KEY) {
+  if (provider === "openai" && env.OPENAI_API_KEY) {
     const name = env.OPENAI_MODEL ?? DEFAULT_MODELS.openai;
-    return { model: createOpenAI({ apiKey: env.OPENAI_API_KEY })(name), name };
-  }
-  if (env.GEMINI_API_KEY) {
-    const name = env.GEMINI_MODEL ?? DEFAULT_MODELS.gemini;
-    return { model: createGoogleGenerativeAI({ apiKey: env.GEMINI_API_KEY })(name), name };
+    return { model: createOpenAI({ apiKey: env.OPENAI_API_KEY })(name), name, provider };
   }
   return null;
 }
@@ -205,10 +225,10 @@ export async function askModel(
   question: string,
   history: { role: "user" | "assistant"; text: string }[],
 ): Promise<LlmAnswer | null> {
-  const coach = getCoachModel();
-  if (!coach) return null;
   const settings = await getSettings();
   if (!settings.features.ai) return null;
+  const coach = getCoachModel(settings.aiProvider);
+  if (!coach) return null;
   if (
     settings.aiDailyRequestLimit > 0 &&
     (await aiRequestsToday()) >= settings.aiDailyRequestLimit

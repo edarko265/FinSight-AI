@@ -24,12 +24,16 @@ export const metadata: Metadata = {
   title: "FinSight-AI",
   description:
     "An explainable financial coach: understand your money, protect what matters, explore what you can change.",
+  applicationName: "FinSight-AI",
+  appleWebApp: { capable: true, title: "FinSight", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#004628",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">): React.JSX.Element {
