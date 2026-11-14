@@ -98,6 +98,10 @@ and the voice agent all run them through the same two functions, `runTool` and `
 | `recurring`     | Regular bills and the usual income pattern                                 | Bars                  |
 | `recommend`     | Ranked suggestions with a monthly value                                    | Bars                  |
 | `plan`          | The month as five slices of income, in percentages                         | Pie                   |
+| `subscriptions` | Payments that repeat monthly at one merchant, with the yearly cost         | Rows                  |
+| `accounts`      | Each account's balance, linked (simulated) ones included                   | Table                 |
+| `safe_to_save`  | What could be set aside with the next month covered; tests an amount       | Split bar             |
+| `mortgage`      | The customer's own mortgage application, for teaching                      | Split bar             |
 | goals           | Save a goal, plan how to fund it ([`goals.ts`](../src/lib/coach/goals.ts)) | Bars                  |
 
 A dashboard widget is a stored `{ tool, input, chart }`. It is re-run whenever it is shown,
@@ -172,6 +176,10 @@ Routes marked 🔒 also require the terms to be accepted.
 | 🔒 `/api/advisor`, `/api/advisor/messages`                | GET, POST                | Request an adviser; write to them                                                                              |
 | 🔒 `/api/voice/stt`, `/api/voice/tts`, `/api/voice/agent` | POST, POST, GET          | Speech in, speech out, start a call                                                                            |
 | `/api/privacy/export`, `/api/privacy/erase`               | GET, POST                | Download or delete the customer's data                                                                         |
+| 🔒 `/api/accounts`                                        | GET, POST                | Accounts: link (simulated), rename, include, unlink                                                            |
+| 🔒 `/api/corrections`                                     | GET, POST                | Basket corrections and bill adjustments, with undo                                                             |
+| 🔒 `/api/goals/set-aside`                                 | POST, DELETE             | Mark money as set aside for a goal; take it back                                                               |
+| 🔒 `/api/mortgage`                                        | GET                      | Mortgage guide figures and the customer's own application                                                      |
 | 🔒 `/api/plans`                                           | GET, POST                | Plans: make, edit, share by code, copy, preview                                                                |
 | 🔒 `/api/push`                                            | GET, POST, DELETE        | Device notification subscriptions                                                                              |
 | `/api/cron/reminders`                                     | GET                      | The daily reminder job (needs `CRON_SECRET`)                                                                   |
@@ -195,7 +203,8 @@ Routes marked 🔒 also require the terms to be accepted.
 
 - **Demo sign-in.** Customer ID plus one shared password. A real deployment replaces it with
   the bank's authentication.
-- **One account per customer**, as in the dataset.
+- **One real account per customer**, as in the dataset. Accounts at other banks are a
+  labelled simulation; a real connection would replace the generator behind the same merge.
 - **The demo clock is fixed** by `DEMO_AS_OF_DATE`.
 - **Adviser chat polls** every few seconds instead of using a socket.
 - **Conversations are not stored.** The last few turns are sent with each question from the

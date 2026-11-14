@@ -31,6 +31,8 @@ export interface RegularBill {
   /** Typical day of the month for a once-a-month bill; null when it is spread over the month. */
   typicalDay: number | null;
   nextExpectedDate: string | null;
+  /** True when the customer changed the amount or the day. */
+  adjusted: boolean;
 }
 
 const LOOKBACK_MONTHS = 6;
@@ -76,6 +78,27 @@ export function detectIncome(transactions: readonly Transaction[], asOf: string)
   };
 }
 
+/** What the customer has told us about a regular bill: its real amount, its day, or that it is not regular. */
+export interface BillAdjustment {
+  cents?: number;
+  day?: number;
+  skip?: boolean;
+}
+
+/**
+ * Adjustments travel with the transaction list they belong to, so every
+ * calculation that looks for regular bills sees them without each caller
+ * having to pass them along.
+ */
+const ADJUSTMENTS = new WeakMap<readonly Transaction[], Record<string, BillAdjustment>>();
+
+export function setBillAdjustments(
+  transactions: readonly Transaction[],
+  adjustments: Record<string, BillAdjustment>,
+): void {
+  ADJUSTMENTS.set(transactions, adjustments);
+}
+
 /** Regular commitments by category, from the completed months before the as-of date. */
 export function detectRegularBills(
   transactions: readonly Transaction[],
@@ -119,7 +142,111 @@ export function detectRegularBills(
       typicalMonthlyCents: median(totals),
       typicalDay,
       nextExpectedDate,
+      adjusted: false,
     });
   }
-  return bills.sort((a, b) => b.typicalMonthlyCents - a.typicalMonthlyCents);
+  const adjustments = ADJUSTMENTS.get(transactions) ?? {};
+  return bills
+    .filter((bill) => !adjustments[bill.category]?.skip)
+    .map((bill) => {
+      const change = adjustments[bill.category];
+      if (!change || (change.cents === undefined && change.day === undefined)) return bill;
+      const day = change.day ?? bill.typicalDay;
+      return {
+        ...bill,
+        typicalMonthlyCents: change.cents ?? bill.typicalMonthlyCents,
+        typicalDay: day,
+        nextExpectedDate:
+          change.day !== undefined && day !== null
+            ? nextOccurrence(day, addDays(asOf, -1))
+            : bill.nextExpectedDate,
+        adjusted: true,
+      };
+    })
+    .sort((a, b) => b.typicalMonthlyCents - a.typicalMonthlyCents);
+}
+
+/** Regular bills exactly as the history suggests them, before the customer's adjustments. */
+export function detectRegularBillsUnadjusted(
+  transactions: readonly Transaction[],
+  asOf: string,
+): RegularBill[] {
+  return detectRegularBills([...transactions], asOf);
+}
+
+export interface Subscription {
+  merchantId: string;
+  category: string;
+  mcc: string | null;
+  /** Linked account it is paid from, if not the bank's own. */
+  account?: string;
+  monthsObserved: number;
+  typicalCents: number;
+  typicalDay: number;
+  nextExpectedDate: string;
+}
+
+const SUBSCRIPTION_MONTHS = 6;
+/** Payments to one merchant count as a subscription when their amounts differ by no more than this. */
+const SUBSCRIPTION_TOLERANCE = 0.1;
+
+/**
+ * Subscription-like payments: the same merchant, about once a month, for about
+ * the same amount, in at least three of the last six full months. The data has
+ * no payee names, so a subscription is known only by its merchant number and
+ * the kind of merchant; it is a suggestion, not a fact.
+ */
+export function detectSubscriptions(
+  transactions: readonly Transaction[],
+  asOf: string,
+): Subscription[] {
+  const months = completedMonths(asOf, SUBSCRIPTION_MONTHS);
+  const start = months[0]?.startInclusive ?? asOf;
+  const byMerchant = new Map<string, Transaction[]>();
+  for (const tx of transactions) {
+    if (!tx.merchantId || flowOf(tx) !== "consumption" || tx.date < start || tx.date > asOf)
+      continue;
+    const key = `${tx.account ?? "main"}|${tx.merchantId}`;
+    const list = byMerchant.get(key) ?? [];
+    list.push(tx);
+    byMerchant.set(key, list);
+  }
+  const found: Subscription[] = [];
+  for (const list of byMerchant.values()) {
+    const amounts: number[] = [];
+    const days: number[] = [];
+    let regular = true;
+    for (const month of months) {
+      const inMonth = list.filter((tx) => inPeriod(tx.date, month));
+      if (inMonth.length === 0) continue;
+      // More than one payment in a month is shopping, not a subscription.
+      if (inMonth.length > 1) {
+        regular = false;
+        break;
+      }
+      const tx = inMonth[0];
+      if (!tx) continue;
+      amounts.push(-tx.amountCents);
+      days.push(parts(tx.date).day);
+    }
+    if (!regular || amounts.length < 3) continue;
+    const typical = median(amounts);
+    if (typical <= 0) continue;
+    const spread = (Math.max(...amounts) - Math.min(...amounts)) / typical;
+    if (spread > SUBSCRIPTION_TOLERANCE) continue;
+    const first = list[0];
+    if (!first?.merchantId) continue;
+    const day = median(days);
+    found.push({
+      merchantId: first.merchantId,
+      category: first.category,
+      mcc: first.mcc,
+      account: first.account,
+      monthsObserved: amounts.length,
+      typicalCents: typical,
+      typicalDay: day,
+      nextExpectedDate: nextOccurrence(day, asOf),
+    });
+  }
+  return found.sort((a, b) => b.typicalCents - a.typicalCents);
 }

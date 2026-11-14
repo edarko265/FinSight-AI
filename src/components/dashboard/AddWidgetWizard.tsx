@@ -29,6 +29,9 @@ const CHARTS = [
   { tool: "peers", target: "optional" },
   { tool: "what_if", target: "required" },
   { tool: "recommend", target: "none" },
+  { tool: "subscriptions", target: "none" },
+  { tool: "accounts", target: "none" },
+  { tool: "safe_to_save", target: "none" },
 ] as const;
 type ChartTool = (typeof CHARTS)[number]["tool"];
 

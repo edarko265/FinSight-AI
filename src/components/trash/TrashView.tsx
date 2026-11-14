@@ -5,12 +5,12 @@ import { useEffect, useState } from "react";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { api } from "@/lib/api-client";
-import { formatDay } from "@/lib/i18n/config";
+import { formatDay, formatMoney } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
 interface TrashEntry {
   id: string;
-  kind: "goal" | "plan" | "view" | "widget";
+  kind: "goal" | "plan" | "account" | "setaside" | "view" | "widget";
   label: string;
   deletedAt: string;
 }
@@ -51,7 +51,12 @@ export function TrashView(): React.JSX.Element {
   /** Built-in views and widgets are stored by key; show their translated names. */
   const label = (item: TrashEntry): string => {
     const key = item.kind === "view" ? `views.preset.${item.label}` : `admin.topic.${item.label}`;
-    return item.kind !== "goal" && item.kind !== "plan" && hasMessage(key) ? t(key) : item.label;
+    if (item.kind === "setaside") return formatMoney(Number(item.label), locale);
+    return item.kind === "view" || item.kind === "widget"
+      ? hasMessage(key)
+        ? t(key)
+        : item.label
+      : item.label;
   };
 
   return (

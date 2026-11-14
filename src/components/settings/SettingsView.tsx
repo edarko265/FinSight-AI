@@ -182,6 +182,23 @@ export function SettingsView(): React.JSX.Element {
         </Section>
       ) : null}
 
+      <Section title={t("settings.money")}>
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+          <Link href="/accounts" className="font-semibold text-accent">
+            {t("accounts.title")}
+          </Link>
+          <Link href="/corrections" className="font-semibold text-accent">
+            {t("corrections.title")}
+          </Link>
+          <Link href="/plans" className="font-semibold text-accent">
+            {t("plans.title")}
+          </Link>
+          <Link href="/mortgage" className="font-semibold text-accent">
+            {t("mortgage.title")}
+          </Link>
+        </div>
+      </Section>
+
       <Section title={t("settings.privacy")}>
         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
           <p className="text-muted">{t("settings.privacyBody")}</p>

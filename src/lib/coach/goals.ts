@@ -1,7 +1,9 @@
 import "server-only";
 
 import { recordUsage } from "@/lib/admin/usage";
-import { goalResult, planGoal, type Goal, type GoalPlan } from "@/lib/coach/advice";
+import { goalResult, planGoal, safeToSave, type Goal } from "@/lib/coach/advice";
+import { goalProgress, type GoalProgress } from "@/lib/coach/goal-progress";
+import { listSetAsides, writeSetAsides, type SetAside } from "@/lib/coach/personal";
 import type { SessionContext } from "@/lib/coach/context";
 import type { ToolResult } from "@/lib/coach/tools";
 import { addToTrash, goalToTrash } from "@/lib/coach/trash";
@@ -14,8 +16,67 @@ export async function listGoals(ctx: SessionContext): Promise<Goal[]> {
   return (await readState<Goal[]>(ctx.customerRef, "goals")) ?? [];
 }
 
-export async function listGoalPlans(ctx: SessionContext): Promise<GoalPlan[]> {
-  return (await listGoals(ctx)).map((goal) => planGoal(ctx, goal));
+export async function listGoalPlans(ctx: SessionContext): Promise<GoalProgress[]> {
+  const setAsides = await listSetAsides(ctx.customerRef);
+  return (await listGoals(ctx)).map((goal) =>
+    goalProgress(planGoal(ctx, goal), setAsides, ctx.asOf),
+  );
+}
+
+export type SetAsideError = "above_safe" | "not_found";
+
+/**
+ * Marks money as set aside for a goal. Nothing is moved: the customer makes
+ * the transfer themselves, or simply treats the money as spoken for. The
+ * amount may not exceed what is safe to save, so the next month of bills,
+ * essentials and usual spending stays covered; from then on it is left out of
+ * what is safe to spend.
+ */
+export async function setAside(
+  ctx: SessionContext,
+  input: { goalId: string | null; cents: number },
+): Promise<SetAside | SetAsideError> {
+  if (input.goalId && !(await listGoals(ctx)).some((goal) => goal.id === input.goalId)) {
+    return "not_found";
+  }
+  if (input.cents > safeToSave(ctx).safeCents) return "above_safe";
+  const item: SetAside = {
+    id: `aside-${crypto.randomUUID()}`,
+    goalId: input.goalId,
+    cents: Math.round(input.cents),
+    date: ctx.asOf,
+  };
+  await writeSetAsides(ctx.customerRef, [item, ...(await listSetAsides(ctx.customerRef))]);
+  await recordUsage("goal", "set_aside", ctx.locale);
+  return item;
+}
+
+/** Takes a set-aside back (the money counts as spendable again) and puts it in the recycle bin. */
+export async function removeSetAside(ctx: SessionContext, id: string): Promise<boolean> {
+  const all = await listSetAsides(ctx.customerRef);
+  const item = all.find((candidate) => candidate.id === id);
+  if (!item) return false;
+  await writeSetAsides(
+    ctx.customerRef,
+    all.filter((candidate) => candidate.id !== id),
+  );
+  await addToTrash(ctx.customerRef, [
+    {
+      id: `trash-${crypto.randomUUID()}`,
+      kind: "setaside",
+      deletedAt: new Date().toISOString(),
+      label: String(item.cents),
+      item,
+    },
+  ]);
+  return true;
+}
+
+export async function restoreSetAside(ctx: SessionContext, item: SetAside): Promise<void> {
+  const all = await listSetAsides(ctx.customerRef);
+  if (!all.some((candidate) => candidate.id === item.id)) {
+    await writeSetAsides(ctx.customerRef, [item, ...all]);
+  }
 }
 
 /** Saves a goal described in conversation and returns the plan for reaching it. */

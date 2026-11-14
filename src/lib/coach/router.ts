@@ -50,6 +50,12 @@ const PATTERNS = {
   recurring:
     /recurring|subscription|regular (bill|payment)|upcoming|coming up|bills?\b|salary|payday|lasku|säännölli|toistuva|tilauks|palkka|räkning|regelbund|prenumeration|lön/,
   plan: /\bbudget|\bmy plan\b|spending plan|savings? plan|split my (income|money|salary)|budjet|suunnitelma|jakaa tulo|sparplan|fördela/,
+  save: /safe to save|how much (can|could) i (save|set aside|put aside)|can i (save|set aside)|paljonko (voin|voisin) säästää|voinko säästää|hur mycket kan jag spara|kan jag spara/,
+  mortgage:
+    /mortgage (application|process)|my mortgage|how (does|do) (a )?mortgages? work|asuntolainahakemu|asuntolainani|miten asuntolaina|bolåneansökan|mitt bolån|hur fungerar bolån/,
+  subscriptions: /subscription|tilauks|kestotilau|prenumeration|abonnemang/,
+  accounts:
+    /my accounts|other bank|all (my )?accounts|linked account|tilini|muut pankit|muu pankki|mina konton|andra banker/,
   baskets: /basket|mandatory|essential|kori|pakolli|välttämät|korg|obligatorisk|nödvändig/,
   flow: /flow|income go|sankey|diagram|virta|tuloni|kaavio|flöde|min inkomst/,
   balance:
@@ -102,6 +108,15 @@ function route(ctx: CoachContext, question: string): ToolResult {
       period,
     });
   }
+  if (PATTERNS.save.test(text)) {
+    const amount = AMOUNT.exec(text);
+    const euros = amount
+      ? Number((amount[1] ?? amount[2] ?? "").replace(/[\s.]/g, "").replace(",", "."))
+      : NaN;
+    return runTool(ctx, "safe_to_save", {
+      amountCents: Number.isFinite(euros) && euros > 0 ? Math.round(euros * 100) : undefined,
+    });
+  }
   if (PATTERNS.safe.test(text)) {
     // "Can I afford a 300 € bike?" checks the estimate with that purchase taken out.
     const price = /afford|varaa|råd/.test(text) ? AMOUNT.exec(text) : null;
@@ -115,6 +130,9 @@ function route(ctx: CoachContext, question: string): ToolResult {
       otherOutflowsCents: Number.isFinite(euros) && euros > 0 ? Math.round(euros * 100) : undefined,
     });
   }
+  if (PATTERNS.mortgage.test(text)) return runTool(ctx, "mortgage", {});
+  if (PATTERNS.subscriptions.test(text)) return runTool(ctx, "subscriptions", {});
+  if (PATTERNS.accounts.test(text)) return runTool(ctx, "accounts", {});
   if (PATTERNS.plan.test(text)) return runTool(ctx, "plan", {});
   if (PATTERNS.flow.test(text)) return runTool(ctx, "flow", { period });
   if (PATTERNS.peers.test(text)) return runTool(ctx, "peers", { target });

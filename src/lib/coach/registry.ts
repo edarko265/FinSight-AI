@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { recommendTool } from "@/lib/coach/advice";
+import { mortgageTool, recommendTool, saveTool } from "@/lib/coach/advice";
 import {
   balanceTool,
   basketsTool,
@@ -8,7 +8,9 @@ import {
   flowTool,
   peersTool,
   PERIOD_KEYS,
+  accountsTool,
   planTool,
+  subscriptionsTool,
   profileTool,
   recurringTool,
   safeToSpendTool,
@@ -65,6 +67,10 @@ export const TOOL_SCHEMAS = {
   recurring: z.object({}),
   recommend: z.object({}),
   plan: z.object({}),
+  subscriptions: z.object({}),
+  accounts: z.object({}),
+  safe_to_save: z.object({ amountCents: cents.optional() }),
+  mortgage: z.object({}),
 } as const;
 
 export type ToolName = keyof typeof TOOL_SCHEMAS;
@@ -110,6 +116,14 @@ function execute<T extends ToolName>(ctx: CoachContext, tool: T, raw: unknown): 
       return recommendTool(ctx);
     case "plan":
       return planTool(ctx);
+    case "subscriptions":
+      return subscriptionsTool(ctx);
+    case "accounts":
+      return accountsTool(ctx);
+    case "safe_to_save":
+      return saveTool(ctx, TOOL_SCHEMAS.safe_to_save.parse(raw));
+    case "mortgage":
+      return mortgageTool(ctx);
     default:
       return fallbackResult(ctx);
   }

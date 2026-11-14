@@ -128,15 +128,17 @@ place, and the conversation continues there.
 
 ## 5. Goals and rewards
 
-| Part                              | What it does                                                                                                                                                 |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Your goals**                    | Each goal shows the amount, the monthly amount needed, how that compares with what is usually left over, and whether it fits                                 |
-| **Tell the coach about a goal**   | Describe it in a sentence                                                                                                                                    |
-| **Add a goal**                    | A four-step form: name, amount, time, review — with suggestions on each step                                                                                 |
-| **Edit / Move to recycle bin**    | On each goal                                                                                                                                                 |
-| **Where you could free up money** | The coach's recommendations with their monthly value                                                                                                         |
-| **Rewards**                       | Points and a level for progress the data shows: a lighter month, free-choice spending down, a buffer, months with money left over, investing, setting a goal |
-| **Coupons**                       | Unlock at point thresholds. Examples only                                                                                                                    |
+| Part                              | What it does                                                                                                                                                                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Your goals**                    | Each goal shows the amount, the monthly amount needed, how that compares with what is usually left over, and whether it fits                                                                                                       |
+| **Tell the coach about a goal**   | Describe it in a sentence                                                                                                                                                                                                          |
+| **Add a goal**                    | A four-step form: name, amount, time, review — with suggestions on each step                                                                                                                                                       |
+| **Edit / Move to recycle bin**    | On each goal                                                                                                                                                                                                                       |
+| **Set money aside**               | Shows how much is safe to set aside now, and marks an amount as set aside for a goal. Nothing is moved: it is a simulation, capped at what leaves the next month covered, and from then on that money is left out of safe to spend |
+| **Progress**                      | Each goal shows what has been set aside against the target, whether that is ahead of, on, or behind the plan, and how many months are left                                                                                         |
+| **Where you could free up money** | The coach's recommendations with their monthly value                                                                                                                                                                               |
+| **Rewards**                       | Points and a level for progress the data shows: a lighter month, free-choice spending down, a buffer, months with money left over, investing, setting a goal                                                                       |
+| **Coupons**                       | Unlock at point thresholds. Examples only                                                                                                                                                                                          |
 
 Rewards compare a customer with their own past months, never with other people.
 
@@ -188,7 +190,49 @@ notification arrives when something needs attention (a shortfall, a habit going 
 way, a bill, a goal, an announcement), at most one a day, **with a title only and never an
 amount**. It can be switched on or off at any time in Settings.
 
-## 8. Settings
+## 8. Accounts — everything in one place
+
+Settings → **Accounts**. Besides the bank's own account, the customer can link accounts
+from other banks, and from then on every figure, chart, answer and estimate covers all of
+them together.
+
+> **Other banks are simulated.** The three banks are made up and their transactions are
+> generated. No real bank is contacted. Every screen and every chart that includes a linked
+> account says so. In a real service the customer would approve read-only access at their
+> other bank, for a limited time.
+
+| Part                           | What it does                                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **Across your accounts**       | The combined balance of the accounts that are counted. A card balance is what is owed, so it is subtracted |
+| **Link an account**            | Bank, kind (everyday, savings, credit card), an explanation of how linking would really work, a name       |
+| **Count in calculations**      | A switch per account. Savings start switched off, so they are shown but not counted as spendable           |
+| **Edit / Move to recycle bin** | Rename; unlinking removes its figures at once and can be undone from the bin                               |
+
+## 9. My corrections
+
+Settings → **My corrections**, or **Change basket** on any transaction behind an answer.
+
+- **Baskets.** Say which basket a purchase really belongs to and whether it was a need or a
+  choice, for that one purchase or for every purchase of its kind. The correction is used
+  everywhere at once: baskets, recommendations, what-ifs, safe to spend.
+- **Expected bills.** Correct a bill's amount or day ("the rent went up"), or say it is not
+  a regular bill.
+- **Nothing is lost.** Each correction is listed beside what the app had worked out, with
+  **Undo**; **Undo all corrections** puts everything back.
+
+## 10. Mortgage guide
+
+Settings → **Mortgage guide**, or ask the coach "how does a mortgage application work?".
+
+What applying for a mortgage looks like, taught from the 200 applications in the dataset:
+the steps in order with when each typically happens, how long the whole thing takes, what
+it costs along the way, how much own money is typical, and why applications are turned
+down, with what each reason means. A customer who has an application in the bank's records
+also sees **their own**: the outcome, the figures and the full timeline.
+
+It explains. It never predicts or decides whether anyone would get a loan.
+
+## 11. Settings
 
 | Setting           | Options                                                                         |
 | ----------------- | ------------------------------------------------------------------------------- |
@@ -201,9 +245,9 @@ amount**. It can be switched on or off at any time in Settings.
 | **Your data**     | Privacy notice, terms of use, recycle bin, download my data, delete my app data |
 | **Account**       | Sign out                                                                        |
 
-## 9. Recycle bin
+## 12. Recycle bin
 
-Deleting a goal, a plan, a view or a widget moves it here. Each item can be **restored** or
+Deleting a goal, a plan, a view, a widget, a linked account or a set-aside moves it here. Each item can be **restored** or
 **deleted permanently**, and the bin can be emptied.
 
 ---

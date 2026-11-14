@@ -456,6 +456,100 @@ published.
 
 ---
 
+## 11b. Linked accounts, corrections, saving and the mortgage guide
+
+[`linked-accounts.ts`](../src/lib/data/linked-accounts.ts) ·
+[`personal.ts`](../src/lib/coach/personal.ts) ·
+[`recurrence.ts`](../src/lib/analytics/recurrence.ts) ·
+[`goal-progress.ts`](../src/lib/coach/goal-progress.ts)
+
+### One picture of the customer
+
+Everything the customer adds on top of the bank's records is applied in one place, before
+any calculation runs, so every tool sees the same picture.
+
+```mermaid
+flowchart TD
+    BANK[(Bank record:<br/>one sealed ledger)] --> MERGE
+    LINK["Linked accounts<br/><b>simulated</b>: generated,<br/>same history every time"] --> INC{Counted in<br/>calculations?}
+    INC -- yes --> MERGE[Merge by date and time]
+    INC -- no --> SHOW[Shown with its balance only]
+    MERGE --> BAL["Each transaction carries the<br/>combined balance of all<br/>counted accounts"]
+    BAL --> COR{The customer corrected<br/>this purchase, or its kind?}
+    COR -- yes --> OWN[Their basket and necessity win;<br/>the rules' answer is kept]
+    COR -- no --> RULES[The rules decide]
+    OWN --> ALL
+    RULES --> ALL[Every calculation, chart,<br/>insight and answer]
+    BILLS[Bill adjustments] --> ALL
+    ASIDE[Money set aside for goals] -->|protected: left out of<br/>safe to spend| ALL
+```
+
+- **Linked accounts are a simulation.** The generator is seeded by the customer and the
+  account, so the same account always has the same history and nothing needs storing but
+  the link itself. Any chart that includes one says so in its source note.
+- **The combined balance** is the sum of the latest balance of each counted account; a
+  credit card's balance is negative, so it reduces the total.
+- **A correction** can cover one purchase or every purchase of the same category and
+  merchant code. The single purchase wins over the kind; both win over the rules.
+
+### Subscriptions
+
+```mermaid
+flowchart LR
+    T[Purchases with a merchant number,<br/>last 6 full months] --> G[Group by account and merchant]
+    G --> A{One payment a month,<br/>never more?}
+    A -- no --> X[Shopping, not a subscription]
+    A -- yes --> B{Seen in 3 or<br/>more months?}
+    B -- no --> X
+    B -- yes --> C{Amounts within 10%<br/>of each other?}
+    C -- no --> X
+    C -- yes --> S[Subscription-like:<br/>median amount, median day,<br/>next expected date]
+```
+
+The data has no payee names, so a subscription is named by its category and the last
+characters of its merchant number. It is a suggestion, not a fact.
+
+### Safe to save, and goal progress
+
+```mermaid
+flowchart TD
+    W["The safe-to-spend walk<br/>over <b>30</b> days"] --> AV[Free after bills, essentials,<br/>the reserve and money already set aside]
+    AV --> K["Take off a usual month of<br/>free-choice spending"]
+    K --> S["Safe to save<br/>(never below zero)"]
+    S --> ASK{Customer sets<br/>an amount aside}
+    ASK -- "more than safe" --> NO[Refused]
+    ASK -- "within safe" --> YES["Recorded for the goal.<br/><b>No money moves.</b>"]
+    YES --> P[Protected from then on:<br/>safe to spend drops by the same amount]
+    YES --> G["Goal progress =<br/>set aside ÷ target"]
+    G --> PACE{"Set aside so far vs<br/>months since the goal × monthly amount"}
+    PACE --> R[Ahead · On track · Behind]
+```
+
+"Safe to save" keeps a month of the customer's usual free-choice spending in place on
+purpose: saving should not mean an empty wallet the week after.
+
+### The mortgage guide
+
+The dataset has an event history for 200 mortgage applications and each one's outcome.
+They are used for teaching only.
+
+| What                                | How it is worked out                                                         |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| Typical length                      | Median days from the first event to the last, with the shortest and longest  |
+| Typical number of steps, properties | Medians per application                                                      |
+| When a step typically happens       | Median day, counted from the start, of that step's first occurrence          |
+| How often a step happens            | Share of applications in which it appears                                    |
+| Costs along the way                 | Per cost type: share of applications that recorded it, and the median amount |
+| Typical loan and own-money share    | Medians of loan ÷ price and own money ÷ price                                |
+| Why not approved                    | Counts of the recorded reasons among the applications that were turned down  |
+
+A customer whose ID is linked to an application gets their own events and outcome, sealed
+with their key like everything else they own; the free-text notes in the source are not
+kept. **Nothing here predicts an outcome**, and the coach is instructed never to judge
+whether a loan would be approved.
+
+---
+
 ## 12. How the statistical data is used
 
 Three different bodies of numbers are used, for three different jobs. None of them is ever

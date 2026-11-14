@@ -20,7 +20,7 @@ import {
   monthToDate,
   type Period,
 } from "@/lib/analytics/periods";
-import { detectIncome, detectRegularBills } from "@/lib/analytics/recurrence";
+import { detectIncome, detectRegularBills, detectSubscriptions } from "@/lib/analytics/recurrence";
 import { simulateReduction } from "@/lib/analytics/scenario";
 import {
   balanceByMonth,
@@ -142,8 +142,13 @@ function makeHelpers(ctx: CoachContext) {
       to: formatDay(addDays(period.endExclusive, -1), ctx.locale),
     });
   };
+  const linkedCount = (ctx.record.accounts ?? []).filter(
+    (account) => account.simulated && account.included,
+  ).length;
   const basis = (period: Period): string =>
-    t("coach.basis", { period: periodLabel(period), asOf: formatDay(ctx.asOf, ctx.locale) });
+    t("coach.basis", { period: periodLabel(period), asOf: formatDay(ctx.asOf, ctx.locale) }) +
+    // Say so whenever figures include accounts linked from elsewhere, which are simulated here.
+    (linkedCount > 0 ? ` ${t("coach.basis.linked", { count: linkedCount })}` : "");
   const evidence = (period: Period, count: number, target?: TargetKey): EvidenceRef => {
     const filter = target ? TARGETS[target] : undefined;
     return {
@@ -416,7 +421,13 @@ export function forecastFor(ctx: CoachContext, overrides: ForecastOverrides = {}
   return estimateSafeToSpend(
     ctx.record.transactions,
     ctx.asOf,
-    { ...suggested, ...given, horizonDays: horizon },
+    {
+      ...suggested,
+      // Money set aside for goals is not there to spend, unless the customer says otherwise.
+      protectedCents: ctx.record.earmarkedCents ?? 0,
+      ...given,
+      horizonDays: horizon,
+    },
     ["essentialDailyCents", "irregularReserveCents", "bills", "spreadBillsDailyCents"],
   );
 }
@@ -795,6 +806,95 @@ export function planTool(ctx: CoachContext): ToolResult {
     facts: [{ label: h.t("coach.flow.income"), valueCents: actual.incomeCents }, ...points],
     lesson: h.t("coach.plan.lesson"),
     followUps: [h.t("chat.suggest.whatif"), h.t("chat.suggest.recommend")],
+  };
+}
+
+/** Subscription-like payments: the same merchant, about monthly, about the same amount. */
+export function subscriptionsTool(ctx: CoachContext): ToolResult {
+  const h = makeHelpers(ctx);
+  const found = detectSubscriptions(ctx.record.transactions, ctx.asOf);
+  const period = resolvePeriod("last_6_months", ctx.asOf);
+  if (found.length === 0) {
+    return {
+      tool: "subscriptions",
+      text: h.t("coach.subscriptions.none"),
+      facts: [],
+      lesson: h.t("coach.subscriptions.lesson"),
+      followUps: [h.t("chat.suggest.bills")],
+    };
+  }
+  const name = (item: (typeof found)[number]): string => {
+    const kind = h.targetLabel(item.category);
+    // The data has no payee names: the last characters of the merchant number tell two apart.
+    return `${kind} · ${item.merchantId.slice(-4)}`;
+  };
+  const points = found
+    .slice(0, 8)
+    .map((item) => ({ label: name(item), valueCents: item.typicalCents }));
+  const monthly = found.reduce((sum, item) => sum + item.typicalCents, 0);
+  const text = h.t("coach.subscriptions.summary", {
+    count: found.length,
+    monthly: h.money(monthly),
+    yearly: h.money(monthly * 12),
+  });
+  return {
+    tool: "subscriptions",
+    text,
+    card: {
+      title: h.t("coach.subscriptions.title"),
+      summary: text,
+      chart: { kind: "hbar", points },
+      basis: h.basis(period),
+    },
+    facts: [
+      { label: h.t("coach.subscriptions.monthly"), valueCents: monthly },
+      { label: h.t("coach.subscriptions.yearly"), valueCents: monthly * 12 },
+      ...points,
+    ],
+    lesson: h.t("coach.subscriptions.lesson"),
+    followUps: [h.t("chat.suggest.bills"), h.t("chat.suggest.recommend")],
+  };
+}
+
+/** The balance of each account the customer has, the bank's own and any linked from elsewhere. */
+export function accountsTool(ctx: CoachContext): ToolResult {
+  const h = makeHelpers(ctx);
+  const accounts = ctx.record.accounts ?? [
+    {
+      id: "main",
+      kind: "main" as const,
+      balanceCents: recordedBalance(ctx.record.transactions, ctx.asOf)?.balanceCents ?? 0,
+      included: true,
+      simulated: false,
+    },
+  ];
+  const label = (account: (typeof accounts)[number]): string =>
+    account.simulated
+      ? `${account.nickname || h.t(`accounts.kind.${account.kind}` as MessageKey)} (${h.t("accounts.simulated")})`
+      : h.t("accounts.main");
+  const points = accounts.map((account) => ({
+    label: label(account),
+    valueCents: account.balanceCents,
+  }));
+  const total = accounts
+    .filter((account) => account.included)
+    .reduce((sum, account) => sum + account.balanceCents, 0);
+  const text =
+    accounts.length === 1
+      ? h.t("coach.accounts.single", { balance: h.money(total) })
+      : h.t("coach.accounts.summary", { count: accounts.length, total: h.money(total) });
+  return {
+    tool: "accounts",
+    text,
+    card: {
+      title: h.t("coach.accounts.title"),
+      summary: text,
+      chart: { kind: "table", points },
+      basis: h.basis(resolvePeriod("this_month", ctx.asOf)),
+    },
+    facts: [{ label: h.t("coach.accounts.total"), valueCents: total }, ...points],
+    lesson: h.t("coach.accounts.lesson"),
+    followUps: [h.t("chat.suggest.safe")],
   };
 }
 

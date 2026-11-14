@@ -56,15 +56,15 @@ Seventeen tables, created by the migrations in
 
 ### Customer data — sealed
 
-| Table              | Plain columns                       | Sealed or hashed                                                                                                                                                 |
-| ------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `customer_ledgers` | key ID, ingestion ID                | customer blind index; profile (customer ID, account ID, age, postal code); the whole transaction ledger                                                          |
-| `customer_state`   | kind, updated-at                    | customer blind index; the value. Kinds: `views`, `goals`, `plans`, `trash`, `consent`, `insights_read`, `announcements_seen`, `push`, `push_locale`, `push_sent` |
-| `sessions`         | expiry                              | token hash; customer blind index                                                                                                                                 |
-| `advisor_requests` | topic, status, timestamps           | customer blind index; details (call time, note, fee)                                                                                                             |
-| `advisor_messages` | sender, timestamp                   | message text                                                                                                                                                     |
-| `staff_users`      | timestamps                          | username blind index; profile (name, username, role); password as a salted scrypt hash                                                                           |
-| `shared_plans`     | listed flag, copy count, timestamps | the plan (name and percentages). **No customer reference at all**                                                                                                |
+| Table              | Plain columns                       | Sealed or hashed                                                                                                                                                                                                             |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customer_ledgers` | key ID, ingestion ID                | customer blind index; profile (customer ID, account ID, age, postal code); the whole transaction ledger                                                                                                                      |
+| `customer_state`   | kind, updated-at                    | customer blind index; the value. Kinds: `views`, `goals`, `plans`, `linked_accounts`, `corrections`, `set_asides`, `mortgage`, `trash`, `consent`, `insights_read`, `announcements_seen`, `push`, `push_locale`, `push_sent` |
+| `sessions`         | expiry                              | token hash; customer blind index                                                                                                                                                                                             |
+| `advisor_requests` | topic, status, timestamps           | customer blind index; details (call time, note, fee)                                                                                                                                                                         |
+| `advisor_messages` | sender, timestamp                   | message text                                                                                                                                                                                                                 |
+| `staff_users`      | timestamps                          | username blind index; profile (name, username, role); password as a salted scrypt hash                                                                                                                                       |
+| `shared_plans`     | listed flag, copy count, timestamps | the plan (name and percentages). **No customer reference at all**                                                                                                                                                            |
 
 Each customer's whole transaction history is **one sealed value**: the rows are packed,
 compressed and encrypted with that customer's key. The database cannot see how many

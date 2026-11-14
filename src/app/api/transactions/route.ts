@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-import { classify } from "@/lib/analytics/classify";
+import { classify, classifyByRules } from "@/lib/analytics/classify";
 import { isValidDate } from "@/lib/analytics/periods";
 import { filterSpending } from "@/lib/analytics/spending";
+import { transactionKey } from "@/lib/data/linked-accounts";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 
 const date = z.string().refine(isValidDate);
@@ -40,7 +41,15 @@ export async function GET(request: Request): Promise<Response> {
     totalCents: -matches.reduce((sum, tx) => sum + tx.amountCents, 0),
     items: matches.slice(offset, offset + limit).map((tx) => {
       const c = classify(tx);
+      const original = classifyByRules(tx);
       return {
+        // Identifies this transaction, and its kind, for the customer's own corrections.
+        key: transactionKey(tx),
+        kindKey: `${tx.category}|${tx.mcc ?? ""}`,
+        account: tx.account ?? null,
+        corrected: Boolean(tx.override),
+        originalBasket: original.basket,
+        originalNecessity: original.necessity,
         date: tx.date,
         time: tx.time,
         amountCents: tx.amountCents,

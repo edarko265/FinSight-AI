@@ -69,6 +69,17 @@ Vercel's own integration, so there is only one deployer.
 
 CI (`pr-validation.yml`, `security.yml`) runs on every pull request into `dev` or `main`.
 
+## Loading the mortgage files
+
+After the main ingestion, once per database:
+
+```bash
+pnpm data:mortgage --source data/raw
+```
+
+It seals each applicant's own history with their key and stores anonymous figures for the
+guide. Safe to run again.
+
 ## After a schema change
 
 Migrations are not run by the deployment. When a pull request adds a file under

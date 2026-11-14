@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import { themeOf } from "@/lib/admin/themes";
-import { buildRewards, DEFAULT_REWARD_RULES, planGoal, type Goal } from "@/lib/coach/advice";
+import { classify, classifyByRules } from "@/lib/analytics/classify";
+import {
+  detectRegularBills,
+  detectRegularBillsUnadjusted,
+  detectSubscriptions,
+  setBillAdjustments,
+} from "@/lib/analytics/recurrence";
+import { goalProgress } from "@/lib/coach/goal-progress";
+import { generateLinked, mergeAccounts, type LinkedAccount } from "@/lib/data/linked-accounts";
+import {
+  buildRewards,
+  DEFAULT_REWARD_RULES,
+  planGoal,
+  safeToSave,
+  type Goal,
+} from "@/lib/coach/advice";
 import { checkGrounding, parseAmountToCents } from "@/lib/coach/grounding";
 import {
   actualSplit,
@@ -403,5 +418,147 @@ describe("chart types", () => {
       expect(drawn.card?.chart.points).toEqual(base.card?.chart.points);
       expect(drawn.query?.chart).toBe(chart);
     }
+  });
+});
+
+describe("linked accounts (simulated)", () => {
+  const account: LinkedAccount = {
+    id: "acct-test-0001",
+    bank: "aurora",
+    kind: "everyday",
+    nickname: "Other bank",
+    included: true,
+    linkedOn: "2026-09-15",
+  };
+
+  it("generates the same history every time, and nothing after the demo date", () => {
+    const first = generateLinked(account, "seed", ctx.asOf);
+    expect(generateLinked(account, "seed", ctx.asOf)).toEqual(first);
+    expect(generateLinked(account, "another-customer", ctx.asOf)).not.toEqual(first);
+    expect(first.length).toBeGreaterThan(50);
+    expect(first.every((tx) => tx.date <= ctx.asOf && tx.account === account.id)).toBe(true);
+  });
+
+  it("merges accounts so the balance is the total across them", () => {
+    const linked = generateLinked(account, "seed", ctx.asOf);
+    const main = ctx.record.transactions;
+    const merged = mergeAccounts(main, [{ account, transactions: linked }], ctx.asOf);
+    expect(merged.transactions).toHaveLength(main.length + linked.length);
+    expect(merged.transactions.at(-1)?.balanceCents).toBe(
+      (main.at(-1)?.balanceCents ?? 0) + (linked.at(-1)?.balanceCents ?? 0),
+    );
+    expect(merged.accounts.map((item) => item.simulated)).toEqual([false, true]);
+    // An account the customer chose not to count is listed but not merged.
+    const excluded = mergeAccounts(
+      main,
+      [{ account: { ...account, included: false }, transactions: linked }],
+      ctx.asOf,
+    );
+    expect(excluded.transactions).toHaveLength(main.length);
+    expect(excluded.accounts).toHaveLength(2);
+  });
+
+  it("includes linked spending in the answers and says that it is simulated", () => {
+    const linked = generateLinked(account, "seed", ctx.asOf);
+    const merged = mergeAccounts(
+      ctx.record.transactions,
+      [{ account, transactions: linked }],
+      ctx.asOf,
+    );
+    const both: CoachContext = {
+      ...ctx,
+      record: { ...ctx.record, transactions: merged.transactions, accounts: merged.accounts },
+    };
+    const alone = runTool(ctx, "spending", { period: "last_month" });
+    const together = runTool(both, "spending", { period: "last_month" });
+    const total = (result: typeof alone): number =>
+      (result.card?.chart.points ?? []).reduce((sum, point) => sum + point.valueCents, 0);
+    expect(total(together)).toBeGreaterThan(total(alone));
+    expect(together.card?.basis).toContain("simulated");
+    expect(alone.card?.basis).not.toContain("simulated");
+    expect(routeQuestion(both, "show all my accounts").tool).toBe("accounts");
+  });
+
+  it("finds the linked account's subscriptions and nothing among ordinary shopping", () => {
+    const linked = generateLinked(account, "seed", ctx.asOf);
+    const found = detectSubscriptions(linked, ctx.asOf);
+    expect(found.map((item) => item.typicalCents).sort((a, b) => a - b)).toEqual([1299, 3990]);
+    expect(detectSubscriptions(ctx.record.transactions, ctx.asOf)).toEqual([]);
+  });
+});
+
+describe("corrections", () => {
+  it("lets the customer's choice win, and keeps what the rules said", () => {
+    const taxi = ctx.record.transactions.find((tx) => tx.mcc === "4121");
+    if (!taxi) throw new Error("fixture has no taxi ride");
+    expect(classify(taxi)).toMatchObject({ basket: "everyday", necessity: "discretionary" });
+    const corrected = {
+      ...taxi,
+      override: { basket: "everyday", necessity: "essential" } as const,
+    };
+    expect(classify(corrected)).toMatchObject({ necessity: "essential" });
+    expect(classifyByRules(corrected)).toMatchObject({ necessity: "discretionary" });
+  });
+
+  it("applies an adjusted bill everywhere, and the suggestion stays available", () => {
+    const txs = [...ctx.record.transactions];
+    const before = detectRegularBills(txs, ctx.asOf).find((bill) => bill.category === "Housing");
+    expect(before?.typicalMonthlyCents).toBe(90_000);
+    setBillAdjustments(txs, { Housing: { cents: 95_000, day: 5 } });
+    const after = detectRegularBills(txs, ctx.asOf).find((bill) => bill.category === "Housing");
+    expect(after).toMatchObject({ typicalMonthlyCents: 95_000, typicalDay: 5, adjusted: true });
+    expect(
+      detectRegularBillsUnadjusted(txs, ctx.asOf).find((bill) => bill.category === "Housing")
+        ?.typicalMonthlyCents,
+    ).toBe(90_000);
+    setBillAdjustments(txs, { Housing: { skip: true } });
+    expect(detectRegularBills(txs, ctx.asOf).some((bill) => bill.category === "Housing")).toBe(
+      false,
+    );
+  });
+});
+
+describe("safe to save and goal progress", () => {
+  it("never offers more than leaves the next month covered", () => {
+    const now = safeToSave(ctx);
+    expect(now.status).toBe("ok");
+    expect(now.safeCents).toBe(Math.max(0, now.availableCents - now.keepCents));
+    expect(now.safeCents).toBeLessThan(now.balanceCents);
+    // Money already set aside is protected, so it reduces what else can be set aside.
+    const earmarked: CoachContext = { ...ctx, record: { ...ctx.record, earmarkedCents: 50_000 } };
+    expect(safeToSave(earmarked).safeCents).toBe(Math.max(0, now.safeCents - 50_000));
+    expect(routeQuestion(ctx, "how much can I save?").tool).toBe("safe_to_save");
+  });
+
+  it("measures a goal against what was set aside and against the plan", () => {
+    const goal: Goal = {
+      id: "g1",
+      name: "Trip",
+      targetCents: 120_000,
+      months: 12,
+      monthlyCents: 10_000,
+      createdOn: "2026-07-15",
+    };
+    const plan = planGoal(ctx, goal);
+    const aside = (cents: number, id: string) => ({ id, goalId: "g1", cents, date: "2026-09-01" });
+    // Two months have passed: the plan expected 200.
+    expect(goalProgress(plan, [], ctx.asOf)).toMatchObject({
+      savedCents: 0,
+      percent: 0,
+      pace: "behind",
+      monthsLeft: 12,
+    });
+    expect(goalProgress(plan, [aside(20_000, "a")], ctx.asOf)).toMatchObject({
+      percent: 17,
+      pace: "on_track",
+      monthsLeft: 10,
+    });
+    expect(goalProgress(plan, [aside(20_000, "a"), aside(15_000, "b")], ctx.asOf).pace).toBe(
+      "ahead",
+    );
+    // Set-asides for another goal do not count.
+    expect(
+      goalProgress(plan, [{ ...aside(50_000, "c"), goalId: "other" }], ctx.asOf).savedCents,
+    ).toBe(0);
   });
 });

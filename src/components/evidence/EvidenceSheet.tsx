@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { CorrectionWizard, type CorrectionTarget } from "@/components/corrections/CorrectionWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
@@ -18,6 +19,12 @@ interface EvidenceItem {
   merchantId: string | null;
   basket: string;
   necessity: string;
+  key: string;
+  kindKey: string;
+  account: string | null;
+  corrected: boolean;
+  originalBasket: string;
+  originalNecessity: string;
 }
 
 interface EvidencePage {
@@ -40,6 +47,7 @@ export function EvidenceSheet({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [page, setPage] = useState<EvidencePage | null>(null);
   const [loading, setLoading] = useState(false);
+  const [correcting, setCorrecting] = useState<CorrectionTarget | null>(null);
 
   async function load(ref: EvidenceRef, offset: number): Promise<void> {
     setLoading(true);
@@ -121,7 +129,16 @@ export function EvidenceSheet({
                 <p className="text-xs text-muted">
                   {formatDay(item.date, locale)} · {label("basket", item.basket)} ·{" "}
                   {label("necessity", item.necessity)}
+                  {item.corrected ? ` · ${t("corrections.yours")}` : ""}
+                  {item.account ? ` · ${t("accounts.simulated")}` : ""}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setCorrecting({ ...item })}
+                  className="mt-0.5 text-xs font-semibold text-accent"
+                >
+                  {t("corrections.change")}
+                </button>
               </div>
               <span className="shrink-0 text-sm font-medium tabular-nums">
                 {formatMoney(-item.amountCents, locale)}
@@ -140,6 +157,13 @@ export function EvidenceSheet({
           </button>
         ) : null}
       </div>
+      <CorrectionWizard
+        target={correcting}
+        onClose={() => setCorrecting(null)}
+        onDone={() => {
+          if (evidence) void load(evidence, 0);
+        }}
+      />
     </dialog>
   );
 }

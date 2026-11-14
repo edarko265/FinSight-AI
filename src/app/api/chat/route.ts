@@ -46,6 +46,7 @@ export async function POST(request: Request): Promise<Response> {
   const theme = themeOf(parsed.data.message);
   if (
     topic !== "taught" &&
+    topic !== "mortgage" &&
     (topic === "none" || topic === "conversation" || OUTSIDE_THEMES.has(theme))
   ) {
     await recordUsage("unanswered", theme, ctx.locale, message.mode ?? "basic");

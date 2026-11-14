@@ -171,6 +171,16 @@ only for the signed-in customer.
 - Known limit: someone who already knows one of the sharer's amounts can estimate the
   others from the percentages. The share screen shows exactly what will be visible.
 
+### Linked accounts, corrections and mortgage records
+
+- Linked accounts are generated on the server from the customer's blind index; only the
+  link (bank, kind, name) is stored, sealed with the customer's key.
+- Corrections, bill adjustments and set-asides are sealed per customer and applied on the
+  server; a request cannot name another customer's data.
+- A set-aside above what is safe to save is refused on the server, not only in the form.
+- Each applicant's mortgage history is sealed with their own key. The source's free-text
+  notes are not stored.
+
 ### Device notifications
 
 - A device's subscription is sealed with its customer's key.

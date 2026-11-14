@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { getSettings } from "@/lib/admin/settings";
-import { buildRecommendations, buildRewards } from "@/lib/coach/advice";
+import { buildRecommendations, buildRewards, safeToSave } from "@/lib/coach/advice";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { deleteGoal, listGoalPlans, setGoal, updateGoal } from "@/lib/coach/goals";
 
@@ -17,6 +17,9 @@ export async function GET(request: Request): Promise<Response> {
     goals: plans,
     rewards: settings.features.rewards ? buildRewards(ctx, plans.length, settings.rewards) : null,
     recommendations: buildRecommendations(ctx),
+    // What could be set aside now while the next month stays covered.
+    safeToSave: safeToSave(ctx).safeCents,
+    setAsideCents: ctx.record.earmarkedCents ?? 0,
   });
 }
 

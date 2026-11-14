@@ -183,6 +183,30 @@ export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
       inputSchema: TOOL_SCHEMAS.plan.extend(chartField),
       execute: async ({ chart }) => run(runTool(ctx, "plan", {}, chart)),
     }),
+    get_subscriptions: tool({
+      description:
+        "Subscription-like payments: the same merchant, about monthly, for about the same amount, with their monthly and yearly cost.",
+      inputSchema: TOOL_SCHEMAS.subscriptions.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "subscriptions", {}, chart)),
+    }),
+    get_accounts: tool({
+      description:
+        "The balance of each of the user's accounts: the bank's own and any linked from other banks (which are simulated in this demo). All other tools already include linked accounts.",
+      inputSchema: TOOL_SCHEMAS.accounts.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "accounts", {}, chart)),
+    }),
+    get_safe_to_save: tool({
+      description:
+        "How much the user could set aside for savings now while keeping 30 days of bills, essentials and their usual free-choice spending. Pass amountCents to test a specific amount. It is a simulation: nothing is moved.",
+      inputSchema: TOOL_SCHEMAS.safe_to_save.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "safe_to_save", input, chart)),
+    }),
+    get_mortgage_story: tool({
+      description:
+        "The user's own mortgage application from the bank's records, if they have one: how long it took, the property price, loan, own money and the outcome. For teaching only. Never predict or judge whether a loan would be approved.",
+      inputSchema: TOOL_SCHEMAS.mortgage,
+      execute: async () => run(runTool(ctx, "mortgage", {})),
+    }),
     get_regular_payments: tool({
       description: "Regular monthly bills and the usual income pattern, suggested from history.",
       inputSchema: TOOL_SCHEMAS.recurring.extend(chartField),

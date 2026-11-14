@@ -9,7 +9,7 @@ import {
   summariseSpending,
 } from "@/lib/analytics/spending";
 import { mean } from "@/lib/analytics/stats";
-import type { CoachContext, ToolResult } from "@/lib/coach/tools";
+import { forecastFor, type CoachContext, type ToolResult } from "@/lib/coach/tools";
 import { formatMoney } from "@/lib/i18n/config";
 import { hasMessage, translate, type MessageKey, type MessageParams } from "@/lib/i18n/translate";
 
@@ -463,5 +463,137 @@ export function buildRewards(
       coupon("groceries", rules.couponUnlockAt.groceries),
       coupon("voucher", rules.couponUnlockAt.voucher),
     ],
+  };
+}
+
+const SAVE_HORIZON_DAYS = 30;
+
+export interface SafeToSave {
+  /** What could be set aside now without touching the next 30 days of commitments or usual spending. */
+  safeCents: number;
+  /** Free after bills, essentials, the reserve and money already set aside. */
+  availableCents: number;
+  /** The usual month of free-choice spending, left untouched. */
+  keepCents: number;
+  earmarkedCents: number;
+  balanceCents: number;
+  commitmentsCents: number;
+  status: "ok" | "shortfall" | "insufficient_data";
+}
+
+/**
+ * How much could be moved to savings now. It uses the same walk as safe to
+ * spend, over 30 days, and then also leaves a usual month of free-choice
+ * spending in place: saving should not mean an empty wallet next week.
+ */
+export function safeToSave(ctx: CoachContext, alsoMovingCents = 0): SafeToSave {
+  const forecast = forecastFor(ctx, {
+    horizonDays: SAVE_HORIZON_DAYS,
+    otherOutflowsCents: alsoMovingCents,
+  });
+  const keepCents = discretionaryByCategory(ctx).reduce((sum, item) => sum + item.monthlyCents, 0);
+  const b = forecast.breakdown;
+  return {
+    safeCents: forecast.status === "ok" ? Math.max(0, forecast.availableCents - keepCents) : 0,
+    availableCents: forecast.availableCents,
+    keepCents,
+    earmarkedCents: ctx.record.earmarkedCents ?? 0,
+    balanceCents: forecast.balanceCents,
+    commitmentsCents:
+      b.billsCents + b.spreadBillsCents + b.essentialsCents + b.irregularReserveCents,
+    status: forecast.status,
+  };
+}
+
+/** "How much could I save?", optionally testing a specific amount. Nothing is ever moved. */
+export function saveTool(ctx: CoachContext, input: { amountCents?: number }): ToolResult {
+  const { t, money } = helpers(ctx);
+  const now = safeToSave(ctx);
+  if (now.status === "insufficient_data") {
+    return { tool: "safe_to_save", text: t("coach.save.noData"), facts: [], followUps: [] };
+  }
+  const amount = input.amountCents && input.amountCents > 0 ? Math.round(input.amountCents) : null;
+  const after = amount ? safeToSave(ctx, amount) : null;
+  const text = amount
+    ? t(amount <= now.safeCents ? "coach.save.fits" : "coach.save.tooMuch", {
+        amount: money(amount),
+        safe: money(now.safeCents),
+        left: money(Math.max(0, after?.safeCents ?? 0)),
+      })
+    : t(now.safeCents > 0 ? "coach.save.summary" : "coach.save.none", {
+        safe: money(now.safeCents),
+        keep: money(now.keepCents),
+      });
+  const points = [
+    { label: t("coach.save.row.commitments"), valueCents: now.commitmentsCents },
+    { label: t("coach.save.row.keep"), valueCents: now.keepCents },
+    { label: t("coach.save.row.earmarked"), valueCents: now.earmarkedCents },
+    { label: t("coach.save.row.safe"), valueCents: now.safeCents },
+  ].filter((point) => point.valueCents > 0);
+  return {
+    tool: "safe_to_save",
+    text,
+    card: {
+      title: t("coach.save.title"),
+      summary: text,
+      chart: { kind: "stack", points },
+      basis: t("coach.save.basis", { days: SAVE_HORIZON_DAYS }),
+    },
+    facts: [{ label: t("dashboard.balance"), valueCents: now.balanceCents }, ...points],
+    lesson: t("coach.save.lesson"),
+    followUps: [t("chat.suggest.goal"), t("chat.suggest.safe")],
+  };
+}
+
+/** The customer's own mortgage application as a short account, or a pointer to the guide. Teaching only. */
+export function mortgageTool(ctx: CoachContext): ToolResult {
+  const { t, money } = helpers(ctx);
+  const story = ctx.record.mortgage;
+  if (!story) {
+    return {
+      tool: "mortgage",
+      text: t("coach.mortgage.general"),
+      facts: [],
+      lesson: t("coach.mortgage.lesson"),
+      followUps: [t("chat.suggest.safe")],
+    };
+  }
+  const o = story.outcome;
+  const first = story.events[0]?.date ?? ctx.asOf;
+  const last = story.events.at(-1)?.date ?? ctx.asOf;
+  const days = Math.max(1, Math.round((Date.parse(last) - Date.parse(first)) / 86_400_000));
+  const text = t(
+    o.decision === "approved" ? "coach.mortgage.approved" : "coach.mortgage.rejected",
+    {
+      days,
+      steps: story.events.length,
+      price: money(o.priceCents),
+      loan: money(o.loanCents),
+      equity: money(o.equityCents),
+      ltv: o.loanToValuePercent,
+      reason: o.rejectionReason ? t(`mortgage.reason.${o.rejectionReason}` as MessageKey) : "",
+    },
+  );
+  const points = [
+    { label: t("mortgage.figure.loan"), valueCents: o.loanCents },
+    { label: t("mortgage.figure.equity"), valueCents: o.equityCents },
+  ];
+  return {
+    tool: "mortgage",
+    text,
+    card: {
+      title: t("coach.mortgage.title"),
+      summary: text,
+      chart: { kind: "stack", points },
+      basis: t("coach.mortgage.basis"),
+    },
+    facts: [
+      { label: t("mortgage.figure.price"), valueCents: o.priceCents },
+      ...points,
+      { label: t("mortgage.figure.collateral"), valueCents: o.collateralCents },
+      { label: t("mortgage.figure.income"), valueCents: o.requiredMonthlyIncomeCents },
+    ],
+    lesson: t("coach.mortgage.lesson"),
+    followUps: [t("chat.suggest.safe")],
   };
 }

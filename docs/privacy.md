@@ -89,6 +89,27 @@ zero-retention options where the provider offers them, and document internationa
 - **Shared plans**: the name and percentages a customer published, not who published them.
 - **Not** a customer's transactions, balance or profile. No admin route returns them.
 
+## Linked accounts
+
+Accounts at other banks are simulated in this prototype: no bank is contacted, no
+credential is asked for, and the transactions are generated. The screen says so before
+linking and on every chart afterwards. A real service would need each bank's
+account-information access under PSD2, the customer's explicit consent at that bank,
+renewal of that consent, and its own data-protection assessment.
+
+## Corrections and set-asides
+
+The customer's corrections and the amounts they mark as set aside are their own data,
+sealed with their key, exported with their data and erased with it. What the app had
+worked out is never overwritten, so every correction can be undone.
+
+## Mortgage records
+
+Customers with a mortgage application in the dataset can see their own history and
+outcome; nobody else can. The guide's general figures are medians and counts over all 200
+applications. The app explains outcomes and never produces a score, a prediction or a
+decision about lending.
+
 ## Sharing plans
 
 Sharing is the customer's own, deliberate act, and it publishes the minimum: a plan's name

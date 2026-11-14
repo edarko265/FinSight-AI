@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
-import { restoreGoal } from "@/lib/coach/goals";
+import { restoreGoal, restoreSetAside } from "@/lib/coach/goals";
+import { restoreLinked } from "@/lib/coach/personal";
 import { restorePlan } from "@/lib/coach/plans";
 import { emptyTrash, listTrash, takeFromTrash } from "@/lib/coach/trash";
 import { restoreToDashboard } from "@/lib/coach/views";
@@ -41,6 +42,8 @@ export async function POST(request: Request): Promise<Response> {
   if (parsed.data.action === "restore") {
     if (item.kind === "goal") await restoreGoal(ctx, item.item);
     else if (item.kind === "plan") await restorePlan(ctx, item.item);
+    else if (item.kind === "account") await restoreLinked(ctx.customerRef, item.item);
+    else if (item.kind === "setaside") await restoreSetAside(ctx, item.item);
     else await restoreToDashboard(ctx, item);
   }
   return Response.json({ ok: true });

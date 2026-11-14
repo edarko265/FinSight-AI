@@ -169,6 +169,16 @@ const UNCLASSIFIED: Classification = {
 /** Places a consumption transaction in a basket. Non-consumption is never classified. */
 export function classify(tx: Transaction): Classification {
   if (!isConsumption(tx)) return UNCLASSIFIED;
+  // The customer knows their own purchases best: a correction they made wins over the rules.
+  if (tx.override) return { ...tx.override, reason: OWN_CHOICE };
+  return classifyByRules(tx);
+}
+
+export const OWN_CHOICE = "You set this yourself.";
+
+/** What the rules say, ignoring any correction. Kept so a correction can be shown and undone. */
+export function classifyByRules(tx: Transaction): Classification {
+  if (!isConsumption(tx)) return UNCLASSIFIED;
   const rule = RULES[tx.category];
   if (!rule) return UNCLASSIFIED;
   const override = tx.mcc ? rule.mcc?.[tx.mcc] : undefined;

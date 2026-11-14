@@ -1305,6 +1305,271 @@ export const en = {
   "admin.topic.story": "My month in 30 seconds",
   "admin.topic.goals": "My goals",
   "admin.topic.insights": "Needs attention",
+  "settings.money": "Your money",
+  "accounts.title": "Accounts",
+  "accounts.intro":
+    "See everything in one place. Link accounts from other banks and every figure, chart and answer covers them too.",
+  "accounts.simulation":
+    "Other banks are simulated in this demo: the banks are made up and their transactions are generated. No real bank is contacted.",
+  "accounts.simulated": "simulated",
+  "accounts.main": "S-Pankki account",
+  "accounts.main.note": "The account in the bank's own records.",
+  "accounts.total": "Across your accounts",
+  "accounts.total.note":
+    "{count} accounts counted. A card balance is what you owe, so it is subtracted.",
+  "accounts.include": "Count in calculations",
+  "accounts.include.yes": "Yes, count it",
+  "accounts.include.yes.note": "Its spending and balance take part in every figure.",
+  "accounts.include.no": "No, just show the balance",
+  "accounts.include.no.note": "Good for savings you do not want counted as spendable.",
+  "accounts.link": "Link an account",
+  "accounts.link.confirm": "Link the account",
+  "accounts.rename": "Rename account",
+  "accounts.note":
+    "Unlinking moves an account to the recycle bin; its figures leave the calculations at once.",
+  "accounts.tooMany": "You can link up to four accounts. Unlink one first.",
+  "accounts.bank.aurora": "Aurora Bank",
+  "accounts.bank.kaski": "Kaski Savings Bank",
+  "accounts.bank.nordlys": "Nordlys Bank",
+  "accounts.bank.note": "A made-up bank, for the demonstration.",
+  "accounts.kind.everyday": "Everyday account",
+  "accounts.kind.everyday.note": "Daily purchases and a couple of subscriptions.",
+  "accounts.kind.savings": "Savings account",
+  "accounts.kind.savings.note": "Monthly deposits and a little interest.",
+  "accounts.kind.credit": "Credit card",
+  "accounts.kind.credit.note": "Purchases through the month, paid off once a month.",
+  "accounts.step.bank": "Which bank?",
+  "accounts.step.bankHint": "These banks do not exist. They stand in for wherever else you bank.",
+  "accounts.step.kind": "What kind of account?",
+  "accounts.step.kindHint": "Each kind brings a different, generated history.",
+  "accounts.step.consent": "How linking would work",
+  "accounts.step.consentHint": "Read this before you continue.",
+  "accounts.consent.simulated":
+    "This is a simulation. No bank is contacted and no real account is read. The account you link here is filled with made-up transactions so you can see the combined view.",
+  "accounts.consent.real":
+    "In a real service you would be sent to your other bank to sign in and approve read-only access for a limited time, and you could withdraw it at any moment. FinSight would never see your credentials and could never move money.",
+  "accounts.step.name": "Name for the account",
+  "accounts.step.nameHint": "How it appears in your lists.",
+  "accounts.name.suggest.1": "Joint account",
+  "accounts.name.suggest.2": "Holiday fund",
+  "corrections.title": "My corrections",
+  "corrections.intro":
+    "You know your purchases best. Change which basket something belongs to, or what a bill really is; the app remembers what it had worked out, so anything can be undone.",
+  "corrections.baskets": "Baskets you changed",
+  "corrections.empty":
+    "Nothing changed yet. Open the transactions behind any answer and tap Change on one.",
+  "corrections.how":
+    "To correct a purchase, open See transactions under any answer or chart and tap Change.",
+  "corrections.find": "Find a purchase to correct",
+  "corrections.change": "Change basket",
+  "corrections.yours": "your choice",
+  "corrections.was": "The app's answer",
+  "corrections.now": "Yours",
+  "corrections.undo": "Undo",
+  "corrections.undoAll": "Undo all corrections",
+  "corrections.count": "{count} purchases",
+  "corrections.reviewHint": "You can undo this at any time under My corrections.",
+  "corrections.step.basket": "Which basket?",
+  "corrections.step.basketHint": "The app put this in: {basket}.",
+  "corrections.basket.regular": "Comes every month and has to be paid.",
+  "corrections.basket.irregular": "Necessary, but with no schedule: a repair, a dentist.",
+  "corrections.basket.everyday": "Day-to-day spending.",
+  "corrections.step.necessity": "Did you have to?",
+  "corrections.step.necessityHint": "Only free-choice spending is ever suggested as a saving.",
+  "corrections.necessity.essential": "I needed this.",
+  "corrections.necessity.discretionary": "I chose this.",
+  "corrections.step.scope": "Apply to",
+  "corrections.step.scopeHint": "Just this purchase, or everything like it.",
+  "corrections.scope.one": "This purchase only",
+  "corrections.scope.one.note": "Others like it stay as they are.",
+  "corrections.scope.kind": "All purchases like this: {category}",
+  "corrections.scope.kind.note": "Past and future purchases of the same kind.",
+  "corrections.bills": "Expected bills",
+  "corrections.bills.note":
+    "Suggested from your history. Correct the amount or the day, or say that something is not a regular bill; safe to spend and reminders follow.",
+  "corrections.bills.empty": "No regular bills found in your history.",
+  "corrections.bills.suggested": "Suggested",
+  "corrections.bills.day": "day {day}",
+  "corrections.bills.skipped": "Not a regular bill",
+  "corrections.bills.edit": "Expected bill: {category}",
+  "corrections.bills.step.kind": "What needs correcting?",
+  "corrections.bills.step.kindHint": "The suggestion comes from the last six months.",
+  "corrections.bills.mode.amount": "The amount or the day",
+  "corrections.bills.mode.amount.note": "For example the rent went up.",
+  "corrections.bills.mode.skip": "This is not a regular bill",
+  "corrections.bills.mode.skip.note": "Leave it out of expected bills.",
+  "corrections.bills.step.amount": "What is it really?",
+  "corrections.bills.step.amountHint":
+    "The monthly amount in euros, and the day of the month if it has one.",
+  "corrections.bills.amount": "Monthly amount, €",
+  "corrections.bills.dayLabel": "Day of the month (optional)",
+  "goals.progress": "Set aside so far",
+  "goals.pace.ahead": "Ahead of plan",
+  "goals.pace.on_track": "On track",
+  "goals.pace.behind": "Behind plan",
+  "goals.reached": "Goal reached.",
+  "goals.monthsLeft": "About {months} more months at the planned amount.",
+  "goals.aside.cta": "Set money aside",
+  "goals.aside.safe":
+    "You could set aside about {amount} now and still cover a month of bills, essentials and your usual spending.",
+  "goals.aside.none":
+    "Right now there is nothing safe to set aside: the next month of bills and essentials needs what is there.",
+  "goals.aside.total":
+    "Already set aside for goals: {amount}. It is left out of what is safe to spend.",
+  "goals.aside.title": "Set aside for: {goal}",
+  "goals.aside.step": "How much?",
+  "goals.aside.stepHint":
+    "Up to {amount} is safe. No money is moved: you make the transfer yourself, and the app treats the amount as spoken for.",
+  "goals.aside.amount": "Amount, €",
+  "goals.aside.aboveSafe":
+    "That is more than is safe to set aside right now. Choose a smaller amount.",
+  "goals.aside.confirm": "Mark as set aside",
+  "goals.aside.reviewHint": "A simulation of saving. Nothing leaves your account.",
+  "goals.aside.for": "For",
+  "goals.aside.left": "Still safe to set aside after this",
+  "goals.aside.history": "What you set aside ({count})",
+  "coach.basis.linked": "Includes linked accounts ({count}), which are simulated.",
+  "coach.accounts.title": "Your accounts",
+  "coach.accounts.single":
+    "You have one account here, with {balance}. You can link accounts from other banks under Settings to see everything together.",
+  "coach.accounts.summary": "You have {count} accounts. Together, the ones you count hold {total}.",
+  "coach.accounts.total": "Total counted",
+  "coach.accounts.lesson":
+    "Money spread over several banks is easy to lose sight of. Seen together, a card balance is something you owe, not something you have.",
+  "coach.subscriptions.title": "Subscriptions",
+  "coach.subscriptions.summary":
+    "I found {count} payments that look like subscriptions: the same merchant, about monthly, about the same amount. Together they come to {monthly} a month, {yearly} a year.",
+  "coach.subscriptions.none":
+    "I could not find payments that repeat at the same merchant for the same amount each month.",
+  "coach.subscriptions.monthly": "Subscriptions a month",
+  "coach.subscriptions.yearly": "Subscriptions a year",
+  "coach.subscriptions.lesson":
+    "Small monthly amounts are easy to forget. Seeing the yearly figure is the quickest way to decide which ones are still worth it. The data has no merchant names, so these are told apart by merchant number.",
+  "coach.save.title": "Safe to save",
+  "coach.save.summary":
+    "You could set aside about {safe} now. That still leaves the next 30 days of bills, essentials and a reserve covered, plus {keep} for your usual free-choice spending. Nothing is moved: this is a simulation.",
+  "coach.save.none":
+    "Right now there is nothing safe to set aside. The next 30 days of bills and essentials, plus {keep} of usual spending, need what is there.",
+  "coach.save.fits":
+    "Setting aside {amount} fits: up to {safe} is safe right now, and {left} would still be safe after it. Nothing is moved: this is a simulation.",
+  "coach.save.tooMuch":
+    "Setting aside {amount} is more than is safe right now: about {safe} is. Above that, the next month of bills, essentials or usual spending would be squeezed.",
+  "coach.save.noData": "There is not enough history yet to say what is safe to save.",
+  "coach.save.row.commitments": "Bills, essentials and reserve, 30 days",
+  "coach.save.row.keep": "Your usual free-choice spending",
+  "coach.save.row.earmarked": "Already set aside for goals",
+  "coach.save.row.safe": "Safe to set aside now",
+  "coach.save.basis":
+    "An estimate over the next {days} days from your own history. Expected income is not counted until it arrives.",
+  "coach.save.lesson":
+    "Saving works best straight after payday, and from what is truly spare: money you will need back next week was never saved.",
+  "coach.mortgage.title": "Your mortgage application",
+  "coach.mortgage.approved":
+    "Your application took {days} days and {steps} steps, and was approved. The property was {price}; you asked for a loan of {loan} with {equity} of your own money, which is {ltv} % of the price borrowed. The mortgage guide under Settings shows every step.",
+  "coach.mortgage.rejected":
+    "Your application took {days} days and {steps} steps, and was not approved. The reason recorded was: {reason}. The property was {price}; you asked for {loan} with {equity} of your own money, {ltv} % of the price. The mortgage guide under Settings explains what that reason means. An adviser can go through it with you.",
+  "coach.mortgage.general":
+    "I have no mortgage application on record for you. The mortgage guide under Settings shows how an application goes, step by step, how long it typically takes and what it costs along the way. I cannot say whether a loan would be approved: that is for an adviser.",
+  "coach.mortgage.basis":
+    "From the mortgage records in the synthetic dataset. For understanding, not a decision or a prediction.",
+  "coach.mortgage.lesson":
+    "A lender looks at three things: whether your income carries the payments, how much of the price is your own money, and whether the collateral covers the loan.",
+  "mortgage.title": "Mortgage guide",
+  "mortgage.intro":
+    "What applying for a mortgage looks like, step by step: how long it takes, what it costs along the way, and why applications are turned down.",
+  "mortgage.disclaimer":
+    "This explains; it does not decide or predict. Whether you would get a loan depends on a full assessment by the bank. The figures come from synthetic data.",
+  "mortgage.yours": "Your application",
+  "mortgage.timeline": "Your timeline, {count} steps",
+  "mortgage.noStats": "The mortgage figures have not been loaded.",
+  "mortgage.talk": "Talk to an adviser",
+  "mortgage.figure.price": "Property price",
+  "mortgage.figure.loan": "Loan asked for",
+  "mortgage.figure.equity": "Own money",
+  "mortgage.figure.collateral": "Collateral value",
+  "mortgage.figure.income": "Monthly income needed",
+  "mortgage.figure.ltv": "Loan as share of price",
+  "mortgage.stat.days": "Typical length",
+  "mortgage.stat.days.value": "{median} days ({min}–{max})",
+  "mortgage.stat.steps": "Typical number of steps",
+  "mortgage.stat.properties": "Properties considered",
+  "mortgage.stat.approved": "Approved",
+  "mortgage.stat.ltv": "Typical loan share of price",
+  "mortgage.stat.equity": "Typical own money share",
+  "mortgage.stat.note":
+    "Middle values across {count} applications in the synthetic dataset. No figure describes one person.",
+  "mortgage.steps": "The steps",
+  "mortgage.step.when":
+    "Typically first happens around day {day}. Part of {share} % of applications.",
+  "mortgage.costs": "Costs along the way",
+  "mortgage.costs.note": "Besides the price itself. The typical amount where it was recorded.",
+  "mortgage.costs.share": "Recorded in {share} % of applications",
+  "mortgage.reasons": "Why applications are turned down",
+  "mortgage.reasons.note":
+    "{rejected} of {total} applications were not approved. The reasons recorded:",
+  "mortgage.decision.approved": "Approved",
+  "mortgage.decision.rejected": "Not approved",
+  "mortgage.property.apartment": "Apartment",
+  "mortgage.property.terraced_house": "Terraced house",
+  "mortgage.property.detached_house": "Detached house",
+  "mortgage.reason.insufficient_collateral": "Not enough collateral",
+  "mortgage.reason.insufficient_income": "Income too low for the payments",
+  "mortgage.reason.insufficient_equity": "Not enough own money",
+  "mortgage.reason.existing_debt": "Existing debt",
+  "mortgage.reason.explain.insufficient_collateral":
+    "The home and any other security together were worth less than the bank needs against the loan. More own money, extra collateral or a cheaper home each change this.",
+  "mortgage.reason.explain.insufficient_income":
+    "The monthly payments, tested at a higher interest rate, took too large a share of income. A smaller loan or a longer repayment time lowers the payment.",
+  "mortgage.reason.explain.insufficient_equity":
+    "Too little of the price was the applicant's own money. Saving a larger deposit first is the usual way forward.",
+  "mortgage.reason.explain.existing_debt":
+    "Other loans already took a large share of income. Paying some down first leaves more room.",
+  "mortgage.expense.valuation_fee": "Valuation fee",
+  "mortgage.expense.existing_loan": "Existing loan to settle",
+  "mortgage.expense.renovation": "Renovation",
+  "mortgage.expense.transfer_tax": "Transfer tax",
+  "mortgage.expense.maintenance_fee": "Maintenance fee",
+  "mortgage.expense.bank_fee": "Bank fee",
+  "mortgage.event.application_created": "Application started",
+  "mortgage.event.customer_contact": "Talked with the bank",
+  "mortgage.event.property_added": "A home is added",
+  "mortgage.event.property_price_updated": "Price estimate updated",
+  "mortgage.event.loan_calculation": "Loan calculation",
+  "mortgage.event.income_information_received": "Income information handed in",
+  "mortgage.event.document_received": "Documents handed in",
+  "mortgage.event.collateral_added": "Collateral offered",
+  "mortgage.event.collateral_valuation": "Collateral valued",
+  "mortgage.event.additional_collateral_requested": "More collateral asked for",
+  "mortgage.event.expense_recorded": "A cost is recorded",
+  "mortgage.event.loan_decision": "Decision",
+  "mortgage.step.application_created":
+    "You tell the bank you want a mortgage. Nothing is binding yet.",
+  "mortgage.step.property_added":
+    "You name the home you are considering and its price. Most people look at more than one.",
+  "mortgage.step.loan_calculation":
+    "The bank works out the loan: price, your own money, and whether the payments fit your income.",
+  "mortgage.step.income_information_received":
+    "You show what you earn, usually payslips or a tax decision.",
+  "mortgage.step.document_received":
+    "Other papers the bank asks for, such as the sale agreement or the housing company's documents.",
+  "mortgage.step.collateral_added": "You offer security for the loan, normally the home itself.",
+  "mortgage.step.collateral_valuation":
+    "The bank decides what the security is worth to it, which is less than the market price.",
+  "mortgage.step.additional_collateral_requested":
+    "If the home does not cover the loan, the bank asks for more: another property, a guarantee, or more own money.",
+  "mortgage.step.expense_recorded":
+    "Costs beyond the price are counted in: transfer tax, fees, a renovation, an old loan to settle.",
+  "mortgage.step.loan_decision":
+    "The bank says yes or no. A no comes with a reason, and it is about this application, not about you for good.",
+  "admin.topic.subscriptions": "Subscriptions",
+  "admin.topic.accounts": "Accounts",
+  "admin.topic.safe_to_save": "Safe to save",
+  "admin.topic.mortgage": "Mortgage guide",
+  "widget.chart.subscriptions": "Payments that repeat monthly at the same merchant.",
+  "widget.chart.accounts": "The balance of each account, linked ones included.",
+  "widget.chart.safe_to_save": "What you could set aside now with the next month covered.",
+  "trash.kind.account": "Linked account",
+  "trash.kind.setaside": "Money set aside",
 } as const;
 
 export type MessageKey = keyof typeof en;

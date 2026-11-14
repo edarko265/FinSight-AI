@@ -41,6 +41,15 @@ All notable changes to this project are documented here. The format follows
   daily reminders for goals, bills, shortfalls and habits going the wrong way.
 - **Layout.** Responsive from 320 px phones to desktops; custom date ranges with a date
   picker; language as a selector; error and not-found pages.
+- **Accounts.** Link accounts from other banks as a clearly labelled simulation; every
+  calculation, chart and answer then covers all counted accounts together.
+- **Corrections.** Change a purchase's basket for one purchase or its whole kind; adjust
+  an expected bill; every correction keeps the original and can be undone.
+- **Safe to save and goal progress.** What could be set aside with the next month covered;
+  mark money as set aside for a goal (nothing is moved); progress and pace per goal.
+- **Subscriptions.** Payments that repeat monthly at one merchant, with the yearly cost.
+- **Mortgage guide.** The application process taught from the dataset, and the customer's
+  own application where one exists. No prediction of outcomes.
 - **Charts and widgets.** Fifteen chart types any widget can switch between, by selector
   or by asking; a step-by-step add-widget form with a chart gallery and live preview;
   widgets can be dragged, moved, made wide or small, minimised and removed; shortcut and

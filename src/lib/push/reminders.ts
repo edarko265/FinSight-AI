@@ -1,7 +1,7 @@
 import "server-only";
 
 import { allInsights } from "@/lib/coach/all-insights";
-import type { SessionContext } from "@/lib/coach/context";
+import { personalRecord, type SessionContext } from "@/lib/coach/context";
 import { loadBenchmarks, loadCustomer } from "@/lib/data/repository";
 import { getEnv } from "@/lib/env";
 import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n/config";
@@ -35,8 +35,9 @@ export async function runReminders(): Promise<ReminderRun> {
   let sent = 0;
 
   for (const customerRef of refs) {
-    const record = await loadCustomer(customerRef);
-    if (!record) continue;
+    const base = await loadCustomer(customerRef);
+    if (!base) continue;
+    const record = await personalRecord(customerRef, base, asOf);
     const stored = await pushLocale(customerRef);
     const locale = isLocale(stored) ? stored : DEFAULT_LOCALE;
     const ctx: SessionContext = { customerRef, record, asOf, locale, benchmarks };

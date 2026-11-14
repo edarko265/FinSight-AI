@@ -19,6 +19,7 @@
     "voice:setup": "tsx scripts/setup-voice-agent.ts",
     "db:check": "tsx scripts/db-check.ts",
     "build:check": "NEXT_DIST_DIR=.next-check next build",
+    "data:mortgage": "tsx scripts/ingest-mortgage.ts",
     "limits:clear": "tsx scripts/clear-limits.ts"
   },
   "dependencies": {
