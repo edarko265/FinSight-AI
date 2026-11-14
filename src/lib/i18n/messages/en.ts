@@ -1798,6 +1798,60 @@ export const en = {
   "goals.curve": "Progress month by month",
   "goals.curve.caption":
     "Solid: set aside so far ({saved}). Dashed: where the plan expected you to be ({planned}).",
+  "entries.title": "Income and expenses",
+  "entries.nav": "My entries",
+  "entries.intro":
+    "Record money that came in or went out that your account history does not show yet, such as cash. It counts in your balance, your limits and your plan straight away.",
+  "entries.add.income": "Add income",
+  "entries.add.expense": "Add expense",
+  "entries.edit.income": "Edit income",
+  "entries.edit.expense": "Edit expense",
+  "entries.kind.income": "Income",
+  "entries.kind.expense": "Expense",
+  "entries.saved.income": "Income added to your balance",
+  "entries.saved.expense": "Expense recorded",
+  "entries.tooMany": "You have recorded as many entries as can be kept. Remove some first.",
+  "entries.amount": "Amount in euros",
+  "entries.date": "Date",
+  "entries.note": "Note (optional)",
+  "entries.notePlaceholder.income": "For example: sold my old bike",
+  "entries.notePlaceholder.expense": "For example: market stall, paid in cash",
+  "entries.today": "Today",
+  "entries.yesterday": "Yesterday",
+  "entries.step.amount": "How much?",
+  "entries.step.amountHint.income":
+    "Enter what you received, in euros. It is added to your balance.",
+  "entries.step.amountHint.expense":
+    "Enter what you paid, in euros. It is taken from your balance.",
+  "entries.step.category.income": "Where it came from",
+  "entries.step.category.expense": "What it was for",
+  "entries.step.categoryHint.income":
+    "Pick the closest source. Salary counts as salary; everything else as other income.",
+  "entries.step.categoryHint.expense":
+    "Pick the closest kind of spending. This decides which basket and which monthly limit it counts towards.",
+  "entries.step.when": "When?",
+  "entries.step.whenHint":
+    "Choose the day it happened, up to a year back. A short note helps you recognise it later.",
+  "entries.reviewHint":
+    "Check the entry and your balance after it. You can go back to change anything.",
+  "entries.balanceAfter": "Balance after this",
+  "entries.month.income": "Income recorded this month",
+  "entries.month.expense": "Expenses recorded this month",
+  "entries.empty": "Nothing recorded yet. Add income or an expense to see it here.",
+  "entries.yours": "recorded by you",
+  "entries.source.salary": "Salary",
+  "entries.source.benefit": "Benefit or pension",
+  "entries.source.gift": "Gift",
+  "entries.source.sale": "Something I sold",
+  "entries.source.refund": "Refund",
+  "entries.source.other": "Other income",
+  "entries.alerts.title": "Worth knowing",
+  "entries.alerts.intro": "Saved. This is what changed against your limits and your plan.",
+  "entries.alerts.all": "See all insights",
+  "entries.alerts.ok": "OK",
+  "trash.kind.entry": "Income or expense",
+  "admin.topic.entry_income": "Income recorded",
+  "admin.topic.entry_expense": "Expense recorded",
 } as const;
 
 export type MessageKey = keyof typeof en;

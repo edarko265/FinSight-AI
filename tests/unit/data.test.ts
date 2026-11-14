@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
+import { applyEntries, ENTRY_ROW_BASE, type Entry } from "@/lib/data/entries";
 import { openLedger, openProfile, sealLedger, sealProfile } from "@/lib/data/ledger-codec";
 import { parseSourceTimestamp, parseTransactionRow, SourceRowError } from "@/lib/data/source-parse";
 import type { Transaction } from "@/lib/data/types";
@@ -94,5 +95,63 @@ describe("translations", () => {
 
   it("fills in parameters", () => {
     expect(translate("fi", "evidence.count", { count: 3 })).toBe("3 tapahtumaa");
+  });
+});
+
+describe("income and expenses the customer records", () => {
+  const tx = (
+    row: number,
+    date: string,
+    amountCents: number,
+    balanceCents: number,
+  ): Transaction => ({
+    row,
+    date,
+    time: "09:00:00",
+    amountCents,
+    balanceCents,
+    category: "Groceries",
+    type: "purchase",
+    merchantId: null,
+    mcc: "5411",
+  });
+  const main = [tx(1, "2026-09-01", -1000, 9000), tx(2, "2026-09-10", -500, 8500)];
+  const entry = (over: Partial<Entry>): Entry => ({
+    id: "entry-1",
+    row: ENTRY_ROW_BASE + 1,
+    kind: "expense",
+    cents: 2000,
+    date: "2026-09-05",
+    category: "Restaurants",
+    note: "",
+    ...over,
+  });
+
+  it("leaves the history alone when nothing is recorded", () => {
+    expect(applyEntries(main, [], "2026-09-15")).toEqual(main);
+  });
+
+  it("carries an expense through every balance after it", () => {
+    const out = applyEntries(main, [entry({})], "2026-09-15");
+    expect(out.map((item) => item.balanceCents)).toEqual([9000, 7000, 6500]);
+    expect(out[1]).toMatchObject({ manual: true, amountCents: -2000, type: "purchase" });
+  });
+
+  it("adds income to the balance, salary as salary and the rest as other income", () => {
+    const out = applyEntries(
+      main,
+      [
+        entry({ kind: "income", category: "salary", cents: 10_000, date: "2026-09-15" }),
+        entry({ id: "entry-2", row: ENTRY_ROW_BASE + 2, kind: "income", category: "gift" }),
+      ],
+      "2026-09-15",
+    );
+    expect(out.at(-1)).toMatchObject({ type: "salary", balanceCents: 8500 + 2000 + 10_000 });
+    expect(out[1]).toMatchObject({ type: "other_income", balanceCents: 11_000 });
+  });
+
+  it("ignores an entry dated after today, and starts from zero with no history", () => {
+    expect(applyEntries(main, [entry({ date: "2026-09-16" })], "2026-09-15")).toEqual(main);
+    expect(applyEntries([], [entry({})], "2026-09-15")[0]?.balanceCents).toBe(-2000);
   });
 });

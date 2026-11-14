@@ -48,6 +48,9 @@ export async function GET(request: Request): Promise<Response> {
         kindKey: `${tx.category}|${tx.mcc ?? ""}`,
         account: tx.account ?? null,
         corrected: Boolean(tx.override),
+        // Recorded by the customer, not taken from the bank's history.
+        manual: Boolean(tx.manual),
+        note: tx.note ?? null,
         originalBasket: original.basket,
         originalNecessity: original.necessity,
         date: tx.date,

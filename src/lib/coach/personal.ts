@@ -1,6 +1,7 @@
 import "server-only";
 
 import { setBillAdjustments, type BillAdjustment } from "@/lib/analytics/recurrence";
+import { applyEntries, type Entry } from "@/lib/data/entries";
 import { accountProvider } from "@/lib/data/account-providers";
 import {
   mergeAccounts,
@@ -18,7 +19,7 @@ import type { CustomerRecord, Transaction } from "@/lib/data/types";
 
 /**
  * What a customer has added on top of the bank's own records: accounts linked
- * from elsewhere, their own corrections to how spending is sorted, their
+ * from elsewhere, income and expenses they recorded, their own corrections to how spending is sorted, their
  * adjustments to expected bills, and money they have set aside for goals.
  * All of it is sealed with the customer's key, and all of it is applied in one
  * place, here, so every calculation sees the same picture.
@@ -26,6 +27,7 @@ import type { CustomerRecord, Transaction } from "@/lib/data/types";
 const LINKED = "linked_accounts";
 const CORRECTIONS = "corrections";
 const SET_ASIDES = "set_asides";
+export const ENTRIES = "entries";
 const MAX_LINKED = 4;
 
 export type Override = NonNullable<Transaction["override"]>;
@@ -60,7 +62,7 @@ export const writeSetAsides = (ref: string, items: SetAside[]): Promise<void> =>
   writeState(ref, SET_ASIDES, items.slice(0, 200));
 
 /** The kinds of state `personalise` needs, so a caller can fetch them with others in one read. */
-export const PERSONAL_KINDS = [LINKED, CORRECTIONS, SET_ASIDES, "mortgage"] as const;
+export const PERSONAL_KINDS = [LINKED, CORRECTIONS, SET_ASIDES, ENTRIES, "mortgage"] as const;
 
 /**
  * Builds the customer's full picture from the bank's record: linked accounts
@@ -82,9 +84,11 @@ export async function personalise(
   };
   const setAsides = (snapshot.get(SET_ASIDES) as SetAside[] | undefined) ?? [];
   const mortgage = (snapshot.get("mortgage") as MortgageStory | undefined) ?? null;
+  const entries = (snapshot.get(ENTRIES) as Entry[] | undefined) ?? [];
   const provider = accountProvider();
   const merged = mergeAccounts(
-    base.transactions,
+    // What the customer recorded themselves is part of their own account's history.
+    applyEntries(base.transactions, entries, asOf),
     await Promise.all(
       linked.map(async (account) => ({
         account,

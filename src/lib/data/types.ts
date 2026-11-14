@@ -26,6 +26,10 @@ export interface Transaction {
     basket: "regular" | "irregular" | "everyday";
     necessity: "essential" | "discretionary";
   };
+  /** True for income or an expense the customer recorded themselves. */
+  manual?: true;
+  /** The customer's own words about an entry they recorded. */
+  note?: string;
 }
 
 /** One account in the customer's combined view. */
