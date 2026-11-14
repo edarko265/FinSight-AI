@@ -2,6 +2,8 @@
 
 /* Palette follows S-Pankki's published design system: deep green, mint accent, neutral greys. */
 :root {
+  /* Room to leave for the phone's status bar. SafeArea replaces it when the browser reports none. */
+  --safe-top: env(safe-area-inset-top, 0px);
   /* Height of the phone tab bar above the safe-area inset; 0 where there is no tab bar. */
   --bottom-nav-h: 0rem;
   --background: #f5f5f5;

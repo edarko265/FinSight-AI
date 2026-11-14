@@ -77,7 +77,7 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-5 py-8">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-5 pt-[calc(var(--safe-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)]">
       <LanguagePicker compact />
 
       <header className="flex flex-1 flex-col items-center justify-center gap-4 text-center">

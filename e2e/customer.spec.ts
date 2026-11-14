@@ -37,6 +37,9 @@ test.describe("signed in", () => {
     await expect(page.getByText("Recorded balance").first()).toBeVisible();
     await expect(page.getByText(/Safe to spend, next|Estimated shortfall, next/)).toBeVisible();
     await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
+    // Recording income and expenses starts from the balance card.
+    await expect(page.getByRole("button", { name: "Add income" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add expense" })).toBeVisible();
     // Nothing may scroll sideways on a phone.
     expect(
       await page.evaluate(
