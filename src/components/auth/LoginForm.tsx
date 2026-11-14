@@ -8,8 +8,10 @@ import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Suggestions, Wizard, WizardField } from "@/components/ui/Wizard";
-import { api, ApiError } from "@/lib/api-client";
+import { api } from "@/lib/api-client";
+import { isApiError } from "@/lib/async-action";
 import { DEMO_PERSONAS } from "@/lib/demo/personas";
 
 /** The sign-in page: a welcome with one button, which opens a two-step sign-in. */
@@ -23,18 +25,28 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
     null,
   );
 
-  async function signIn(): Promise<void> {
+  const [navigating, setNavigating] = useState(false);
+  // The error shows inside the wizard, so no toast.
+  const login = useAsyncAction(
+    () => api("/api/auth/login", { method: "POST", json: { customerId, password } }),
+    { errorKey: () => null },
+  );
+
+  async function signIn(): Promise<boolean> {
     setError(null);
-    try {
-      await api("/api/auth/login", { method: "POST", json: { customerId, password } });
-      router.replace("/dashboard");
-    } catch (failure) {
-      const status = failure instanceof ApiError ? failure.status : 0;
+    const result = await login.run();
+    if (!result.ok) {
+      const status = isApiError(result.error) ? result.error.status : 0;
       // A server fault is not the user's mistake: say so instead of blaming the password.
       setError(
         status === 429 ? "login.tooMany" : status === 401 ? "login.error" : "login.unavailable",
       );
+      return false;
     }
+    setNavigating(true);
+    router.replace("/dashboard");
+    // Stay pending until the page changes, so the button is not re-enabled mid-navigation.
+    return new Promise<boolean>(() => undefined);
   }
 
   return (
@@ -66,7 +78,7 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
       <Wizard
         open={open}
         title={t("login.title")}
-        finishLabel={t("login.submit")}
+        finishLabel={navigating ? t("login.submitting") : t("login.submit")}
         error={error ? t(error) : null}
         onClose={() => {
           setOpen(false);

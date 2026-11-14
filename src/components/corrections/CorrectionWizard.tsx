@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Wizard, WizardChoices, WizardReview } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
@@ -73,6 +75,28 @@ export function CorrectionWizard({
     return true;
   }
 
+  // A correction made for the whole kind is undone together with the transaction's own.
+  const undo = useAsyncAction(
+    async (current: CorrectionTarget) => {
+      await api("/api/corrections", {
+        method: "POST",
+        json: { action: "undo", scope: "transaction", key: current.key },
+      });
+      await api("/api/corrections", {
+        method: "POST",
+        json: { action: "undo", scope: "kind", key: current.kindKey },
+      });
+    },
+    { successKey: "toast.restored" },
+  );
+
+  async function undoCorrection(current: CorrectionTarget): Promise<void> {
+    const result = await undo.run(current);
+    if (!result.ok) return;
+    close();
+    onDone();
+  }
+
   return (
     <Wizard
       open={target !== null}
@@ -114,22 +138,14 @@ export function CorrectionWizard({
                 <button
                   type="button"
                   className="self-start text-sm font-semibold text-accent"
-                  onClick={() =>
-                    void send(
-                      { action: "undo", scope: "transaction", key: target.key },
-                      "toast.restored",
-                    ).then((done) =>
-                      // A correction made for the whole kind is undone the same way.
-                      done
-                        ? api("/api/corrections", {
-                            method: "POST",
-                            json: { action: "undo", scope: "kind", key: target.kindKey },
-                          }).catch(() => undefined)
-                        : undefined,
-                    )
-                  }
+                  aria-disabled={undo.pending}
+                  onClick={() => void undoCorrection(target)}
                 >
-                  {t("corrections.undo")}
+                  {undo.pending ? (
+                    <PendingLabel>{t("common.restoring")}</PendingLabel>
+                  ) : (
+                    t("corrections.undo")
+                  )}
                 </button>
               ) : null}
             </>

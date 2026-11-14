@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useLoad } from "@/components/shared/useLoad";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
+import { PendingLabel, Spinner } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -131,9 +136,11 @@ function SplitView({
 export function PlansView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const [data, setData] = useState<Payload | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [tick, setTick] = useState(0);
+  const {
+    data,
+    failed,
+    retry: reload,
+  } = useLoad(() => api<Payload>(`/api/plans?locale=${locale}`), locale);
 
   // Make or edit
   const [formOpen, setFormOpen] = useState(false);
@@ -153,22 +160,6 @@ export function PlansView(): React.JSX.Element {
   const [code, setCode] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [codeError, setCodeError] = useState<MessageKey | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    api<Payload>(`/api/plans?locale=${locale}`)
-      .then((payload) => {
-        if (cancelled) return;
-        setData(payload);
-        setFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, tick]);
 
   // A link a friend sent opens straight on their plan.
   useEffect(() => {
@@ -204,7 +195,6 @@ export function PlansView(): React.JSX.Element {
     };
   }, [codeOpen, cleanCode]);
 
-  const reload = useCallback(() => setTick((value) => value + 1), []);
   const money = (cents: number): string => formatMoney(cents, locale);
 
   function openMake(): void {
@@ -338,17 +328,7 @@ export function PlansView(): React.JSX.Element {
         </InfoTip>
       </div>
 
-      {failed ? (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm"
-        >
-          <span>{t("admin.loadFailed")}</span>
-          <button type="button" className="font-semibold underline" onClick={reload}>
-            {t("admin.retry")}
-          </button>
-        </div>
-      ) : null}
+      {failed ? <LoadError onRetry={reload} /> : null}
 
       {data ? (
         <>
@@ -441,25 +421,21 @@ export function PlansView(): React.JSX.Element {
                       </button>
                     ) : null}
                     {plan.shareCode ? (
-                      <button
-                        type="button"
-                        className="text-muted"
-                        onClick={() =>
-                          void act({ action: "unshare", id: plan.id }, "toast.planUnshared")
-                        }
-                      >
-                        {t("plans.stopSharing")}
-                      </button>
+                      <PlanActionButton
+                        payload={{ action: "unshare", id: plan.id }}
+                        successKey="toast.planUnshared"
+                        pendingKey="common.saving"
+                        labelKey="plans.stopSharing"
+                        onDone={reload}
+                      />
                     ) : null}
-                    <button
-                      type="button"
-                      className="text-muted"
-                      onClick={() =>
-                        void act({ action: "delete", id: plan.id }, "toast.movedToBin")
-                      }
-                    >
-                      {t("common.moveToBin")}
-                    </button>
+                    <PlanActionButton
+                      payload={{ action: "delete", id: plan.id }}
+                      successKey="toast.movedToBin"
+                      pendingKey="common.removing"
+                      labelKey="common.moveToBin"
+                      onDone={reload}
+                    />
                   </div>
                 </article>
               ))}
@@ -510,9 +486,13 @@ export function PlansView(): React.JSX.Element {
           )}
         </>
       ) : failed ? null : (
-        <p className="py-10 text-center text-sm text-muted" role="status">
-          …
-        </p>
+        <LoadingRegion className="flex flex-col gap-5">
+          <SkeletonCard />
+          <div className="grid gap-3 md:grid-cols-2">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </LoadingRegion>
       )}
 
       {/* Make or edit a plan */}
@@ -767,24 +747,32 @@ export function PlansView(): React.JSX.Element {
             hint: t("plans.code.hint"),
             valid: preview !== null && preview.plan.code === cleanCode,
             content: (
-              <WizardField
-                label={t("plans.code")}
-                value={code}
-                onChange={(event) => {
-                  setCode(event.target.value.toUpperCase().slice(0, 9));
-                  setPreview(null);
-                  setCodeError(null);
-                }}
-                placeholder="K7M2QX9P"
-                autoCapitalize="characters"
-                autoComplete="off"
-                maxLength={9}
-                autoFocus
-              />
+              <>
+                <WizardField
+                  label={t("plans.code")}
+                  value={code}
+                  onChange={(event) => {
+                    setCode(event.target.value.toUpperCase().slice(0, 9));
+                    setPreview(null);
+                    setCodeError(null);
+                  }}
+                  placeholder="K7M2QX9P"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  maxLength={9}
+                  autoFocus
+                />
+                {cleanCode.length === 8 && !preview && !codeError ? (
+                  <p role="status" className="flex items-center gap-2 text-sm text-muted">
+                    <Spinner />
+                    {t("common.loading")}
+                  </p>
+                ) : null}
+              </>
             ),
           },
           {
-            title: preview?.plan.name ?? "…",
+            title: preview?.plan.name ?? t("common.loading"),
             hint: t("plans.code.previewHint"),
             valid: preview !== null,
             content:
@@ -802,5 +790,41 @@ export function PlansView(): React.JSX.Element {
         ]}
       />
     </div>
+  );
+}
+
+/** Unshare or move-to-bin button for one plan. It owns its hook so it shows its own pending state. */
+function PlanActionButton({
+  payload,
+  successKey,
+  pendingKey,
+  labelKey,
+  onDone,
+}: {
+  payload: Record<string, unknown>;
+  successKey: MessageKey;
+  pendingKey: MessageKey;
+  labelKey: MessageKey;
+  onDone: () => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const action = useAsyncAction(() => api("/api/plans", { method: "POST", json: payload }), {
+    successKey,
+  });
+
+  async function onClick(): Promise<void> {
+    const result = await action.run();
+    if (result.ok) onDone();
+  }
+
+  return (
+    <button
+      type="button"
+      className="min-h-11 text-muted"
+      aria-disabled={action.pending}
+      onClick={() => void onClick()}
+    >
+      {action.pending ? <PendingLabel>{t(pendingKey)}</PendingLabel> : t(labelKey)}
+    </button>
   );
 }

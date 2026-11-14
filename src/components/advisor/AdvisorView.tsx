@@ -4,10 +4,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { useToast } from "@/components/providers/ToastProvider";
 import { SendIcon } from "@/components/ui/icons";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, Skeleton, SkeletonText } from "@/components/ui/Skeleton";
+import { Spinner } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Suggestions, Wizard, WizardChoices, WizardReview } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
+import { isApiError } from "@/lib/async-action";
 import { formatMoney, formatSlot } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { InfoTip } from "@/components/ui/InfoTip";
@@ -38,8 +42,9 @@ const POLL_MS = 4000;
 /** Hand-over to a human adviser: request one and book a call, then continue the conversation with them. */
 export function AdvisorView(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const toast = useToast();
   const [data, setData] = useState<Payload | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
   const [topic, setTopic] = useState<"general" | "investment">("general");
   const [slot, setSlot] = useState("");
   const [note, setNote] = useState("");
@@ -49,12 +54,19 @@ export function AdvisorView(): React.JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
+    let loaded = false;
     const load = (): void => {
       api<Payload>("/api/advisor")
         .then((payload) => {
-          if (!cancelled) setData(payload);
+          if (cancelled) return;
+          loaded = true;
+          setData(payload);
+          setFailed(false);
         })
-        .catch(() => undefined);
+        .catch((error: unknown) => {
+          // Polling stays quiet once there is something to show.
+          if (!cancelled && !loaded && !isApiError(error, 401)) setFailed(true);
+        });
     };
     load();
     const timer = window.setInterval(load, POLL_MS);
@@ -62,34 +74,49 @@ export function AdvisorView(): React.JSX.Element {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [tick]);
 
   const messageCount = data?.request?.messages.length ?? 0;
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messageCount]);
 
-  async function submit(): Promise<void> {
-    if (!data) return;
-    const { request: created } = await api<{ request: AdvisorRequest }>("/api/advisor", {
+  const create = useAsyncAction(
+    async (payload: Payload) => {
+      const { request: created } = await api<{ request: AdvisorRequest }>("/api/advisor", {
+        method: "POST",
+        json: { topic, slot: slot || payload.slots[0], note },
+      });
+      return created;
+    },
+    { successKey: "toast.requestSent" },
+  );
+  const reply = useAsyncAction(async (text: string) => {
+    const { request } = await api<{ request: AdvisorRequest }>("/api/advisor/messages", {
       method: "POST",
-      json: { topic, slot: slot || data.slots[0], note },
+      json: { text },
     });
+    return request;
+  });
+
+  async function submit(): Promise<boolean> {
+    if (!data) return false;
+    const result = await create.run(data);
+    if (!result.ok) return false;
     setOpen(false);
-    setData({ ...data, request: created });
-    toast.notify("toast.requestSent");
+    setData({ ...data, request: result.value });
+    return true;
   }
 
   async function send(event: React.FormEvent): Promise<void> {
     event.preventDefault();
     const text = draft.trim();
     if (!text || !data) return;
+    // The draft is only cleared once the message is delivered, so a failure loses nothing.
+    const result = await reply.run(text);
+    if (!result.ok) return;
     setDraft("");
-    const { request } = await api<{ request: AdvisorRequest }>("/api/advisor/messages", {
-      method: "POST",
-      json: { text },
-    });
-    setData({ ...data, request });
+    setData({ ...data, request: result.value });
   }
 
   const request = data?.request;
@@ -145,10 +172,11 @@ export function AdvisorView(): React.JSX.Element {
             <button
               type="submit"
               disabled={draft.trim() === ""}
-              aria-label={t("chat.send")}
+              aria-disabled={reply.pending}
+              aria-label={reply.pending ? t("common.sending") : t("chat.send")}
               className="rounded-full bg-primary p-3 text-on-primary disabled:opacity-40"
             >
-              <SendIcon className="size-5" />
+              {reply.pending ? <Spinner size="md" /> : <SendIcon className="size-5" />}
             </button>
           </form>
           <Link href="/chat" className="mt-2 block text-center text-sm font-medium text-accent">
@@ -175,6 +203,14 @@ export function AdvisorView(): React.JSX.Element {
           {t("advisor.intro")}
         </InfoTip>
       </div>
+
+      {failed && !data ? <LoadError onRetry={() => setTick((value) => value + 1)} /> : null}
+      {!data && !failed ? (
+        <LoadingRegion className="flex flex-col gap-3">
+          <Skeleton className="h-12 w-full rounded-2xl" />
+          <SkeletonText lines={2} />
+        </LoadingRegion>
+      ) : null}
 
       {data ? (
         <p className="rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm font-medium">
