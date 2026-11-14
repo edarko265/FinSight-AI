@@ -143,4 +143,44 @@ test.describe("signed in", () => {
       await expectAccessible(page);
     }
   });
+
+  test("an expense can be recorded, and says so when it breaks a monthly limit", async ({
+    page,
+  }) => {
+    // A limit with room in it, so the expense below is what takes it over.
+    const headers = { Origin: `http://localhost:${E2E_PORT}` };
+    const set = (cents: number): Promise<unknown> =>
+      page.request.post("/api/budgets", {
+        data: { action: "set", target: "Restaurants", cents },
+        headers,
+      });
+    await set(100_000);
+    const { budgets } = (await (await page.request.get("/api/budgets")).json()) as {
+      budgets: { target: string; spentCents: number }[];
+    };
+    const spent = budgets.find((budget) => budget.target === "Restaurants")?.spentCents ?? 0;
+    await set(spent + 10_000);
+
+    await page.goto("/entries");
+    await expect(page.getByRole("heading", { name: "Income and expenses" })).toBeVisible();
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.getByLabel("Amount in euros").fill("150");
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("radio", { name: "Restaurants" }).check();
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByLabel("Note (optional)").fill("Birthday dinner");
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Balance after this")).toBeVisible();
+    await page.getByRole("button", { name: "Save" }).click();
+
+    await expect(page.getByRole("heading", { name: "Worth knowing" })).toBeVisible();
+    await expect(page.getByText(/Restaurants/).first()).toBeVisible();
+    await page.getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText(/Birthday dinner/)).toBeVisible();
+    await expectAccessible(page);
+
+    // To the recycle bin, and it is gone from the list.
+    await page.getByRole("button", { name: "Move to recycle bin" }).click();
+    await expect(page.getByText(/Nothing recorded yet/)).toBeVisible();
+  });
 });

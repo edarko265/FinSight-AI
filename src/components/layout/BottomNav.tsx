@@ -25,6 +25,7 @@ const ITEMS = [
 /** Screens that sit behind the main five: listed in the side menu, and as links on the dashboard. */
 export const MORE = [
   { href: "/plans", label: "plans.title" },
+  { href: "/entries", label: "entries.nav" },
   { href: "/accounts", label: "accounts.title" },
   { href: "/corrections", label: "corrections.title" },
   { href: "/mortgage", label: "mortgage.title" },

@@ -10,12 +10,13 @@ import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
+import { EntryWizard, type EntryDraft } from "@/components/entries/EntryWizard";
 import { MORE } from "@/components/layout/BottomNav";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { CountUp } from "@/components/ui/CountUp";
-import { PlusIcon } from "@/components/ui/icons";
+import { PlayIcon, PlusIcon } from "@/components/ui/icons";
 import { api, load, peek, remember } from "@/lib/api-client";
 import {
   CUSTOM_PERIOD,
@@ -90,6 +91,9 @@ export function DashboardView(): React.JSX.Element {
   const [affordOpen, setAffordOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
+  const [entryDraft, setEntryDraft] = useState<EntryDraft | null>(null);
+  // Counts recorded income and expenses, so the charts and the banner are fetched again.
+  const [recorded, setRecorded] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +110,7 @@ export function DashboardView(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [locale, recorded]);
 
   const active = dashboard?.views.find((view) => view.id === dashboard.activeId);
   const customMatch = active ? CUSTOM_PERIOD.exec(active.period) : null;
@@ -215,6 +219,19 @@ export function DashboardView(): React.JSX.Element {
         <p className="mt-1 text-3xl font-semibold tabular-nums">
           {overview ? <CountUp cents={overview.balanceCents} locale={locale} /> : "—"}
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(["income", "expense"] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              onClick={() => setEntryDraft({ kind })}
+              className="flex items-center gap-1 rounded-full bg-white/15 px-3.5 py-2 text-xs font-semibold"
+            >
+              <PlusIcon className="size-3.5" />
+              {t(`entries.add.${kind}`)}
+            </button>
+          ))}
+        </div>
         {forecast && forecast.status !== "insufficient_data" ? (
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/15 pt-3">
             <div>
@@ -248,7 +265,7 @@ export function DashboardView(): React.JSX.Element {
             className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-accent"
             aria-hidden="true"
           >
-            ▶
+            <PlayIcon className="size-4" />
           </span>
           {t("story.cta")}
         </span>
@@ -258,7 +275,7 @@ export function DashboardView(): React.JSX.Element {
       </Link>
 
       <nav aria-label={t("dashboard.more")}>
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {MORE.map(({ href, label }) => (
             <li key={href}>
               <Link
@@ -432,6 +449,11 @@ export function DashboardView(): React.JSX.Element {
         </div>
       )}
 
+      <EntryWizard
+        draft={entryDraft}
+        onClose={() => setEntryDraft(null)}
+        onSaved={() => setRecorded((value) => value + 1)}
+      />
       <AffordWizard open={affordOpen} onClose={() => setAffordOpen(false)} />
       {overview ? (
         <PeriodWizard

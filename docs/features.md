@@ -225,6 +225,18 @@ them together.
 | **Count in calculations**      | A switch per account. Savings start switched off, so they are shown but not counted as spendable           |
 | **Edit / Move to recycle bin** | Rename; unlinking removes its figures at once and can be undone from the bin                               |
 
+### Income and expenses you record
+
+**Add income** and **Add expense** on the balance card, or **My entries** in the menu. For
+money the account history does not show yet, such as cash.
+
+| Part                           | What it does                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Four steps**                 | Amount, what it was for (or where it came from), the day and an optional note, then a check that shows the balance afterwards                          |
+| **Counts everywhere**          | The entry becomes a transaction on the customer's own account: balance, safe to spend, the three baskets, charts, monthly limits and the plan all move |
+| **Says what it tipped over**   | If the entry takes a monthly limit to nearly or fully used, or moves the month away from the plan being followed, that is shown as soon as it is saved |
+| **Edit / Move to recycle bin** | Every entry can be changed, removed, restored or deleted for good. In the transactions behind an answer it is marked _recorded by you_                 |
+
 ## 9. My corrections
 
 Settings → **My corrections**, or **Change basket** on any transaction behind an answer.
@@ -268,7 +280,7 @@ It explains. It never predicts or decides whether anyone would get a loan.
 ## 12. Recycle bin
 
 Deleting a goal, a plan, a view, a widget, a linked account, a set-aside, a monthly limit,
-a friend or a cleared conversation moves it here. Each item can be **restored** or
+a recorded income or expense, a friend or a cleared conversation moves it here. Each item can be **restored** or
 **deleted permanently**, and the bin can be emptied.
 
 ---

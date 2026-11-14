@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { MicIcon, PhoneIcon } from "@/components/ui/icons";
+import { MicIcon, PhoneIcon, PlayIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import type { ActionWidget } from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
@@ -227,7 +227,7 @@ export function ActionWidgetBody({
     case "story":
       return (
         <Link href="/story" className={primary}>
-          <span aria-hidden="true">▶</span>
+          <PlayIcon className="size-4" />
           {t("widget.story.start")}
         </Link>
       );
