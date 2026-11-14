@@ -9,6 +9,7 @@ import { EvidenceSheet } from "@/components/evidence/EvidenceSheet";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { MicIcon, PhoneIcon, SendIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
+import { Spinner } from "@/components/ui/Spinner";
 import { useVoice } from "@/components/voice/useVoice";
 import { VoiceCall } from "@/components/voice/VoiceCall";
 import { api } from "@/lib/api-client";
@@ -187,6 +188,7 @@ export function ChatPanel({
   }, [request, me]);
 
   async function toggleRecording(): Promise<void> {
+    if (voice.transcribing) return;
     if (!voice.recording) {
       await voice.startRecording();
       return;
@@ -396,6 +398,17 @@ export function ChatPanel({
         {voice.error === "mic" ? (
           <p className="mb-2 text-sm text-warning">{t("chat.micDenied")}</p>
         ) : null}
+        {voice.transcribeFailed ? (
+          <p role="alert" className="mb-2 text-sm text-warning">
+            {t("toast.error")}
+          </p>
+        ) : null}
+        {voice.transcribing ? (
+          <p role="status" className="mb-2 flex items-center gap-2 text-sm text-muted">
+            <Spinner />
+            {t("common.transcribing")}
+          </p>
+        ) : null}
 
         <form
           className="flex items-end gap-2"
@@ -437,15 +450,24 @@ export function ChatPanel({
             <button
               type="button"
               onClick={() => void toggleRecording()}
-              aria-label={t(voice.recording ? "chat.stop" : "chat.speak")}
+              aria-label={t(
+                voice.transcribing
+                  ? "common.transcribing"
+                  : voice.recording
+                    ? "chat.stop"
+                    : "chat.speak",
+              )}
               aria-pressed={voice.recording}
-              className={`relative flex size-11 shrink-0 items-center justify-center rounded-full ${
+              aria-disabled={voice.transcribing}
+              className={`relative flex size-11 shrink-0 items-center justify-center rounded-full aria-disabled:opacity-40 ${
                 voice.recording
                   ? "bg-accent text-surface"
                   : "border border-border bg-surface text-accent"
               }`}
             >
-              {voice.recording ? (
+              {voice.transcribing ? (
+                <Spinner size="md" />
+              ) : voice.recording ? (
                 <>
                   <span
                     className="absolute inset-0 rounded-full bg-accent fs-ring"
@@ -472,14 +494,12 @@ export function ChatPanel({
       <EvidenceSheet evidence={evidence} onClose={() => setEvidence(null)} />
       <ConsentSheet
         open={Boolean(me?.aiEnabled && !me.aiConsent && !me.aiDecided && !declined)}
-        onChoose={(accepted) => {
+        onChoose={async (accepted) => {
+          // A "no" is stored too, so the question is not asked again on every visit.
+          await api("/api/consent", { method: "POST", json: { accepted } });
+          // Only after the server has stored it, so a failure leaves the sheet open.
           setDeclined(!accepted);
-          if (accepted) {
-            void api("/api/consent", { method: "POST", json: { accepted: true } }).then(refresh);
-          } else {
-            // Remember the "no", so the question is not asked again on every visit.
-            void api("/api/consent", { method: "POST", json: { accepted: false } }).then(refresh);
-          }
+          refresh();
         }}
       />
     </div>

@@ -8,6 +8,8 @@ import { ChartView } from "@/components/charts/ChartView";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { useVoice } from "@/components/voice/useVoice";
 import { api } from "@/lib/api-client";
 import type { ChartCard } from "@/lib/contracts/chart";
@@ -34,7 +36,14 @@ export function StoryView(): React.JSX.Element {
   const { me } = useOverview();
   const router = useRouter();
   const voice = useVoice(locale);
-  const [slides, setSlides] = useState<Slide[] | null>(null);
+  // Tagged with the locale it was loaded for, so a language change starts from a clean slate.
+  const [loaded, setLoaded] = useState<{ locale: string; slides: Slide[] } | null>(null);
+  const [failedLocale, setFailedLocale] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const retried = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const slides = loaded?.locale === locale ? loaded.slides : null;
+  const loadFailed = failedLocale === locale && slides === null;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [narrate, setNarrate] = useState(false);
@@ -44,15 +53,29 @@ export function StoryView(): React.JSX.Element {
     let cancelled = false;
     api<{ slides: Slide[] }>(`/api/story?locale=${locale}`)
       .then((data) => {
-        if (!cancelled) setSlides(data.slides);
+        if (!cancelled) setLoaded({ locale, slides: data.slides });
       })
       .catch(() => {
-        if (!cancelled) setSlides([]);
+        if (!cancelled) setFailedLocale(locale);
       });
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [locale, attempt]);
+
+  function retry(): void {
+    retried.current = true;
+    setFailedLocale(null);
+    setAttempt((value) => value + 1);
+  }
+
+  // The retry button is gone once the story loads, so move focus into the story.
+  useEffect(() => {
+    if (retried.current && slides !== null) {
+      retried.current = false;
+      rootRef.current?.focus();
+    }
+  }, [slides]);
 
   const total = slides?.length ?? 0;
   const ended = slides !== null && index >= total;
@@ -101,9 +124,11 @@ export function StoryView(): React.JSX.Element {
 
   return (
     <div
+      ref={rootRef}
+      tabIndex={-1}
       role="dialog"
       aria-label={t("story.title")}
-      className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand"
+      className="outline-none fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand"
     >
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
         <ol className="flex gap-1.5" aria-hidden="true">
@@ -195,7 +220,14 @@ export function StoryView(): React.JSX.Element {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center fs-rise">
-          {slides === null ? null : total === 0 ? (
+          {loadFailed ? (
+            <LoadError className="w-full text-foreground" onRetry={retry} />
+          ) : slides === null ? (
+            <LoadingRegion className="flex w-full flex-col gap-4">
+              <Skeleton className="h-8 w-2/3 self-center" />
+              <SkeletonText lines={3} />
+            </LoadingRegion>
+          ) : total === 0 ? (
             <p className="text-base">{t("story.empty")}</p>
           ) : ended ? (
             <>

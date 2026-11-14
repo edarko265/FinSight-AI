@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { CorrectionWizard, type CorrectionTarget } from "@/components/corrections/CorrectionWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon } from "@/components/ui/icons";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonList } from "@/components/ui/Skeleton";
+import { PendingLabel, Spinner } from "@/components/ui/Spinner";
 import {
   TAB_SHEET_MAX_H,
   TAB_SHEET_POSITION,
@@ -52,11 +55,21 @@ export function EvidenceSheet({
   const { t, locale } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [page, setPage] = useState<EvidencePage | null>(null);
-  const [loading, setLoading] = useState(false);
+  /** Offset of the request in flight, or null. */
+  const [loadingOffset, setLoadingOffset] = useState<number | null>(null);
+  /** Offset of the request that failed last, or null. */
+  const [failedOffset, setFailedOffset] = useState<number | null>(null);
+  const requestId = useRef(0);
+  const focusAfterRetry = useRef(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const loading = loadingOffset !== null;
   const [correcting, setCorrecting] = useState<CorrectionTarget | null>(null);
 
-  async function load(ref: EvidenceRef, offset: number): Promise<void> {
-    setLoading(true);
+  async function load(ref: EvidenceRef, offset: number, retry = false): Promise<void> {
+    // A newer request, or closing the sheet, makes this one stale.
+    const id = ++requestId.current;
+    setLoadingOffset(offset);
+    setFailedOffset(null);
     const params = new URLSearchParams({
       start: ref.startInclusive,
       end: ref.endExclusive,
@@ -67,13 +80,26 @@ export function EvidenceSheet({
     if (ref.mccs?.length) params.set("mccs", ref.mccs.join(","));
     try {
       const next = await api<EvidencePage>(`/api/transactions?${params.toString()}`);
+      if (id !== requestId.current) return;
+      focusAfterRetry.current = retry;
       setPage((current) =>
         offset === 0 || !current ? next : { ...next, items: [...current.items, ...next.items] },
       );
+    } catch {
+      // Keep what is already shown; the retry button below reloads this offset.
+      if (id === requestId.current) setFailedOffset(offset);
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoadingOffset(null);
     }
   }
+
+  // After a successful retry the retry button is gone, so move focus to the content.
+  useEffect(() => {
+    if (focusAfterRetry.current && !loading && failedOffset === null) {
+      focusAfterRetry.current = false;
+      contentRef.current?.focus();
+    }
+  }, [page, loading, failedOffset]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -81,6 +107,9 @@ export function EvidenceSheet({
     if (evidence && !dialog.open) {
       setPage(null);
       void load(evidence, 0);
+    } else if (!evidence) {
+      // Closing makes any request still in flight stale; opening starts from a clean state.
+      requestId.current += 1;
     }
   }, [evidence]);
   // Runs after the effect above, which still sees the dialog closed on the first render of `evidence`.
@@ -121,7 +150,28 @@ export function EvidenceSheet({
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-4 py-2">
+        <div
+          ref={contentRef}
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto px-4 py-2 outline-none"
+        >
+          {!page && loading ? (
+            <LoadingRegion className="py-2">
+              <SkeletonList rows={5} />
+            </LoadingRegion>
+          ) : null}
+          {page && loadingOffset === 0 ? (
+            <LoadingRegion
+              labelKey="common.refreshing"
+              className="flex items-center gap-2 py-2 text-sm text-muted"
+            >
+              <Spinner />
+              <span aria-hidden="true">{t("common.refreshing")}</span>
+            </LoadingRegion>
+          ) : null}
+          {failedOffset === 0 ? (
+            <LoadError className="my-2" onRetry={() => evidence && void load(evidence, 0, true)} />
+          ) : null}
           {page && page.items.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted">{t("evidence.empty")}</p>
           ) : null}
@@ -153,14 +203,28 @@ export function EvidenceSheet({
               </li>
             ))}
           </ul>
-          {page && page.items.length < page.total ? (
+          {page && failedOffset !== null && failedOffset > 0 ? (
+            <LoadError
+              className="my-3"
+              onRetry={() => evidence && void load(evidence, failedOffset, true)}
+            />
+          ) : null}
+          {page &&
+          page.items.length < page.total &&
+          (failedOffset === null || failedOffset === 0) ? (
             <button
               type="button"
-              disabled={loading}
-              onClick={() => evidence && void load(evidence, page.items.length)}
-              className="my-3 w-full rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+              aria-disabled={loading}
+              onClick={() => {
+                if (!loading && evidence) void load(evidence, page.items.length);
+              }}
+              className="my-3 min-h-11 w-full rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium aria-disabled:opacity-50"
             >
-              {t("evidence.more")}
+              {loadingOffset !== null && loadingOffset > 0 ? (
+                <PendingLabel>{t("common.loading")}</PendingLabel>
+              ) : (
+                t("evidence.more")
+              )}
             </button>
           ) : null}
         </div>
