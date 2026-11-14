@@ -13,7 +13,8 @@ import { readState, writeState } from "@/lib/data/repository";
  *
  * Both are versioned: changing a version asks again.
  */
-export const TERMS_VERSION = "2026-11-14";
+// Bumped when the privacy notice changed: conversations are now kept for the customer.
+export const TERMS_VERSION = "2026-11-14.2";
 export const AI_TERMS_VERSION = "2026-11-14";
 
 export interface ConsentRecord {

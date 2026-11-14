@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { BudgetsSection } from "@/components/plans/BudgetsSection";
+import { FriendsSection } from "@/components/plans/FriendsSection";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import {
@@ -35,6 +37,7 @@ interface Plan {
   origin: "own" | "template" | "copied";
   shareCode?: string;
   shareListed?: boolean;
+  tracked?: boolean;
   forMe: Split;
 }
 
@@ -152,6 +155,10 @@ export function PlansView(): React.JSX.Element {
   const [code, setCode] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [codeError, setCodeError] = useState<MessageKey | null>(null);
+
+  // Report a shared plan
+  const [reporting, setReporting] = useState<string | null>(null);
+  const [reason, setReason] = useState<"name" | "misleading" | "other">("name");
 
   useEffect(() => {
     let cancelled = false;
@@ -386,6 +393,7 @@ export function PlansView(): React.JSX.Element {
                   <div>
                     <h3 className="text-base font-semibold">{plan.name}</h3>
                     <p className="text-xs text-muted">
+                      {plan.tracked ? `${t("plans.following")} · ` : ""}
                       {t(`plans.origin.${plan.origin}`)}
                       {plan.shareCode
                         ? ` · ${t(plan.shareListed ? "plans.shared.listed" : "plans.shared.code")}`
@@ -424,6 +432,19 @@ export function PlansView(): React.JSX.Element {
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
                     <button type="button" className="text-accent" onClick={() => openEdit(plan)}>
                       {t("common.edit")}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={Boolean(plan.tracked)}
+                      className={plan.tracked ? "text-muted" : "text-accent"}
+                      onClick={() =>
+                        void act(
+                          { action: "track", id: plan.tracked ? null : plan.id },
+                          plan.tracked ? "toast.updated" : "toast.planFollowed",
+                        )
+                      }
+                    >
+                      {t(plan.tracked ? "plans.unfollow" : "plans.follow")}
                     </button>
                     {data.sharing && !plan.shareCode ? (
                       <button
@@ -464,6 +485,19 @@ export function PlansView(): React.JSX.Element {
             </div>
           </section>
 
+          <BudgetsSection />
+
+          <FriendsSection
+            onTry={(shared) => {
+              setCode(shared);
+              setCodeOpen(true);
+            }}
+            onReport={(shared) => {
+              setReason("name");
+              setReporting(shared);
+            }}
+          />
+
           {data.sharing ? (
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold">{t("plans.popular")}</h2>
@@ -488,16 +522,28 @@ export function PlansView(): React.JSX.Element {
                     </div>
                     <SplitView split={plan.split} />
                     {plan.mine ? null : (
-                      <button
-                        type="button"
-                        className={`${quiet} self-start`}
-                        onClick={() => {
-                          setCode(plan.code);
-                          setCodeOpen(true);
-                        }}
-                      >
-                        {t("plans.tryIt")}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <button
+                          type="button"
+                          className={quiet}
+                          onClick={() => {
+                            setCode(plan.code);
+                            setCodeOpen(true);
+                          }}
+                        >
+                          {t("plans.tryIt")}
+                        </button>
+                        <button
+                          type="button"
+                          className="text-sm font-semibold text-muted"
+                          onClick={() => {
+                            setReason("name");
+                            setReporting(plan.code);
+                          }}
+                        >
+                          {t("plans.report")}
+                        </button>
+                      </div>
                     )}
                   </article>
                 ))}
@@ -796,6 +842,36 @@ export function PlansView(): React.JSX.Element {
                   <p className="text-xs text-muted">{t("plans.forYou.note")}</p>
                 </div>
               ) : null,
+          },
+        ]}
+      />
+      {/* Report a shared plan to staff */}
+      <Wizard
+        open={reporting !== null}
+        title={t("plans.report")}
+        finishLabel={t("plans.report.send")}
+        onClose={() => setReporting(null)}
+        onFinish={async () => {
+          const done = await act({ action: "report", code: reporting, reason }, "toast.reported");
+          if (done) setReporting(null);
+          return done;
+        }}
+        steps={[
+          {
+            title: t("plans.report.step"),
+            hint: t("plans.report.stepHint"),
+            valid: true,
+            content: (
+              <WizardChoices
+                name="plan-report-reason"
+                value={reason}
+                onChange={setReason}
+                options={(["name", "misleading", "other"] as const).map((value) => ({
+                  value,
+                  label: t(`plans.report.reason.${value}`),
+                }))}
+              />
+            ),
           },
         ]}
       />

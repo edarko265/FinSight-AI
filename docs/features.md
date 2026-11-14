@@ -47,13 +47,13 @@ terms change, the sheet appears again.
 
 Every widget has the same controls in its title bar:
 
-| Control                  | What it does                                                                                       |
-| ------------------------ | -------------------------------------------------------------------------------------------------- |
-| **Drag** (grip)          | On a tablet or desktop, drag a widget onto another to move it there                                |
-| **Move earlier / later** | The same with arrows, on a phone or from the keyboard                                              |
-| **Make wide / small**    | Wide takes the full width; small takes one column. Small shortcuts sit two side by side on a phone |
-| **Minimise**             | Folds the widget to its title bar; the plus opens it again                                         |
-| **Remove** (×)           | Moves it to the recycle bin, from where it can be restored                                         |
+| Control                  | What it does                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Drag** (grip)          | Drag a widget onto another to move it there, with a mouse or a finger; the page scrolls as you near its edge                 |
+| **Move earlier / later** | The same with arrows, on a phone or from the keyboard                                                                        |
+| **Change size**          | Small, medium or wide: by the button, or by pulling the widget's right edge. Small shortcuts sit two side by side on a phone |
+| **Minimise**             | Folds the widget to its title bar; the plus opens it again                                                                   |
+| **Remove** (×)           | Moves it to the recycle bin, from where it can be restored                                                                   |
 
 The order, size and minimised state are saved with the view.
 
@@ -97,6 +97,8 @@ Ask in your own words, by typing, by holding the microphone, or in a voice call.
 ### With every answer
 
 - **A chart** and the values behind it.
+- **How this was worked out** — the steps the calculation took, in order, with the same
+  figures as the answer.
 - **See transactions** — the actual transactions the figure was calculated from.
 - **A short lesson**, for example what an irregular essential cost is.
 - **Add to dashboard** — pins the chart to the view you have open.
@@ -108,6 +110,9 @@ Ask in your own words, by typing, by holding the microphone, or in a voice call.
 
 Suggested questions sit in a tidy grid under the conversation, so there is nothing to
 scroll sideways.
+
+The conversation is kept between visits, so the coach opens where you left off. **Clear
+this conversation** sends it to the recycle bin.
 
 ### Voice
 
@@ -123,22 +128,24 @@ Voice needs the AI choice to be on, because speech is processed by a speech prov
 
 From the coach, **Talk to a person** opens a four-step request: what you need help with
 (everyday finances or investment advice), when to be called, a note for the adviser, and a
-summary with the price. The first conversation is free. The adviser then replies in the same
+summary with the price. The first conversation is free; later ones have a fee, paid on a
+final step. **Payment is simulated: no card is asked for and no money is taken.** The adviser then replies in the same
 place, and the conversation continues there.
 
 ## 5. Goals and rewards
 
-| Part                              | What it does                                                                                                                                                                                                                       |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Your goals**                    | Each goal shows the amount, the monthly amount needed, how that compares with what is usually left over, and whether it fits                                                                                                       |
-| **Tell the coach about a goal**   | Describe it in a sentence                                                                                                                                                                                                          |
-| **Add a goal**                    | A four-step form: name, amount, time, review — with suggestions on each step                                                                                                                                                       |
-| **Edit / Move to recycle bin**    | On each goal                                                                                                                                                                                                                       |
-| **Set money aside**               | Shows how much is safe to set aside now, and marks an amount as set aside for a goal. Nothing is moved: it is a simulation, capped at what leaves the next month covered, and from then on that money is left out of safe to spend |
-| **Progress**                      | Each goal shows what has been set aside against the target, whether that is ahead of, on, or behind the plan, and how many months are left                                                                                         |
-| **Where you could free up money** | The coach's recommendations with their monthly value                                                                                                                                                                               |
-| **Rewards**                       | Points and a level for progress the data shows: a lighter month, free-choice spending down, a buffer, months with money left over, investing, setting a goal                                                                       |
-| **Coupons**                       | Unlock at point thresholds. Examples only                                                                                                                                                                                          |
+| Part                              | What it does                                                                                                                                                                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Your goals**                    | Each goal shows the amount, the monthly amount needed, how that compares with what is usually left over, and whether it fits                                                                                                                                       |
+| **Tell the coach about a goal**   | Describe it in a sentence                                                                                                                                                                                                                                          |
+| **Add a goal**                    | A four-step form: name, amount, time, review — with suggestions on each step                                                                                                                                                                                       |
+| **Edit / Move to recycle bin**    | On each goal                                                                                                                                                                                                                                                       |
+| **Set money aside**               | Shows how much is safe to set aside now, and marks an amount as set aside for a goal. Nothing is moved: it is a simulation, capped at what leaves the next month covered, and from then on that money is left out of safe to spend                                 |
+| **Progress**                      | Each goal shows what has been set aside against the target, whether that is ahead of, on, or behind the plan, how many months are left, and a curve of planned against actual month by month. A goal can start in the past and set-asides can carry their own date |
+| **Redeem a reward**               | An unlocked coupon gives a code. The bonus programme is simulated, so the code has no value                                                                                                                                                                        |
+| **Where you could free up money** | The coach's recommendations with their monthly value                                                                                                                                                                                                               |
+| **Rewards**                       | Points and a level for progress the data shows: a lighter month, free-choice spending down, a buffer, months with money left over, investing, setting a goal                                                                                                       |
+| **Coupons**                       | Unlock at point thresholds. Examples only                                                                                                                                                                                                                          |
 
 Rewards compare a customer with their own past months, never with other people.
 
@@ -157,6 +164,16 @@ add up to 100.
 | **Add a friend's plan**                       | Enter the code, or open the link. You see their percentages worked out on **your** income before adding it            |
 | **Plans others have shared**                  | Listed plans, most copied first                                                                                       |
 | **Edit / Stop sharing / Move to recycle bin** | On each plan                                                                                                          |
+
+More on the Plans page:
+
+- **Follow this plan.** One plan can be followed; the app then says when a slice of your
+  month has drifted five points or more from it.
+- **Monthly limits.** Set a limit for a kind of spending. Nothing is blocked: a bar shows
+  how the month is going and you are told at 80 % and when it is passed.
+- **Friends.** Give your friend code to someone, or add theirs. You then see the plans
+  they have chosen to share, as percentages. They are not told you added them.
+- **Report.** Any shared plan can be reported to staff, anonymously.
 
 **What others can see:** the plan's name and the percentages. Goal names are shown as #1,
 #2 unless you choose to show them. **Never:** your income, any amount, your balance, your
@@ -234,20 +251,24 @@ It explains. It never predicts or decides whether anyone would get a loan.
 
 ## 11. Settings
 
-| Setting           | Options                                                                         |
-| ----------------- | ------------------------------------------------------------------------------- |
-| **Language**      | A selector: English, Suomi, Svenska                                             |
-| **Notifications** | Device notifications and the app-icon badge, on or off                          |
-| **Theme**         | System, Light, Dark                                                             |
-| **Text size**     | Small, Medium, Large, Extra large                                               |
-| **Voice replies** | Read answers aloud automatically                                                |
-| **AI coach**      | On or off. Off withdraws consent: nothing more goes to an AI service            |
-| **Your data**     | Privacy notice, terms of use, recycle bin, download my data, delete my app data |
-| **Account**       | Sign out                                                                        |
+| Setting                     | Options                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------- |
+| **Language**                | A selector: English, Suomi, Svenska                                                         |
+| **Notifications**           | Device notifications and the app-icon badge, on or off                                      |
+| **What to notify me about** | A switch per kind: shortfall, habits, bills, goals, plan, limits, tips, announcements       |
+| **Quiet hours**             | No notifications between two hours you choose; they wait in the app                         |
+| **Two-step sign-in**        | A six-digit code from an authenticator app after the password. Set up by scanning a QR code |
+| **Theme**                   | System, Light, Dark                                                                         |
+| **Text size**               | Small, Medium, Large, Extra large                                                           |
+| **Voice replies**           | Read answers aloud automatically                                                            |
+| **AI coach**                | On or off. Off withdraws consent: nothing more goes to an AI service                        |
+| **Your data**               | Privacy notice, terms of use, recycle bin, download my data, delete my app data             |
+| **Account**                 | Sign out                                                                                    |
 
 ## 12. Recycle bin
 
-Deleting a goal, a plan, a view, a widget, a linked account or a set-aside moves it here. Each item can be **restored** or
+Deleting a goal, a plan, a view, a widget, a linked account, a set-aside, a monthly limit,
+a friend or a cleared conversation moves it here. Each item can be **restored** or
 **deleted permanently**, and the bin can be emptied.
 
 ---

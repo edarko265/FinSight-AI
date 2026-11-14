@@ -15,6 +15,7 @@ interface Message {
   id: string;
   sender: "customer" | "advisor";
   text: string;
+  author?: string;
 }
 
 interface AdvisorRequest {
@@ -30,6 +31,14 @@ interface Payload {
   request: AdvisorRequest | null;
   slots: string[];
   nextFeeCents: number;
+  payments: {
+    id: string;
+    amountCents: number;
+    reference: string;
+    simulated: boolean;
+    at: string;
+  }[];
+  paymentsSimulated: boolean;
 }
 
 const POLL_MS = 4000;
@@ -72,7 +81,8 @@ export function AdvisorView(): React.JSX.Element {
     if (!data) return;
     const { request: created } = await api<{ request: AdvisorRequest }>("/api/advisor", {
       method: "POST",
-      json: { topic, slot: slot || data.slots[0], note },
+      // The fee, if there is one, was confirmed on the payment step.
+      json: { topic, slot: slot || data.slots[0], note, pay: data.nextFeeCents > 0 },
     });
     setOpen(false);
     setData({ ...data, request: created });
@@ -104,6 +114,14 @@ export function AdvisorView(): React.JSX.Element {
             {t(`advisor.topic.${request.topic}` as MessageKey)} ·{" "}
             {t("advisor.booked", { slot: formatSlot(request.slot, locale) })}
           </p>
+          {request.feeCents > 0 && data?.payments[0] ? (
+            <p className="mt-1 text-xs text-muted">
+              {t(data.payments[0].simulated ? "advisor.receipt.simulated" : "advisor.receipt", {
+                amount: formatMoney(data.payments[0].amountCents, locale),
+                reference: data.payments[0].reference,
+              })}
+            </p>
+          ) : null}
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <ol className="flex flex-col gap-3" aria-live="polite">
@@ -120,7 +138,11 @@ export function AdvisorView(): React.JSX.Element {
                 }`}
               >
                 <span className="mb-0.5 block text-[11px] font-semibold opacity-70">
-                  {t(message.sender === "customer" ? "advisor.you" : "advisor.adviser")}
+                  {message.sender === "customer"
+                    ? t("advisor.you")
+                    : message.author
+                      ? `${message.author} · ${t("advisor.adviser")}`
+                      : t("advisor.adviser")}
                 </span>
                 {message.text}
               </li>
@@ -197,7 +219,7 @@ export function AdvisorView(): React.JSX.Element {
       <Wizard
         open={open}
         title={t("advisor.title")}
-        finishLabel={t("advisor.submit")}
+        finishLabel={t(fee > 0 ? "advisor.pay.confirm" : "advisor.submit")}
         onClose={() => setOpen(false)}
         onFinish={submit}
         steps={[
@@ -282,6 +304,26 @@ export function AdvisorView(): React.JSX.Element {
               />
             ),
           },
+          ...(fee > 0
+            ? [
+                {
+                  title: t("advisor.pay.title"),
+                  hint: t("advisor.pay.hint"),
+                  valid: true,
+                  content: (
+                    <div className="flex flex-col gap-3 text-sm">
+                      <p className="rounded-2xl bg-brand px-4 py-4 text-center text-2xl font-semibold text-on-brand tabular-nums">
+                        {formatMoney(fee, locale)}
+                      </p>
+                      <p className="rounded-xl border border-warning bg-warning-soft px-3 py-2">
+                        {t("advisor.pay.simulated")}
+                      </p>
+                      <p className="text-muted">{t("advisor.pay.real")}</p>
+                    </div>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </div>

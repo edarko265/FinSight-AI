@@ -9,6 +9,7 @@ const body = z.object({
   /** Empty for the installation owner, who signs in with the admin password alone. */
   username: z.string().trim().max(40).optional(),
   password: z.string().min(1).max(200),
+  code: z.string().max(10).optional(),
 });
 
 export async function POST(request: Request): Promise<Response> {
@@ -20,10 +21,14 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) {
     return Response.json({ error: "invalid_credentials" }, { status: 401 });
   }
-  const { username, password } = parsed.data;
+  const { username, password, code } = parsed.data;
   let staffId: string | null = null;
   if (username) {
-    staffId = (await verifyStaff(username, password))?.id ?? null;
+    const member = await verifyStaff(username, password, code);
+    if (member === "totp_required") {
+      return Response.json({ error: "totp_required" }, { status: 401 });
+    }
+    staffId = member?.id ?? null;
   } else if (adminPasswordMatches(password)) {
     staffId = OWNER_ID;
   }

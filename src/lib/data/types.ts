@@ -16,6 +16,11 @@ export interface Transaction {
   mcc: string | null;
   /** Set for a transaction from a linked account at another bank; absent for the bank's own account. */
   account?: string;
+  /**
+   * For money moving in from elsewhere: "internal" when it came from another of the customer's
+   * own accounts (not income), "external" when it arrived from outside (income).
+   */
+  transfer?: "internal" | "external";
   /** The customer's own correction of which basket this belongs to. The rules' answer is kept alongside. */
   override?: {
     basket: "regular" | "irregular" | "everyday";

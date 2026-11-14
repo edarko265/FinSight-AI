@@ -80,6 +80,15 @@ pnpm data:mortgage --source data/raw
 It seals each applicant's own history with their key and stores anonymous figures for the
 guide. Safe to run again.
 
+## Tests
+
+```bash
+pnpm test   # unit and integration, in-memory database
+pnpm e2e    # browser tests and accessibility audit, throw-away database, made-up customers
+```
+
+Neither needs a secret, the bank's data or a network.
+
 ## After a schema change
 
 Migrations are not run by the deployment. When a pull request adds a file under

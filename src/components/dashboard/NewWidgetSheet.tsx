@@ -44,6 +44,7 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
       </header>
 
       <ChatPanel
+        remember={false}
         intro={t("dashboard.widgetPrompt")}
         placeholder={t("dashboard.widgetExample")}
         cardAction={(_card, query) =>

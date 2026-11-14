@@ -6,7 +6,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import type { AppSettings } from "@/components/admin/AdminControls";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { ChangePassword } from "@/components/admin/ChangePassword";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
+import { TwoStep } from "@/components/settings/TwoStep";
 import { Logo } from "@/components/ui/icons";
 import { LOCALE_INFO } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -16,6 +18,8 @@ export type AdminRole = "owner" | "admin" | "adviser" | "banker";
 export interface AdminData {
   /** Who is signed in. The owner has no name: they use the installation password. */
   me: { id: string; role: AdminRole; name: string };
+  /** How many days the usage figures cover: 7, 30 or 90. */
+  days: number;
   system: {
     customers: number;
     transactions: number;
@@ -62,6 +66,8 @@ export interface AdminData {
     paid: number;
     averageFirstReplyMinutes: number | null;
   };
+  /** Adviser fees paid. Simulated in this prototype: no money moves. */
+  payments: { count: number; cents: number; simulated: boolean };
   settings: AppSettings;
   audit: { id: string; at: string; action: string; detail: string; actor: string }[];
 }
@@ -160,12 +166,14 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
   const [loading, setLoading] = useState(false);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [tick, setTick] = useState(0);
+  const [days, setDays] = useState(30);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const isLogin = pathname.startsWith("/admin/login");
 
   useEffect(() => {
     if (isLogin) return;
     let cancelled = false;
-    fetch("/api/admin/overview", { credentials: "same-origin" })
+    fetch(`/api/admin/overview?days=${days}`, { credentials: "same-origin" })
       .then(async (response) => {
         if (response.status === 401) {
           router.replace("/admin/login");
@@ -187,7 +195,7 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
     return () => {
       cancelled = true;
     };
-  }, [isLogin, router, tick]);
+  }, [isLogin, router, tick, days]);
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -251,6 +259,16 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
           </nav>
           <div className="hidden flex-col gap-3 border-t border-border px-4 py-4 lg:flex">
             {data ? <SignedInAs me={data.me} /> : null}
+            {data && data.me.role !== "owner" ? <TwoStep endpoint="/api/admin/me/totp" /> : null}
+            {data && data.me.role !== "owner" ? (
+              <button
+                type="button"
+                onClick={() => setPasswordOpen(true)}
+                className="text-left text-sm font-semibold text-accent"
+              >
+                {t("admin.password.change")}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => void signOut()}
@@ -271,7 +289,24 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
                   })
                 : " "}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-2 text-sm">
+                <span className="text-muted">{t("admin.period")}</span>
+                <select
+                  value={days}
+                  onChange={(event) => {
+                    setLoading(true);
+                    setDays(Number(event.target.value));
+                  }}
+                  className="rounded-full border border-border bg-surface px-3 py-2 text-sm font-medium"
+                >
+                  {[7, 30, 90].map((value) => (
+                    <option key={value} value={value}>
+                      {t("admin.period.days", { days: value })}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <button
                 type="button"
                 onClick={reload}
@@ -325,6 +360,7 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
           )}
         </main>
       </div>
+      <ChangePassword open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </AdminContext.Provider>
   );
 }

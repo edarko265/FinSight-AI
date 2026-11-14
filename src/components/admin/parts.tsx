@@ -152,21 +152,22 @@ export function Bars({
   );
 }
 
-const WINDOW_DAYS = 30;
-
 /**
  * Every day of the 30 days ending on the latest point, so a quiet day shows
  * as a gap and a single busy day does not fill the whole chart.
  */
-function fillDays(points: { day: string; count: number }[]): { day: string; count: number }[] {
+function fillDays(
+  points: { day: string; count: number }[],
+  span: number,
+): { day: string; count: number }[] {
   const sorted = [...points].sort((a, b) => a.day.localeCompare(b.day));
   const last = sorted.at(-1);
   if (!last) return [];
   const known = new Map(sorted.map((point) => [point.day.slice(0, 10), point.count]));
   const days: { day: string; count: number }[] = [];
   const cursor = new Date(`${last.day.slice(0, 10)}T00:00:00Z`);
-  cursor.setUTCDate(cursor.getUTCDate() - (WINDOW_DAYS - 1));
-  for (let index = 0; index < WINDOW_DAYS; index += 1) {
+  cursor.setUTCDate(cursor.getUTCDate() - (span - 1));
+  for (let index = 0; index < span; index += 1) {
     const day = cursor.toISOString().slice(0, 10);
     days.push({ day, count: known.get(day) ?? 0 });
     cursor.setUTCDate(cursor.getUTCDate() + 1);
@@ -182,9 +183,12 @@ function fillDays(points: { day: string; count: number }[]): { day: string; coun
 export function DailyChart({
   points,
   unit,
+  span = 30,
 }: {
   points: { day: string; count: number }[];
   unit: string;
+  /** How many days the chart covers. */
+  span?: number;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
   const number = useNumber();
@@ -201,7 +205,7 @@ export function DailyChart({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const days = fillDays(points);
+  const days = fillDays(points, span);
   if (days.length === 0) return <p className="text-sm text-muted">{t("admin.chart.empty")}</p>;
 
   const max = Math.max(1, ...days.map((day) => day.count));

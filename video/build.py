@@ -4,10 +4,14 @@ import subprocess
 scenes=[
  ("dash",4,6.5,"dashboard.png","phone","01 · Understand","Know what is safe to spend","Balance, bills due and a reserve for the unexpected, worked out to the cent."),
  ("chat",10.5,6.5,"chat-pie.png","phone","02 · Ask","Ask in your own words","The AI picks the calculation. Our server does the sum. Every answer opens its transactions."),
- ("voice",17,6.5,"voice.png","phone","03 · Talk","English, Finnish or Swedish","A live voice call with the same numbers. The voice agent holds no data."),
- ("goals",23.5,6.5,"goals.png","phone","04 · Improve","Goals from a sentence","A plan from what you usually have left. Rewards for beating your own past."),
- ("plans",30,6.5,"plans.png","phone","05 · Share","Share a plan, never an amount","Friends copy your percentages and see them on their own income."),
- ("admin",36.5,6.5,"admin.png","wide","06 · For the bank","See what customers need, never who asked","Anonymous usage, staff roles, and a way to teach the coach."),
+ ("steps",0,6.0,"steps.png","phone","03 · Check","See how it was worked out","Every answer shows its steps, in the order the calculation took them."),
+ ("voice",17,6.5,"voice.png","phone","04 · Talk","English, Finnish or Swedish","A live voice call with the same numbers. The voice agent holds no data."),
+ ("widgets",0,6.0,"widgets.png","phone","05 · Make it yours","Build your own dashboard","Fifteen chart types. Widgets you drag, resize and remove. A microphone always in reach."),
+ ("goals",23.5,6.5,"goals.png","phone","06 · Improve","Goals you can watch grow","Set money aside and see your progress against the plan, month by month."),
+ ("plans",30,6.5,"plans.png","phone","07 · Share","Share a plan, never an amount","Friends copy your percentages and see them on their own income."),
+ ("accounts",0,6.0,"accounts.png","phone","08 · Everything","All your accounts in one view","Every figure covers them all. Other banks are simulated in this demo."),
+ ("mortgage",0,6.0,"mortgage.png","wide","09 · Learn","A mortgage, explained","The steps, the time and the costs, taught from two hundred applications."),
+ ("admin",36.5,6.5,"admin.png","wide","10 · For the bank","See what customers need, never who asked","Anonymous usage, staff roles, and a way to teach the coach."),
 ]
 
 def spoken(name):
@@ -157,6 +161,27 @@ tail='''      <section id="outro" class="clip scene center" data-start="@OUT@" d
 audio = "".join(
     f'      <audio id="vo-{name}" src="assets/voice/{name}.mp3" data-start="{start}" data-duration="{int(spoken(name) * 100) / 100}" data-track-index="3" data-volume="1"></audio>\n'
     for name, start in voices if spoken(name) > 0
+)
+music = pathlib.Path(__file__).parent / "assets" / "music.mp3"
+# A soft, slow pad made from four sine tones: no samples, so nothing to license.
+subprocess.run(
+    [
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-f", "lavfi", "-i", f"sine=frequency=130.81:duration={TOTAL + 1}",
+        "-f", "lavfi", "-i", f"sine=frequency=196.00:duration={TOTAL + 1}",
+        "-f", "lavfi", "-i", f"sine=frequency=261.63:duration={TOTAL + 1}",
+        "-f", "lavfi", "-i", f"sine=frequency=329.63:duration={TOTAL + 1}",
+        "-filter_complex",
+        "[0][1][2][3]amix=inputs=4:normalize=1,tremolo=f=0.15:d=0.5,lowpass=f=900,"
+        "aecho=0.8:0.7:420|830:0.35|0.25,volume=0.5,"
+        f"afade=t=in:d=2,afade=t=out:st={TOTAL - 2.5}:d=2.5",
+        "-ac", "2", "-b:a", "128k", str(music),
+    ],
+    check=True,
+)
+audio += (
+    f'      <audio id="music" src="assets/music.mp3" data-start="0" data-duration="{TOTAL}" '
+    'data-track-index="4" data-volume="0.35"></audio>\n'
 )
 html=(head+body+tail).replace("@TOTAL@",str(TOTAL)).replace("@INTRO@",str(INTRO)).replace("@OUTD@",str(OUT_D)).replace("@OUT@",str(OUT)).replace("@AUDIO@",audio).replace("@SCENES@",json.dumps([[s[0],s[1],s[2]] for s in scenes]))
 open("index.html","w").write(html)

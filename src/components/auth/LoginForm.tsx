@@ -10,6 +10,7 @@ import { Logo } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { Suggestions, Wizard, WizardField } from "@/components/ui/Wizard";
 import { api, ApiError } from "@/lib/api-client";
+import type { MessageKey } from "@/lib/i18n/translate";
 import { DEMO_PERSONAS } from "@/lib/demo/personas";
 
 /** The sign-in page: a welcome with one button, which opens a two-step sign-in. */
@@ -19,21 +20,39 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
   const [open, setOpen] = useState(false);
   const [customerId, setCustomerId] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<"login.error" | "login.tooMany" | "login.unavailable" | null>(
-    null,
-  );
+  // Asked for only when this customer has two-step sign-in on.
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<MessageKey | null>(null);
 
-  async function signIn(): Promise<void> {
+  async function signIn(): Promise<boolean> {
     setError(null);
     try {
-      await api("/api/auth/login", { method: "POST", json: { customerId, password } });
+      await api("/api/auth/login", {
+        method: "POST",
+        json: { customerId, password, code: needsCode ? code : undefined },
+      });
       router.replace("/dashboard");
+      return true;
     } catch (failure) {
       const status = failure instanceof ApiError ? failure.status : 0;
+      const reason = failure instanceof ApiError ? failure.code : "";
+      if (reason === "totp_required") {
+        // The password was right: show the extra step instead of an error.
+        setNeedsCode(true);
+        return false;
+      }
       // A server fault is not the user's mistake: say so instead of blaming the password.
       setError(
-        status === 429 ? "login.tooMany" : status === 401 ? "login.error" : "login.unavailable",
+        reason === "totp_invalid"
+          ? "twoStep.wrongCode"
+          : status === 429
+            ? "login.tooMany"
+            : status === 401
+              ? "login.error"
+              : "login.unavailable",
       );
+      return false;
     }
   }
 
@@ -124,6 +143,27 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
               </>
             ),
           },
+          ...(needsCode
+            ? [
+                {
+                  title: t("twoStep.code"),
+                  hint: t("twoStep.loginHint"),
+                  valid: /^\d{6}$/.test(code.replace(/\s/g, "")),
+                  content: (
+                    <WizardField
+                      label={t("twoStep.code")}
+                      value={code}
+                      onChange={(event) => setCode(event.target.value)}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      maxLength={7}
+                      autoFocus
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </main>

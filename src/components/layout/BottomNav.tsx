@@ -22,6 +22,14 @@ const ITEMS = [
   { href: "/settings", label: "nav.settings", Icon: SettingsIcon },
 ] as const;
 
+/** Screens that sit behind the main five: listed in the side menu, and as links on the dashboard. */
+export const MORE = [
+  { href: "/plans", label: "plans.title" },
+  { href: "/accounts", label: "accounts.title" },
+  { href: "/corrections", label: "corrections.title" },
+  { href: "/mortgage", label: "mortgage.title" },
+] as const;
+
 function Badge({
   count,
   className,
@@ -119,6 +127,24 @@ export function SideNav(): React.JSX.Element {
                 {href === "/insights" ? (
                   <Badge count={unread} className="ml-auto hidden lg:flex" />
                 ) : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      <ul className="mt-4 hidden flex-col gap-1 border-t border-border pt-4 lg:flex">
+        {MORE.map(({ href, label }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={`block rounded-2xl px-3 py-2 text-sm font-medium ${
+                  active ? "bg-accent-soft text-accent" : "text-muted hover:bg-background"
+                }`}
+              >
+                {t(label)}
               </Link>
             </li>
           );

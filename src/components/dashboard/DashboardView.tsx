@@ -10,6 +10,7 @@ import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
+import { MORE } from "@/components/layout/BottomNav";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -51,6 +52,7 @@ export function DashboardView(): React.JSX.Element {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const [affordOpen, setAffordOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
@@ -207,6 +209,24 @@ export function DashboardView(): React.JSX.Element {
         </span>
       </Link>
 
+      <nav aria-label={t("dashboard.more")}>
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {MORE.map(({ href, label }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="flex h-full items-center justify-between gap-2 rounded-2xl border border-border bg-surface px-3 py-2.5 text-sm font-medium"
+              >
+                <span className="min-w-0 truncate">{t(label)}</span>
+                <span className="text-accent" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">{t("dashboard.title")}</h1>
         <button
@@ -330,12 +350,14 @@ export function DashboardView(): React.JSX.Element {
               widget={widget}
               first={index === 0}
               last={index === all.length - 1}
-              dragging={dragId !== null && dragId !== widget.id}
+              over={overId === widget.id}
+              dragged={dragId === widget.id}
               onDragStart={setDragId}
-              onDragEnd={() => setDragId(null)}
-              onDropOn={(targetId) => {
-                if (dragId) reorder(dragId, targetId);
+              onDragOver={setOverId}
+              onDrop={() => {
+                if (dragId && overId) reorder(dragId, overId);
                 setDragId(null);
+                setOverId(null);
               }}
               onMove={(id, by) => {
                 const neighbour = all[index + by];

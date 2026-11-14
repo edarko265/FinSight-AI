@@ -12,6 +12,14 @@ import { translate } from "@/lib/i18n/translate";
 
 const MAX_GOALS = 5;
 
+/** The same day of the month, `months` earlier (the 28th at the latest, so every month has it). */
+function monthsBefore(date: string, months: number): string {
+  if (months === 0) return date;
+  const [year = 2026, month = 1, day = 1] = date.split("-").map(Number);
+  const index = year * 12 + (month - 1) - months;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}-${String(Math.min(day, 28)).padStart(2, "0")}`;
+}
+
 export async function listGoals(ctx: SessionContext): Promise<Goal[]> {
   return (await readState<Goal[]>(ctx.customerRef, "goals")) ?? [];
 }
@@ -23,7 +31,7 @@ export async function listGoalPlans(ctx: SessionContext): Promise<GoalProgress[]
   );
 }
 
-export type SetAsideError = "above_safe" | "not_found";
+export type SetAsideError = "above_safe" | "not_found" | "bad_date";
 
 /**
  * Marks money as set aside for a goal. Nothing is moved: the customer makes
@@ -34,17 +42,23 @@ export type SetAsideError = "above_safe" | "not_found";
  */
 export async function setAside(
   ctx: SessionContext,
-  input: { goalId: string | null; cents: number },
+  input: { goalId: string | null; cents: number; date?: string },
 ): Promise<SetAside | SetAsideError> {
-  if (input.goalId && !(await listGoals(ctx)).some((goal) => goal.id === input.goalId)) {
-    return "not_found";
-  }
-  if (input.cents > safeToSave(ctx).safeCents) return "above_safe";
+  const goal = input.goalId
+    ? (await listGoals(ctx)).find((candidate) => candidate.id === input.goalId)
+    : undefined;
+  if (input.goalId && !goal) return "not_found";
+  // Money set aside earlier can be recorded with its date, from the goal's start up to today.
+  const date = input.date ?? ctx.asOf;
+  if (date > ctx.asOf || (goal && date < goal.createdOn)) return "bad_date";
+  // Setting aside today is tested against what is safe now. Money recorded as set aside
+  // earlier is a fact about the past, so it is not.
+  if (date === ctx.asOf && input.cents > safeToSave(ctx).safeCents) return "above_safe";
   const item: SetAside = {
     id: `aside-${crypto.randomUUID()}`,
     goalId: input.goalId,
     cents: Math.round(input.cents),
-    date: ctx.asOf,
+    date,
   };
   await writeSetAsides(ctx.customerRef, [item, ...(await listSetAsides(ctx.customerRef))]);
   await recordUsage("goal", "set_aside", ctx.locale);
@@ -82,7 +96,7 @@ export async function restoreSetAside(ctx: SessionContext, item: SetAside): Prom
 /** Saves a goal described in conversation and returns the plan for reaching it. */
 export async function setGoal(
   ctx: SessionContext,
-  input: { name?: string; targetCents: number; months?: number },
+  input: { name?: string; targetCents: number; months?: number; startedMonthsAgo?: number },
 ): Promise<ToolResult> {
   const targetCents = Math.min(100_000_000, Math.max(100, Math.round(input.targetCents)));
   const months = Math.min(120, Math.max(1, Math.round(input.months ?? 12)));
@@ -92,7 +106,8 @@ export async function setGoal(
     targetCents,
     months,
     monthlyCents: Math.ceil(targetCents / months),
-    createdOn: ctx.asOf,
+    // A goal the customer was already saving towards can start in the past.
+    createdOn: monthsBefore(ctx.asOf, Math.min(36, Math.max(0, input.startedMonthsAgo ?? 0))),
   };
   const goals = [goal, ...(await listGoals(ctx))].slice(0, MAX_GOALS);
   await writeState(ctx.customerRef, "goals", goals);

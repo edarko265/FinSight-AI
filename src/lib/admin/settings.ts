@@ -196,7 +196,7 @@ export interface AiUsageSummary {
   daily: { day: string; requests: number }[];
 }
 
-export async function aiUsageSummary(): Promise<AiUsageSummary> {
+export async function aiUsageSummary(span = 30): Promise<AiUsageSummary> {
   const db = await getDb();
   const rows = await db.query<{
     day: string | Date;
@@ -207,7 +207,8 @@ export async function aiUsageSummary(): Promise<AiUsageSummary> {
     is_today: boolean;
   }>(
     `SELECT day, model, requests, input_tokens, output_tokens, (day = CURRENT_DATE) AS is_today
-     FROM ai_usage WHERE day > CURRENT_DATE - 30 ORDER BY day`,
+     FROM ai_usage WHERE day > CURRENT_DATE - $1::int ORDER BY day`,
+    [span],
   );
   const zero = () => ({ requests: 0, inputTokens: 0, outputTokens: 0 });
   const today = zero();

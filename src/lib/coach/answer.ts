@@ -7,6 +7,7 @@ import type { SessionContext } from "@/lib/coach/context";
 import { checkGrounding } from "@/lib/coach/grounding";
 import { goalsResult, setGoal } from "@/lib/coach/goals";
 import { detectGoal, routeQuestion } from "@/lib/coach/router";
+import { explain } from "@/lib/coach/steps";
 import { findTaught } from "@/lib/coach/taught";
 import type { ToolResult } from "@/lib/coach/tools";
 import type { AssistantMessage } from "@/lib/contracts/chat";
@@ -21,7 +22,13 @@ function taughtMessage(text: string): CoachAnswer {
   };
 }
 
-function toMessage(result: ToolResult, text: string, mode: "ai" | "basic"): AssistantMessage {
+function toMessage(
+  ctx: SessionContext,
+  result: ToolResult,
+  text: string,
+  mode: "ai" | "basic",
+): AssistantMessage {
+  const steps = explain(ctx, result);
   return {
     id: `assistant-${crypto.randomUUID()}`,
     role: "assistant",
@@ -32,6 +39,7 @@ function toMessage(result: ToolResult, text: string, mode: "ai" | "basic"): Assi
     evidence: result.evidence,
     lesson: result.lesson,
     followUps: result.followUps.length > 0 ? result.followUps : undefined,
+    steps: steps.length > 0 ? steps : undefined,
     mode,
   };
 }
@@ -83,7 +91,7 @@ export async function answerQuestion(
       }
       if (primary) {
         return {
-          message: toMessage(primary, grounded ? answer.text : primary.text, "ai"),
+          message: toMessage(ctx, primary, grounded ? answer.text : primary.text, "ai"),
           topic: primary.tool,
         };
       }
@@ -115,5 +123,5 @@ export async function answerQuestion(
     const taught = await findTaught(question, ctx.locale);
     if (taught) return taughtMessage(taught);
   }
-  return { message: toMessage(result, result.text, "basic"), topic: result.tool };
+  return { message: toMessage(ctx, result, result.text, "basic"), topic: result.tool };
 }

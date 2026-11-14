@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { NotifyPrefs } from "@/components/settings/NotifyPrefs";
+import { TwoStep } from "@/components/settings/TwoStep";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import {
@@ -164,6 +166,7 @@ export function SettingsView(): React.JSX.Element {
             className="size-5 shrink-0 accent-(--accent)"
           />
         </label>
+        <NotifyPrefs />
       </Section>
 
       {me?.aiEnabled ? (
@@ -181,6 +184,10 @@ export function SettingsView(): React.JSX.Element {
           </label>
         </Section>
       ) : null}
+
+      <Section title={t("twoStep.section")}>
+        <TwoStep endpoint="/api/security/totp" />
+      </Section>
 
       <Section title={t("settings.money")}>
         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">

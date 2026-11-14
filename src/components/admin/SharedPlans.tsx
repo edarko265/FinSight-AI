@@ -18,7 +18,8 @@ interface SharedPlan {
   copies: number;
 }
 
-type Result = { plans: SharedPlan[] };
+type Reports = Record<string, Record<string, number>>;
+type Result = { plans: SharedPlan[]; reports: Reports };
 
 /**
  * Plans customers have shared. Staff see exactly what other customers can
@@ -30,26 +31,30 @@ export function SharedPlans(): React.JSX.Element {
   const toast = useToast();
   const [plans, setPlans] = useState<SharedPlan[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [reports, setReports] = useState<Reports>({});
 
   useEffect(() => {
     let cancelled = false;
     void adminCall<Result>("/api/admin/plans").then((result) => {
       if (cancelled) return;
-      if (result) setPlans(result.plans);
-      else setFailed(true);
+      if (result) {
+        setPlans(result.plans);
+        setReports(result.reports);
+      } else setFailed(true);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  async function remove(code: string): Promise<void> {
-    const result = await adminCall<Result>("/api/admin/plans", "DELETE", { code });
+  async function act(code: string, action: "remove" | "dismiss"): Promise<void> {
+    const result = await adminCall<Result>("/api/admin/plans", "DELETE", { code, action });
     if (!result) {
       toast.fail();
       return;
     }
     setPlans(result.plans);
+    setReports(result.reports);
     toast.notify("toast.updated");
   }
 
@@ -66,6 +71,11 @@ export function SharedPlans(): React.JSX.Element {
         <Stat
           label={t("admin.plans.listed")}
           value={String(all.filter((plan) => plan.listed).length)}
+        />
+        <Stat
+          label={t("admin.plans.reports")}
+          value={String(Object.keys(reports).length)}
+          tone={Object.keys(reports).length > 0 ? "warning" : undefined}
         />
         <Stat
           label={t("admin.plans.copies")}
@@ -119,13 +129,36 @@ export function SharedPlans(): React.JSX.Element {
                   ).join(" · ")}
                 </span>
               </span>
-              <button
-                type="button"
-                className="font-semibold text-warning"
-                onClick={() => void remove(plan.code)}
-              >
-                {t("admin.plans.remove")}
-              </button>
+              <span className="flex flex-wrap items-center gap-4">
+                {reports[plan.code] ? (
+                  <>
+                    <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">
+                      {t("admin.plans.reported", {
+                        reasons: Object.entries(reports[plan.code] ?? {})
+                          .map(
+                            ([key, count]) =>
+                              `${t(`plans.report.reason.${key}` as MessageKey)} × ${count}`,
+                          )
+                          .join(", "),
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      className="font-semibold text-accent"
+                      onClick={() => void act(plan.code, "dismiss")}
+                    >
+                      {t("admin.plans.dismiss")}
+                    </button>
+                  </>
+                ) : null}
+                <button
+                  type="button"
+                  className="font-semibold text-warning"
+                  onClick={() => void act(plan.code, "remove")}
+                >
+                  {t("admin.plans.remove")}
+                </button>
+              </span>
             </li>
           ))}
         </ul>

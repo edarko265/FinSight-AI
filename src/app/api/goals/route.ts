@@ -61,6 +61,8 @@ const create = z.object({
   name: z.string().trim().min(1).max(60),
   targetCents: z.number().int().min(100).max(100_000_000),
   months: z.number().int().min(1).max(120),
+  /** How long ago the customer started saving towards it. 0 or left out means now. */
+  startedMonthsAgo: z.number().int().min(0).max(36).optional(),
 });
 
 /** Creates a goal from the form. Goals can also be created by describing them to the coach. */

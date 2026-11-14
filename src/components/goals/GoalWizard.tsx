@@ -3,7 +3,13 @@
 import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
+import {
+  Suggestions,
+  Wizard,
+  WizardChoices,
+  WizardField,
+  WizardReview,
+} from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -13,6 +19,8 @@ export interface GoalDraft {
   name: string;
   euros: string;
   months: string;
+  /** Months since the customer started saving towards it. New goals only. */
+  started?: string;
 }
 
 const NAMES: MessageKey[] = [
@@ -49,7 +57,13 @@ export function GoalWizard({
   async function save(): Promise<void> {
     await api("/api/goals", {
       method: value.id ? "PATCH" : "POST",
-      json: { id: value.id, name: value.name.trim(), targetCents, months },
+      json: {
+        id: value.id,
+        name: value.name.trim(),
+        targetCents,
+        months,
+        startedMonthsAgo: value.id ? undefined : Number(value.started ?? "0"),
+      },
     });
     setEdited(null);
     onSaved();
@@ -138,6 +152,26 @@ export function GoalWizard({
             </>
           ),
         },
+        ...(value.id
+          ? []
+          : [
+              {
+                title: t("goals.step.started"),
+                hint: t("goals.step.startedHint"),
+                valid: true,
+                content: (
+                  <WizardChoices
+                    name="goal-started"
+                    value={value.started ?? "0"}
+                    onChange={(started) => set({ started })}
+                    options={(["0", "3", "6", "12"] as const).map((months) => ({
+                      value: months,
+                      label: t(`goals.started.${months}` as MessageKey),
+                    }))}
+                  />
+                ),
+              },
+            ]),
         {
           title: t("wizard.review"),
           hint: t("wizard.reviewHint"),
