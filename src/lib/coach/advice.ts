@@ -453,13 +453,16 @@ export function buildRewards(
   const level = [...LEVELS].reverse().find(([, at]) => points >= at)?.[0] ?? "starter";
   const next = LEVELS.find(([, at]) => at > points);
   const month = monthKey(last.startInclusive);
-  // Saving in the evaluated month: income minus consumption. Money moved to investing,
-  // transfers and the salary sweep are not consumption, so putting money aside is not
-  // counted as spending it.
-  const lastFlow = cashFlow(txs, last);
-  const savedCents = lastFlow.salaryCents + lastFlow.otherIncomeCents - lastFlow.consumptionCents;
+  // Saving in the evaluated month: regular monthly income (the same 6-month mean the target
+  // uses) minus that month's consumption. Income is the mean, not the month's own deposits, so a
+  // salary paid early or late does not show two salaries in one month and none in the next.
+  // Consumption already nets refunds booked as positive purchases. Investing, transfers, the
+  // salary sweep and unknown movements are not consumption and are left out: cashFlow does not
+  // tell refunds from other unknowns, so unknownCents is excluded.
+  const incomeCents = monthlyRoom(ctx).incomeCents;
+  const savedCents = incomeCents - cashFlow(txs, last).consumptionCents;
   const vouchers = voucherLadder({
-    incomeCents: monthlyRoom(ctx).incomeCents,
+    incomeCents,
     savedCents,
     month,
     nationalRatePercent: savingRate.ratePercent,

@@ -139,6 +139,32 @@ describe("voucher pick", () => {
     expect(await readState(refA, "voucher-pick")).toBeNull();
   });
 
+  it("treats a corrupt or undecryptable stored pick as no pick", async () => {
+    const { readVoucherPick } = await import("@/lib/coach/vouchers");
+    const { writeState } = await import("@/lib/data/repository");
+    await writeState(refA, "voucher-pick", {
+      month: "2026-08",
+      tierId: "bronze",
+      optionId: "bronze-coffee",
+    });
+    const raw = await db.query<{ sealed_value: string }>(
+      "SELECT sealed_value FROM customer_state WHERE customer_ref = $1 AND kind = 'voucher-pick'",
+      [refA],
+    );
+    // A's ciphertext under B's key cannot be opened.
+    await db.query(
+      "INSERT INTO customer_state (customer_ref, kind, sealed_value) VALUES ($1, 'voucher-pick', $2)",
+      [refB, raw[0]?.sealed_value],
+    );
+    expect(await readVoucherPick(refB, "2026-09-15")).toBeNull();
+    await db.query(
+      "UPDATE customer_state SET sealed_value = 'garbage' WHERE customer_ref = $1 AND kind = 'voucher-pick'",
+      [refA],
+    );
+    expect(await readVoucherPick(refA, "2026-09-15")).toBeNull();
+    await db.query("DELETE FROM customer_state WHERE kind = 'voucher-pick'");
+  });
+
   it("rejects a locked tier and accepts an unlocked one", async () => {
     const { buildRewards } = await import("@/lib/coach/advice");
     const { canSelect } = await import("@/lib/analytics/vouchers");
@@ -156,11 +182,15 @@ describe("voucher pick", () => {
         ...record,
         transactions: [
           {
-            ...record.transactions[0]!,
             row: 2,
             date: "2026-08-03",
+            time: "10:00:00",
             amountCents: 300_000,
+            balanceCents: 300_000,
+            category: "Salary",
             type: "salary",
+            merchantId: null,
+            mcc: null,
           },
         ],
       },

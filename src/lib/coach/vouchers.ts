@@ -14,9 +14,15 @@ export async function readVoucherPick(
   customerRef: string,
   asOf: string,
 ): Promise<VoucherSelection | null> {
-  const parsed = voucherStoredSelectionSchema.safeParse(
-    await readState<unknown>(customerRef, KIND),
-  );
+  let stored: unknown;
+  try {
+    stored = await readState<unknown>(customerRef, KIND);
+  } catch (error) {
+    // Undecryptable or corrupt: treat as no pick. Never log the value.
+    console.error("voucher pick: could not read:", error instanceof Error ? error.name : "error");
+    return null;
+  }
+  const parsed = voucherStoredSelectionSchema.safeParse(stored);
   if (!parsed.success) return null;
   return parsed.data.month === monthKey(lastCompletedMonth(asOf).startInclusive)
     ? parsed.data

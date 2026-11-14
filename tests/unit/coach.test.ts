@@ -295,12 +295,51 @@ describe("voucher ladder in rewards", () => {
     expect("coupons" in buildRewards(ctx, 0)).toBe(false);
   });
 
+  it("measures saving against regular income, so a late salary does not distort it", () => {
+    // July's salary is paid on 31 July and August's on 1 September: August itself has none.
+    const moved = ledger().map((tx) =>
+      tx.date === "2026-08-01" && tx.type === "salary" ? { ...tx, date: "2026-09-01" } : tx,
+    );
+    const late = { ...ctx, record: { ...ctx.record, transactions: moved } };
+    const { vouchers } = buildRewards(late, 0);
+    // Income: five salaries of 250 000 over six months, rounded; spending in August: 154 000.
+    expect(vouchers.incomeCents).toBe(208_333);
+    expect(vouchers.savedCents).toBe(208_333 - 154_000);
+  });
+
+  it("lets a refund reduce the month's consumption", () => {
+    const base = ledger();
+    const refund: Transaction = {
+      ...(base[0] as Transaction),
+      row: 999,
+      date: "2026-08-20",
+      amountCents: 5_000,
+      category: "Clothing",
+      type: "purchase",
+    };
+    const { vouchers } = buildRewards(
+      { ...ctx, record: { ...ctx.record, transactions: [...base, refund] } },
+      0,
+    );
+    expect(vouchers.incomeCents).toBe(250_000);
+    expect(vouchers.savedCents).toBe(250_000 - 154_000 + 5_000);
+  });
+
+  it("is unavailable, and does not throw, with no history", () => {
+    const empty = { ...ctx, record: { ...ctx.record, transactions: [] } };
+    const { vouchers } = buildRewards(empty, 0);
+    expect(vouchers.available).toBe(false);
+    expect(vouchers.incomeCents).toBe(0);
+    expect(vouchers.savedCents).toBe(0);
+    expect(vouchers.tiers.every((tier) => !tier.unlocked)).toBe(true);
+  });
+
   it("honours a pick for the evaluated month and ignores one for another month", () => {
     const free = buildRewards(ctx, 0).vouchers;
     const unlocked = free.tiers.find((tier) => tier.unlocked);
-    expect(unlocked).toBeDefined();
     const option = unlocked?.options[0];
-    const pick = { month: "2026-08", tierId: unlocked!.id, optionId: option!.id };
+    if (!unlocked || !option) throw new Error("fixture should unlock a tier");
+    const pick = { month: "2026-08", tierId: unlocked.id, optionId: option.id };
     const picked = buildRewards(ctx, 0, DEFAULT_REWARD_RULES, pick).vouchers;
     expect(picked.selected).toEqual(pick);
     expect(picked.selectedValid).toBe(true);
