@@ -11,11 +11,15 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // blob: lets the voice SDK load its audio worklets.
+  `script-src 'self' 'unsafe-inline' blob:${isDev ? " 'unsafe-eval'" : ""}`,
+  "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  "media-src 'self' blob:",
+  // Realtime voice calls connect from the browser to the speech provider.
+  `connect-src 'self' https://*.elevenlabs.io wss://*.elevenlabs.io${isDev ? " ws: wss:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -28,7 +32,7 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
@@ -36,6 +40,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  devIndicators: false,
+  // `pnpm check` builds into its own folder, so it can run while `pnpm dev` is running.
+  // Building into the dev server's folder corrupts its cache and makes pages reload in a loop.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   turbopack: {
     rules: {
       "*.css": {

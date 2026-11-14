@@ -1,0 +1,66 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { ChatPanel } from "@/components/chat/ChatPanel";
+import type { WidgetQuery } from "@/lib/contracts/chart";
+import { usePreferences } from "@/components/providers/PreferencesProvider";
+
+interface NewWidgetSheetProps {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (query: WidgetQuery) => void;
+}
+
+/** A bottom sheet where the assistant proposes a chart and the user decides whether to pin it. */
+export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): React.JSX.Element {
+  const { t } = usePreferences();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      aria-labelledby="new-widget-title"
+      className="m-0 mx-auto mt-auto h-[88dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
+    >
+      <header className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 id="new-widget-title" className="text-base font-semibold">
+          {t("dashboard.newWidget")}
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full px-3 py-1.5 text-sm font-medium text-accent"
+        >
+          {t("evidence.close")}
+        </button>
+      </header>
+
+      <ChatPanel
+        intro={t("dashboard.widgetPrompt")}
+        placeholder={t("dashboard.widgetExample")}
+        cardAction={(_card, query) =>
+          query ? (
+            <button
+              type="button"
+              onClick={() => {
+                onAdd(query);
+                onClose();
+              }}
+              className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary"
+            >
+              {t("chat.addToDashboard")}
+            </button>
+          ) : null
+        }
+      />
+    </dialog>
+  );
+}

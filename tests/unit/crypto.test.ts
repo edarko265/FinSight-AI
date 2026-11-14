@@ -99,3 +99,26 @@ describe("decodeKey", () => {
     );
   });
 });
+
+describe("comparing secrets", () => {
+  it("matches only the exact secret, whatever the lengths", async () => {
+    const { secretsMatch } = await import("@/lib/security/compare");
+    expect(secretsMatch("correct horse", "correct horse")).toBe(true);
+    expect(secretsMatch("correct horse", "correct hors")).toBe(false);
+    expect(secretsMatch("correct hors", "correct horse")).toBe(false);
+    expect(secretsMatch("", "correct horse")).toBe(false);
+    expect(secretsMatch("pässi-ä", "pässi-ä")).toBe(true);
+    // Longer than the comparison buffer: refused even if the first part is the same.
+    const long = "x".repeat(2000);
+    expect(secretsMatch(long, long)).toBe(false);
+  });
+});
+
+describe("the boot script", () => {
+  it("carries the same storage key and text sizes as the app", async () => {
+    const { FONT_SIZES, PREFERENCES_BOOT_SCRIPT, PREFS_STORAGE_KEY } =
+      await import("@/components/providers/PreferencesProvider");
+    expect(PREFERENCES_BOOT_SCRIPT).toContain(JSON.stringify(PREFS_STORAGE_KEY));
+    expect(PREFERENCES_BOOT_SCRIPT).toContain(JSON.stringify(FONT_SIZES));
+  });
+});
