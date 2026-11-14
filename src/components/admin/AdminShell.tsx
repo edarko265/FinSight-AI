@@ -10,6 +10,9 @@ import { ChangePassword } from "@/components/admin/ChangePassword";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { TwoStep } from "@/components/settings/TwoStep";
 import { Logo } from "@/components/ui/icons";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
+import { SIGNED_OUT_EVENT } from "@/lib/api-client";
 import { LOCALE_INFO } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -197,6 +200,14 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
     };
   }, [isLogin, router, tick, days]);
 
+  useEffect(() => {
+    if (isLogin) return;
+    // Any admin call that meets a lost session fires this: go and sign in again.
+    const toSignIn = (): void => router.replace("/admin/login");
+    window.addEventListener(SIGNED_OUT_EVENT, toSignIn);
+    return () => window.removeEventListener(SIGNED_OUT_EVENT, toSignIn);
+  }, [isLogin, router]);
+
   const reload = useCallback(() => {
     setLoading(true);
     setTick((value) => value + 1);
@@ -206,14 +217,23 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
   }, []);
   const value = useMemo(() => ({ data, reload, patch }), [data, reload, patch]);
 
-  if (isLogin) return <>{children}</>;
+  const { run: signOutRun, pending: signingOut } = useAsyncAction(
+    async (): Promise<void> => {
+      const response = await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      // A 401 means the session is already gone, which is what signing out wanted.
+      if (!response.ok && response.status !== 401) throw new Error("logout failed");
+      router.replace("/admin/login");
+    },
+    { errorKey: "common.saveFailed" },
+  );
+  const signOut = (): void => {
+    void signOutRun();
+  };
 
-  async function signOut(): Promise<void> {
-    await fetch("/api/admin/logout", { method: "POST", credentials: "same-origin" }).catch(
-      () => undefined,
-    );
-    router.replace("/admin/login");
-  }
+  if (isLogin) return <>{children}</>;
 
   const current = (href: string): boolean =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -271,10 +291,15 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
             ) : null}
             <button
               type="button"
-              onClick={() => void signOut()}
-              className="rounded-full border border-border px-4 py-2 text-sm font-semibold"
+              onClick={signOut}
+              aria-disabled={signingOut}
+              className="min-h-11 rounded-full border border-border px-4 py-2 text-sm font-semibold aria-disabled:opacity-60"
             >
-              {t("admin.signOut")}
+              {signingOut ? (
+                <PendingLabel>{t("common.signingOut")}</PendingLabel>
+              ) : (
+                t("admin.signOut")
+              )}
             </button>
           </div>
         </header>
@@ -317,10 +342,15 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
               </button>
               <button
                 type="button"
-                onClick={() => void signOut()}
-                className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold lg:hidden"
+                onClick={signOut}
+                aria-disabled={signingOut}
+                className="min-h-11 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold aria-disabled:opacity-60 lg:hidden"
               >
-                {t("admin.signOut")}
+                {signingOut ? (
+                  <PendingLabel>{t("common.signingOut")}</PendingLabel>
+                ) : (
+                  t("admin.signOut")
+                )}
               </button>
             </div>
           </div>
@@ -355,7 +385,8 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
             children
           ) : failed ? null : (
             <div className="flex flex-1 items-center justify-center py-20" role="status">
-              <Logo className="size-14 animate-pulse" />
+              <span className="sr-only">{t("common.loading")}</span>
+              <Logo className="size-14 animate-pulse motion-reduce:animate-none" />
             </div>
           )}
         </main>

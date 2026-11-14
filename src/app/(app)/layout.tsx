@@ -1,3 +1,5 @@
+import { ChatDock } from "@/components/chat/ChatDock";
+import { ChatDockProvider } from "@/components/chat/ChatDockProvider";
 import { AppFrame } from "@/components/layout/AppFrame";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { BottomNav, SideNav } from "@/components/layout/BottomNav";
@@ -18,19 +20,22 @@ export const instant = false;
 export default function AppLayout({ children }: LayoutProps<"/">): React.JSX.Element {
   return (
     <OverviewProvider>
-      <AppFrame>
-        <SideNav />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <AppHeader />
-          <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain">
-            <div className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col md:max-w-3xl xl:max-w-6xl">
-              {children}
-            </div>
-          </main>
-          <BottomNav />
-          <NotificationPrompt />
-        </div>
-      </AppFrame>
+      <ChatDockProvider>
+        <AppFrame>
+          <SideNav />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <AppHeader />
+            <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain">
+              <div className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col md:max-w-3xl xl:max-w-6xl">
+                {children}
+              </div>
+            </main>
+            <BottomNav />
+            <NotificationPrompt />
+          </div>
+        </AppFrame>
+        <ChatDock />
+      </ChatDockProvider>
     </OverviewProvider>
   );
 }

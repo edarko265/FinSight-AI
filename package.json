@@ -21,6 +21,7 @@
     "build:check": "NEXT_DIST_DIR=.next-check next build",
     "e2e": "playwright test",
     "data:mortgage": "tsx scripts/ingest-mortgage.ts",
+    "data:saving-rate": "tsx scripts/fetch-saving-rate.ts",
     "limits:clear": "tsx scripts/clear-limits.ts"
   },
   "dependencies": {

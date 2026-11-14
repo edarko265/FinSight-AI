@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSettings } from "@/lib/admin/settings";
 import { buildRecommendations, buildRewards, safeToSave } from "@/lib/coach/advice";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
+import { readVoucherPick } from "@/lib/coach/vouchers";
 import { deleteGoal, listGoalPlans, setGoal, updateGoal } from "@/lib/coach/goals";
 
 /** The customer's goals with their funding plans, their rewards and current recommendations. */
@@ -13,9 +14,12 @@ export async function GET(request: Request): Promise<Response> {
   if (blocked) return blocked;
   const plans = await listGoalPlans(ctx);
   const settings = await getSettings();
+  const pick = settings.features.rewards ? await readVoucherPick(ctx.customerRef, ctx.asOf) : null;
   return Response.json({
     goals: plans,
-    rewards: settings.features.rewards ? buildRewards(ctx, plans.length, settings.rewards) : null,
+    rewards: settings.features.rewards
+      ? buildRewards(ctx, plans.length, settings.rewards, pick)
+      : null,
     recommendations: buildRecommendations(ctx),
     // What could be set aside now while the next month stays covered.
     safeToSave: safeToSave(ctx).safeCents,

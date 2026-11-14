@@ -67,6 +67,13 @@ export const en = {
   "chat.error": "Something went wrong on my side. Please try again.",
   "chat.addToDashboard": "Add to dashboard",
   "chat.added": "Added",
+  "dock.open": "Open the coach",
+  "dock.close": "Close",
+  "dock.expand": "Full screen",
+  "dock.collapse": "Half screen",
+  "dock.new": "New conversation",
+  "dock.unread": "Unread reply from the coach",
+  "dock.call": "Call the coach",
   "chat.seeTransactions": "See transactions",
   "chat.why": "Why this answer?",
   "chat.modeAi": "AI coach",
@@ -103,7 +110,9 @@ export const en = {
   "dashboard.noChart": "I could not make a chart from that. Try naming a category or a time span.",
 
   // Evidence sheet
-  "chart.showValues": "Show values",
+  "chart.average": "Average {amount}",
+  "chart.caption.columns":
+    "Latest month in the darker colour; dashed line is the monthly average, {average}.",
   "evidence.title": "Transactions behind this answer",
   "evidence.count": "{count} transactions",
   "evidence.empty": "No matching transactions in this data and period.",
@@ -371,11 +380,36 @@ export const en = {
   "rewards.next": "{points} points to the next level",
   "rewards.earned": "Earned",
   "rewards.notYet": "Not yet",
-  "rewards.coupons": "Coupons",
   "rewards.unlocked": "Unlocked",
-  "rewards.locked": "Unlocks at {points} points",
-  "rewards.note":
-    "Rewards are measured against your own past months, never against other people. The coupons are examples of what a bank bonus programme could offer.",
+
+  "voucher.title": "Monthly vouchers",
+  "voucher.unavailable":
+    "We cannot set voucher targets yet, because there is no income to measure this month. They appear once your income shows up.",
+  "voucher.tier.bronze": "Bronze",
+  "voucher.tier.silver": "Silver",
+  "voucher.tier.gold": "Gold",
+  "voucher.tier.platinum": "Platinum",
+  "voucher.tier.diamond": "Diamond",
+  "voucher.stage.prev": "Previous stage",
+  "voucher.stage.next": "Next stage",
+  "voucher.brand.grocery": "our grocery stores",
+  "voucher.brand.fuel": "our fuel stations",
+  "voucher.kind.grocery.title": "{percent} off a grocery product",
+  "voucher.kind.grocery.chosen": "{percent} off a grocery product at {brand}",
+  "voucher.kind.fuel.title": "{cents} c/l off fuel",
+  "voucher.kind.fuel.chosen": "{cents} c/l off one fuel top-up at {brand}",
+  "voucher.next": "Next goal",
+  "voucher.progress": "{saved} of {target}",
+  "voucher.choose": "Choose a {tier} voucher",
+  "voucher.remove": "Remove choice",
+  "voucher.invalid": "Your earlier choice is no longer available. Pick another voucher.",
+  "voucher.toast.picked": "Voucher chosen",
+  "voucher.toast.removed": "Choice removed",
+  "voucher.lockedNow": "This voucher isn't unlocked anymore. We refreshed your progress.",
+  "voucher.confirm": "Choose this voucher",
+  "voucher.choosing": "Choosing…",
+  "voucher.off": "Vouchers are not switched on right now.",
+
   "reward.underAverage.title": "A lighter month",
   "reward.underAverage.body":
     "You spent {amount} last month, under your three-month average of {average}.",
@@ -390,12 +424,6 @@ export const en = {
   "reward.investing.body": "You invested {amount} last month.",
   "reward.goal.title": "Set a goal",
   "reward.goal.body": "Told the coach what you are saving for.",
-  "reward.coupon.coffee.title": "Free coffee",
-  "reward.coupon.coffee.body": "Example coupon: one coffee on the house.",
-  "reward.coupon.groceries.title": "Extra bonus on groceries",
-  "reward.coupon.groceries.body": "Example coupon: +1% bonus on groceries for a month.",
-  "reward.coupon.voucher.title": "€5 voucher",
-  "reward.coupon.voucher.body": "Example coupon: €5 off your next purchase.",
   "admin.title": "FinSight admin",
   "admin.login.title": "Admin sign-in",
   "admin.login.hint": "Aggregate statistics only. No customer data can be opened from here.",
@@ -510,6 +538,53 @@ export const en = {
   "common.restore": "Restore",
   "common.deleteForever": "Delete permanently",
   "common.moveToBin": "Move to recycle bin",
+  "common.loading": "Loading…",
+  "common.saving": "Saving…",
+  "common.deleting": "Deleting…",
+  "common.removing": "Removing…",
+  "common.restoring": "Restoring…",
+  "common.sending": "Sending…",
+  "common.signingOut": "Signing out…",
+  "common.erasing": "Erasing your data…",
+  "common.transcribing": "Transcribing…",
+  "common.connecting": "Connecting…",
+  "common.refreshing": "Refreshing…",
+  "common.loadFailed": "Couldn't load this. Check your connection and try again.",
+  "common.saveFailed": "Couldn't save. Nothing was changed.",
+  "common.retry": "Try again",
+  "info.show": "More information",
+  "info.hide": "Hide information",
+  "chart.help.bar":
+    "A longer or taller bar means more money. The darker bar is the largest item, or the latest month when the bars are months. The amounts are written out with the chart.",
+  "chart.help.hbar":
+    "Each row is one item, and a longer bar means more money. The colours match the list under the chart.",
+  "chart.help.line":
+    "The line follows the amount from one period to the next. Higher means more money, and the large dot is the latest. The amounts are listed under the chart.",
+  "chart.help.area":
+    "The line follows the amount over time, and the shading under it makes the level easier to see. Higher means more money.",
+  "chart.help.donut":
+    "The ring is the whole, and each coloured slice is one part of it. A bigger slice is a bigger share. The list under the chart shows which colour is which.",
+  "chart.help.pie":
+    "The circle is the whole, and each coloured slice is one part of it. A bigger slice is a bigger share. The list under the chart shows which colour is which.",
+  "chart.help.stack":
+    "The bar is the whole, split into coloured parts. A wider part is a bigger share. The list under the chart shows which colour is which.",
+  "chart.help.treemap":
+    "Each block is one item, and its area shows its size: a bigger block is a bigger amount. The list under the chart shows which colour is which.",
+  "chart.help.radial":
+    "Each ring is one item, and a longer coloured arc means a larger amount compared with the biggest item. The list under the chart shows which colour is which.",
+  "chart.help.radar":
+    "Each spoke is one item, and the further its point is from the centre, the larger the amount. The shape shows which items stand out.",
+  "chart.help.waterfall":
+    "Each bar is added on top of the one before it, building up to the total on the right.",
+  "chart.help.lollipop":
+    "Each stick is one item, and a higher dot means more money. The list under the chart shows which colour is which.",
+  "chart.help.funnel":
+    "Items are sorted from largest to smallest, so the bars narrow from top to bottom. The list under the chart shows which colour is which.",
+  "chart.help.table":
+    "The items and their amounts as a plain list, with a small bar showing each one’s share.",
+  "chart.help.stat": "The amounts written out as big numbers, one for each item.",
+  "chart.help.flow":
+    "Your income on the left splits into where it went on the right. A thicker band means more money. The list under the chart shows which colour is which.",
   "trash.title": "Recycle bin",
   "trash.intro": "Things you delete stay here until you restore them or delete them permanently.",
   "trash.empty": "The recycle bin is empty.",
@@ -523,8 +598,6 @@ export const en = {
   "goals.edit.months": "Months",
   "views.rename": "Rename",
   "admin.announcements": "Announcements to customers",
-  "admin.announcements.note":
-    "Shown to every customer among their insights. Write in the language your customers read.",
   "admin.announcements.title": "Title",
   "admin.announcements.body": "Message",
   "admin.announcements.severity": "Type",
@@ -642,14 +715,12 @@ export const en = {
   "voice.call.end": "End call",
   "voice.call.failed": "The call could not be started.",
   "admin.controls": "Controls",
-  "admin.controls.note":
-    "Changes take effect within a few seconds, without a deploy. Every change is written to the audit log.",
   "admin.flag.ai": "AI coach",
   "admin.flag.ai.note": "Off: every customer gets basic mode and nothing is sent to an AI service.",
   "admin.flag.voice": "Voice",
   "admin.flag.voice.note": "Spoken questions, spoken answers and voice calls.",
   "admin.flag.rewards": "Rewards",
-  "admin.flag.rewards.note": "Points, levels and coupons on the Goals page.",
+  "admin.flag.rewards.note": "Points, levels and vouchers on the Goals page.",
   "admin.flag.advisor": "Human adviser",
   "admin.flag.advisor.note": "Lets customers request an adviser from the coach.",
   "admin.fee": "Adviser fee",
@@ -672,10 +743,7 @@ export const en = {
   "admin.rules.points": "Points for each achievement",
   "admin.rules.pointsHint":
     "Set how many points each kind of progress earns. The streak value is per month, up to six months.",
-  "admin.rules.coupons": "When coupons unlock",
-  "admin.rules.couponsHint":
-    "Set the points a customer needs for each coupon. Lower numbers make rewards easier to reach.",
-  "admin.rules.summary": "{count} achievements · coupons at {a}, {b} and {c} points",
+  "admin.rules.summary": "{count} achievements · vouchers use the public saving-rate statistic",
   "admin.rule.under_average": "A lighter month",
   "admin.rule.choice_down": "Free-choice spending down 10%",
   "admin.rule.buffer": "One month of bills covered",
@@ -688,8 +756,6 @@ export const en = {
   "admin.aiUsage.month": "In the period",
   "admin.aiUsage.input": "Tokens sent",
   "admin.aiUsage.output": "Tokens received",
-  "admin.aiUsage.note":
-    "Tokens are what the AI provider bills for. Multiply by your provider's current prices for the cost.",
   "admin.aiUsage.empty": "No AI answers recorded yet.",
   "admin.workload": "Adviser workload",
   "admin.workload.open": "Open",
@@ -783,7 +849,7 @@ export const en = {
     "Use the service for your own account only. Do not try to reach other customers' data, overload the service or misuse the AI.",
   "terms.rewards.title": "Rewards and adviser",
   "terms.rewards.body":
-    "Points and coupons are examples and have no monetary value. Adviser conversations and their price are shown as an example of how the service could work.",
+    "Points and vouchers are examples and have no monetary value. Adviser conversations and their price are shown as an example of how the service could work.",
   "terms.changes.title": "Availability and changes",
   "terms.changes.body":
     "The prototype is provided as it is and may change or be unavailable. If these terms change you will be asked to accept them again.",
@@ -902,16 +968,12 @@ export const en = {
   "admin.chart.consent": "Consent choices",
   "admin.chart.tokens": "Tokens by model",
   "admin.chart.empty": "Nothing to chart yet.",
-  "admin.overview.intro":
-    "What customers are using the coach for, and what it costs. Open a tile to see more and to act.",
   "admin.notifications.devices": "{count} customers have notifications on",
   "admin.notifications.note":
     "Reminders go out every morning: a goal to put money towards, a bill due soon, a habit going the wrong way, a possible shortfall. Each customer gets one notification for the most important thing they have not been told about yet. The notification carries the headline only; amounts stay in the app.",
   "admin.notifications.send": "Send reminders now",
   "admin.notifications.sending": "Sending…",
   "admin.notifications.result": "{sent} reminders sent to {customers} customers",
-  "admin.notifications.announce":
-    "Announcements are also sent to every device when they are published.",
   "admin.menu": "Admin sections",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
@@ -980,8 +1042,6 @@ export const en = {
   "admin.role.banker": "Personal banker",
   "admin.role.banker.note":
     "The same as an adviser, for staff who look after customers' everyday banking.",
-  "admin.team.intro":
-    "People who can sign in here besides the owner. Each has their own username, password and role.",
   "admin.team.add": "Add a team member",
   "admin.team.edit": "Edit team member",
   "admin.team.count": "Team members",
@@ -1007,8 +1067,6 @@ export const en = {
     "Note the password now: it is stored only as a hash and cannot be shown again.",
   "admin.team.note":
     "Moving someone to the recycle bin ends their access at once. Names and usernames are stored encrypted; passwords only as a salted hash.",
-  "admin.training.intro":
-    "When the coach has no answer, write the one it should have given. From then on it gives yours, word for word, to everyone who asks.",
   "admin.training.gaps": "What the coach could not answer",
   "admin.training.gaps.note":
     "By theme, over the last 30 days. Questions are sorted into a theme as they arrive and only the theme is counted: nobody's question is stored.",
@@ -1037,7 +1095,6 @@ export const en = {
   "admin.training.useExample": "Start from an example",
   "admin.training.note":
     "Taught answers are shown exactly as written and labelled as coming from the bank's team. They are used only when no calculation fits the question.",
-  "admin.trash.intro": "Everything staff delete waits here. Restore it, or delete it permanently.",
   "admin.trash.note": "Deleting permanently cannot be undone.",
   "admin.trash.confirm": "Delete all {count} items permanently?",
   "admin.trash.kind.announcement": "Announcement",
@@ -1202,14 +1259,10 @@ export const en = {
   "admin.flag.sharing": "Shared plans",
   "admin.flag.sharing.note": "Lets customers share plans as percentages and copy each other's.",
   "admin.nav.plans": "Shared plans",
-  "admin.plans.intro":
-    "What customers have shared with each other: a name and percentages. Not who shared it, and never an amount.",
   "admin.plans.shared": "Plans shared",
   "admin.plans.listed": "Listed for everyone",
   "admin.plans.copies": "Times copied",
   "admin.plans.average": "The average shared plan",
-  "admin.plans.average.note":
-    "The mean percentage per slice across all shared plans: what customers aim for.",
   "admin.plans.top": "Most copied",
   "admin.plans.empty": "Nothing shared yet.",
   "admin.plans.isListed": "listed",
@@ -1410,6 +1463,9 @@ export const en = {
   "goals.reached": "Goal reached.",
   "goals.monthsLeft": "About {months} more months at the planned amount.",
   "goals.aside.cta": "Set money aside",
+  "goals.safeShort": "Safe to set aside",
+  "goals.savedShort": "Set aside so far",
+  "goals.monthsShort": "{months} mo left",
   "goals.aside.safe":
     "You could set aside about {amount} now and still cover a month of bills, essentials and your usual spending.",
   "goals.aside.none":

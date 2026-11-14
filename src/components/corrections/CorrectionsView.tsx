@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useLoad } from "@/components/shared/useLoad";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -15,6 +20,7 @@ import {
 import { api } from "@/lib/api-client";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface Pair {
   basket: string;
@@ -51,31 +57,18 @@ type BillMode = "amount" | "skip";
 export function CorrectionsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const [data, setData] = useState<Payload | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [tick, setTick] = useState(0);
+  const {
+    data,
+    failed,
+    retry: reload,
+    setData,
+    headingRef,
+  } = useLoad(() => api<Payload>("/api/corrections"));
   const [bill, setBill] = useState<Payload["bills"][number] | null>(null);
   const [mode, setMode] = useState<BillMode>("amount");
   const [euros, setEuros] = useState("");
   const [day, setDay] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    api<Payload>("/api/corrections")
-      .then((payload) => {
-        if (cancelled) return;
-        setData(payload);
-        setFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tick]);
-
-  const reload = useCallback(() => setTick((value) => value + 1), []);
   const money = (cents: number): string => formatMoney(cents, locale);
   const label = (prefix: string, value: string): string =>
     hasMessage(`${prefix}.${value}`) ? t(`${prefix}.${value}` as MessageKey) : value;
@@ -94,6 +87,43 @@ export function CorrectionsView(): React.JSX.Element {
     return true;
   }
 
+  // The undone item leaves the list at once, so it cannot be undone twice before the reload lands.
+  function undone(scope: "kind" | "transaction" | "bill", key: string): void {
+    setData((current) =>
+      current
+        ? {
+            transactions: current.transactions.filter(
+              (item) => scope !== "transaction" || item.key !== key,
+            ),
+            kinds: current.kinds.filter((item) => scope !== "kind" || item.key !== key),
+            bills: current.bills.map((item) =>
+              scope === "bill" && item.category === key ? { ...item, adjustment: null } : item,
+            ),
+          }
+        : null,
+    );
+    reload();
+  }
+
+  const undoAll = useAsyncAction(
+    () => api("/api/corrections", { method: "POST", json: { action: "undo_all" } }),
+    { successKey: "toast.restored" },
+  );
+  async function runUndoAll(): Promise<void> {
+    const result = await undoAll.run();
+    if (!result.ok) return;
+    setData((current) =>
+      current
+        ? {
+            transactions: [],
+            kinds: [],
+            bills: current.bills.map((item) => ({ ...item, adjustment: null })),
+          }
+        : null,
+    );
+    reload();
+  }
+
   const amount = Number(euros.replace(",", "."));
   const dayNumber = Number(day);
   const amountValid =
@@ -106,19 +136,22 @@ export function CorrectionsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("corrections.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("corrections.intro")}</p>
-      </div>
-      {failed ? (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm"
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("corrections.title")}
+            </h1>
+          }
         >
-          <span>{t("admin.loadFailed")}</span>
-          <button type="button" className="font-semibold underline" onClick={reload}>
-            {t("admin.retry")}
-          </button>
-        </div>
+          {t("corrections.intro")}
+        </InfoTip>
+      </div>
+      {failed ? <LoadError onRetry={reload} /> : null}
+      {!data && !failed ? (
+        <LoadingRegion className="flex flex-col gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+        </LoadingRegion>
       ) : null}
 
       <section className="flex flex-col gap-3">
@@ -143,15 +176,7 @@ export function CorrectionsView(): React.JSX.Element {
             <p className="text-sm">
               {t("corrections.now")}: <span className="font-medium">{pair(item.override)}</span>
             </p>
-            <button
-              type="button"
-              className="mt-2 text-sm font-semibold text-accent"
-              onClick={() =>
-                void send({ action: "undo", scope: "kind", key: item.key }, "toast.restored")
-              }
-            >
-              {t("corrections.undo")}
-            </button>
+            <UndoButton scope="kind" itemKey={item.key} onDone={() => undone("kind", item.key)} />
           </article>
         ))}
         {data?.transactions.map((item) => (
@@ -166,18 +191,14 @@ export function CorrectionsView(): React.JSX.Element {
             <p className="text-sm">
               {t("corrections.now")}: <span className="font-medium">{pair(item.override)}</span>
             </p>
-            <button
-              type="button"
-              className="mt-2 text-sm font-semibold text-accent"
-              onClick={() =>
-                void send({ action: "undo", scope: "transaction", key: item.key }, "toast.restored")
-              }
-            >
-              {t("corrections.undo")}
-            </button>
+            <UndoButton
+              scope="transaction"
+              itemKey={item.key}
+              onDone={() => undone("transaction", item.key)}
+            />
           </article>
         ))}
-        <p className="text-xs text-muted">{t("corrections.how")}</p>
+        <InfoTip>{t("corrections.how")}</InfoTip>
         <Link
           href={`/chat?q=${encodeURIComponent(t("chat.suggest.where"))}`}
           className="self-start rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-semibold"
@@ -188,7 +209,7 @@ export function CorrectionsView(): React.JSX.Element {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">{t("corrections.bills")}</h2>
-        <p className="text-xs text-muted">{t("corrections.bills.note")}</p>
+        <InfoTip>{t("corrections.bills.note")}</InfoTip>
         {data && data.bills.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
             {t("corrections.bills.empty")}
@@ -227,18 +248,12 @@ export function CorrectionsView(): React.JSX.Element {
                 {t("common.edit")}
               </button>
               {item.adjustment ? (
-                <button
-                  type="button"
-                  className="text-muted"
-                  onClick={() =>
-                    void send(
-                      { action: "undo", scope: "bill", key: item.category },
-                      "toast.restored",
-                    )
-                  }
-                >
-                  {t("corrections.undo")}
-                </button>
+                <UndoButton
+                  scope="bill"
+                  itemKey={item.category}
+                  onDone={() => undone("bill", item.category)}
+                  muted
+                />
               ) : null}
             </div>
           </article>
@@ -248,10 +263,15 @@ export function CorrectionsView(): React.JSX.Element {
       {data && (!none || data.bills.some((item) => item.adjustment)) ? (
         <button
           type="button"
-          className="self-start rounded-full border border-border px-5 py-2.5 text-sm font-semibold"
-          onClick={() => void send({ action: "undo_all" }, "toast.restored")}
+          className="min-h-11 self-start rounded-full border border-border px-5 py-2.5 text-sm font-semibold"
+          aria-disabled={undoAll.pending}
+          onClick={() => void runUndoAll()}
         >
-          {t("corrections.undoAll")}
+          {undoAll.pending ? (
+            <PendingLabel>{t("common.restoring")}</PendingLabel>
+          ) : (
+            t("corrections.undoAll")
+          )}
         </button>
       ) : null}
 
@@ -369,5 +389,41 @@ export function CorrectionsView(): React.JSX.Element {
         ]}
       />
     </div>
+  );
+}
+
+/** Undo button for one correction. It owns its hook so each one shows its own pending state. */
+function UndoButton({
+  scope,
+  itemKey,
+  onDone,
+  muted = false,
+}: {
+  scope: "kind" | "transaction" | "bill";
+  itemKey: string;
+  onDone: () => void;
+  muted?: boolean;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const undo = useAsyncAction(
+    () =>
+      api("/api/corrections", { method: "POST", json: { action: "undo", scope, key: itemKey } }),
+    { successKey: "toast.restored" },
+  );
+
+  async function onClick(): Promise<void> {
+    const result = await undo.run();
+    if (result.ok) onDone();
+  }
+
+  return (
+    <button
+      type="button"
+      className={`min-h-11 text-sm font-semibold ${muted ? "text-muted" : "text-accent"}`}
+      aria-disabled={undo.pending}
+      onClick={() => void onClick()}
+    >
+      {undo.pending ? <PendingLabel>{t("common.restoring")}</PendingLabel> : t("corrections.undo")}
+    </button>
   );
 }

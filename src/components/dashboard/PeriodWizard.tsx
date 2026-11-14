@@ -49,13 +49,16 @@ export function PeriodWizard({
   initial,
   onClose,
   onApply,
+  saving = false,
 }: {
   open: boolean;
   /** The demo's "today": the last day there is data for. */
   asOf: string;
   initial?: { from: string; to: string };
   onClose: () => void;
-  onApply: (from: string, to: string) => void;
+  /** Resolves true once saved. On false the dialog stays open. */
+  onApply: (from: string, to: string) => Promise<boolean>;
+  saving?: boolean;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
   const [from, setFrom] = useState(initial?.from ?? shift(asOf, -29));
@@ -68,7 +71,7 @@ export function PeriodWizard({
     <Wizard
       open={open}
       title={t("views.custom.title")}
-      finishLabel={t("views.custom.apply")}
+      finishLabel={saving ? t("common.saving") : t("views.custom.apply")}
       onClose={onClose}
       onFinish={() => onApply(from, to)}
       steps={[

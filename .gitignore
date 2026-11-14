@@ -78,3 +78,6 @@ tmp/
 /.next-e2e/
 /test-results/
 /playwright-report/
+
+# ---- Claude orchestrator: per-session task board ----
+/.claude/orchestrator/
