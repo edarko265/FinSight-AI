@@ -58,7 +58,7 @@ export function AppFrame({ children }: { children: React.ReactNode }): React.JSX
     };
   }, []);
 
-  return <div className="fs-app-frame flex bg-background">{children}</div>;
+  return <div className="fs-app-frame flex overflow-hidden bg-background">{children}</div>;
 }
 
 function isTyping(element: HTMLElement): boolean {

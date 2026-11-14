@@ -31,6 +31,10 @@ const SWIPE_PX = 60;
 const HEADER_BUTTON = "flex size-11 items-center justify-center rounded-full text-muted";
 
 /**
+ * Drawn inside the app frame and placed against it, not against the browser window: the
+ * frame is what follows the visible screen on a phone, so the button and the sheet sit just
+ * above the tab bar wherever the phone puts it.
+ *
  * The coach as one floating button on every page: it opens the coach as a half-screen
  * sheet, which can be expanded to full screen. Once opened it stays mounted, so closing the
  * popup or moving between pages does not end the conversation.
@@ -124,7 +128,7 @@ export function ChatDock(): React.JSX.Element | null {
   return (
     <>
       {mode === "closed" ? (
-        <div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h)+1rem)] z-30 md:right-6 md:bottom-6">
+        <div className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h)+1rem)] z-30 md:right-6 md:bottom-6">
           <button
             ref={buttonRef}
             type="button"
@@ -154,7 +158,7 @@ export function ChatDock(): React.JSX.Element | null {
         <div
           aria-hidden="true"
           onClick={close}
-          className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 bg-black/30 md:hidden"
+          className="absolute inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 bg-black/30 md:hidden"
         />
       ) : null}
 
@@ -165,7 +169,7 @@ export function ChatDock(): React.JSX.Element | null {
           aria-modal="false"
           aria-label={t("nav.chat")}
           tabIndex={-1}
-          className={`fixed z-40 flex flex-col overflow-hidden bg-background outline-none transition-[transform,visibility] duration-300 motion-reduce:transition-none ${
+          className={`absolute z-40 flex flex-col overflow-hidden bg-background outline-none transition-[transform,visibility] duration-300 motion-reduce:transition-none ${
             shown ? "" : CLOSED
           } ${full ? FULL : HALF}`}
         >
