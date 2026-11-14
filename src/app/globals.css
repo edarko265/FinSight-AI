@@ -107,6 +107,25 @@ body {
   color: var(--foreground);
 }
 
+/*
+ * The signed-in app fills the visible part of the screen exactly. The size and
+ * offset come from AppFrame, which reads them from the browser; until it has
+ * run, the dynamic viewport height is the closest CSS can get.
+ */
+html.fs-app,
+html.fs-app body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.fs-app-frame {
+  position: fixed;
+  top: var(--app-top, 0px);
+  left: 0;
+  width: 100%;
+  height: var(--app-height, 100dvh);
+}
+
 /* ---- Motion. Everything here is decoration: with reduced motion it is switched off below. ---- */
 @keyframes fs-rise {
   from {

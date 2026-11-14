@@ -1,3 +1,4 @@
+import { AppFrame } from "@/components/layout/AppFrame";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { BottomNav, SideNav } from "@/components/layout/BottomNav";
 import { NotificationPrompt } from "@/components/notifications/NotificationPrompt";
@@ -17,7 +18,7 @@ export const instant = false;
 export default function AppLayout({ children }: LayoutProps<"/">): React.JSX.Element {
   return (
     <OverviewProvider>
-      <div className="fixed inset-0 flex bg-background">
+      <AppFrame>
         <SideNav />
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader />
@@ -29,7 +30,7 @@ export default function AppLayout({ children }: LayoutProps<"/">): React.JSX.Ele
           <BottomNav />
           <NotificationPrompt />
         </div>
-      </div>
+      </AppFrame>
     </OverviewProvider>
   );
 }
