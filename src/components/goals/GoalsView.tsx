@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { VoucherLadder } from "@/components/goals/VoucherLadder";
 import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
 import { api, ApiError } from "@/lib/api-client";
+import type { VoucherLadder as VoucherLadderData } from "@/lib/contracts/rewards";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 import { InfoTip } from "@/components/ui/InfoTip";
@@ -29,12 +31,12 @@ interface Rewards {
   level: "starter" | "bronze" | "silver" | "gold";
   nextLevelAt: number | null;
   achievements: { id: string; title: string; body: string; points: number; earned: boolean }[];
-  coupons: { id: string; title: string; body: string; unlockAt: number; unlocked: boolean }[];
+  vouchers: VoucherLadderData;
 }
 
 interface GoalsPayload {
   goals: GoalPlan[];
-  rewards: Rewards;
+  rewards: Rewards | null;
   recommendations: { id: string; title: string; body: string; monthlyValueCents: number }[];
   /** What could be set aside now while the next month stays covered. */
   safeToSave: number;
@@ -375,31 +377,18 @@ export function GoalsView(): React.JSX.Element {
             ))}
           </ul>
 
-          <h3 className="text-sm font-semibold">{t("rewards.coupons")}</h3>
-          <ul className="flex flex-col gap-2">
-            {rewards.coupons.map((coupon) => (
-              <li
-                key={coupon.id}
-                className={`rounded-2xl border border-dashed p-4 ${
-                  coupon.unlocked
-                    ? "border-accent bg-surface"
-                    : "border-border bg-surface opacity-60"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <h4 className="text-sm font-semibold">{coupon.title}</h4>
-                  <span
-                    className={`shrink-0 text-xs font-semibold ${coupon.unlocked ? "text-accent" : "text-muted"}`}
-                  >
-                    {coupon.unlocked
-                      ? t("rewards.unlocked")
-                      : t("rewards.locked", { points: coupon.unlockAt })}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-sm text-muted">{coupon.body}</p>
-              </li>
-            ))}
-          </ul>
+          <h3 className="text-sm font-semibold">{t("voucher.title")}</h3>
+          <VoucherLadder
+            onStale={() => setTick((value) => value + 1)}
+            ladder={rewards.vouchers}
+            onChange={(vouchers) =>
+              setData((current) =>
+                current?.rewards
+                  ? { ...current, rewards: { ...current.rewards, vouchers } }
+                  : current,
+              )
+            }
+          />
           <InfoTip>{t("rewards.note")}</InfoTip>
         </section>
       ) : null}
