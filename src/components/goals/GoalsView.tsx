@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { VoucherLadder } from "@/components/goals/VoucherLadder";
 import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
+import { PendingLabel, Spinner } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
 import { api, ApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/async-action";
 import type { VoucherLadder as VoucherLadderData } from "@/lib/contracts/rewards";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -49,12 +54,168 @@ const FIT_TONE = {
   hard: "bg-warning-soft text-warning",
 } as const;
 
+/** One goal with its progress. Owns the hook for its own "move to bin" action. */
+function GoalCard({
+  plan: { goal, fit, roomCents, savedCents, percent, monthsLeft, pace, setAsides },
+  money,
+  onAside,
+  onEdit,
+  onChanged,
+}: {
+  plan: GoalPlan;
+  money: (cents: number) => string;
+  onAside: () => void;
+  onEdit: () => void;
+  onChanged: () => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const { run, pending: removing } = useAsyncAction(
+    () => api("/api/goals", { method: "DELETE", json: { id: goal.id } }),
+    { successKey: "toast.movedToBin" },
+  );
+
+  async function removeGoal(): Promise<void> {
+    const result = await run();
+    if (result.ok) onChanged();
+  }
+
+  return (
+    <article className="rounded-2xl border border-border bg-surface p-4">
+      <h3 className="text-base font-semibold">{goal.name}</h3>
+      <p className="text-2xl font-semibold tabular-nums">{money(goal.targetCents)}</p>
+      <p className="mt-1 text-sm text-muted">
+        {t("goals.perMonth", { monthly: money(goal.monthlyCents), months: goal.months })}
+      </p>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-border" aria-hidden="true">
+        <div
+          className="h-full rounded-full bg-accent"
+          style={{
+            width: `${Math.min(100, Math.round((roomCents / Math.max(1, goal.monthlyCents)) * 100))}%`,
+          }}
+        />
+      </div>
+      <p className="mt-2 flex items-center justify-between gap-2 text-sm text-muted">
+        <span>
+          {t("goal.row.room")}: {money(roomCents)}
+        </span>
+        <span className={`rounded-full px-2.5 py-1 font-medium ${FIT_TONE[fit]}`}>
+          {t(`goals.fit.${fit}` as MessageKey)}
+        </span>
+      </p>
+      <div className="mt-4 rounded-xl bg-background p-3">
+        <p className="flex items-baseline justify-between gap-3 text-sm">
+          <span className="font-semibold">{t("goals.progress")}</span>
+          <span className="tabular-nums">
+            {money(savedCents)} / {money(goal.targetCents)} · {percent} %
+          </span>
+        </p>
+        <div
+          className="mt-2 h-3 overflow-hidden rounded-full bg-border"
+          role="meter"
+          aria-label={t("goals.progress")}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+        >
+          <div
+            className="fs-grow-x h-full rounded-full bg-accent"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
+          <span
+            className={`rounded-full px-2.5 py-1 font-medium ${
+              pace === "behind" ? "bg-warning-soft text-warning" : "bg-accent-soft text-accent"
+            }`}
+          >
+            {t(`goals.pace.${pace}` as MessageKey)}
+          </span>
+          {percent >= 100 ? t("goals.reached") : t("goals.monthsLeft", { months: monthsLeft })}
+        </p>
+        {setAsides.length > 0 ? (
+          <details className="mt-2">
+            <summary className="cursor-pointer text-xs font-semibold text-accent">
+              {t("goals.aside.history", { count: setAsides.length })}
+            </summary>
+            <ul className="mt-2 flex flex-col divide-y divide-border text-sm">
+              {setAsides.map((item) => (
+                <SetAsideRow key={item.id} item={item} money={money} onChanged={onChanged} />
+              ))}
+            </ul>
+          </details>
+        ) : null}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
+        <button type="button" onClick={onAside} className="min-h-11 text-accent">
+          {t("goals.aside.cta")}
+        </button>
+        <button type="button" onClick={onEdit} className="min-h-11 text-accent">
+          {t("common.edit")}
+        </button>
+        <button
+          type="button"
+          aria-disabled={removing}
+          onClick={() => void removeGoal()}
+          className="min-h-11 text-muted aria-disabled:opacity-60"
+        >
+          {removing ? <PendingLabel>{t("common.removing")}</PendingLabel> : t("common.moveToBin")}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+/** One set-aside in a goal's history, with its own "move to bin" action. */
+function SetAsideRow({
+  item,
+  money,
+  onChanged,
+}: {
+  item: { id: string; cents: number; date: string };
+  money: (cents: number) => string;
+  onChanged: () => void;
+}): React.JSX.Element {
+  const { t, locale } = usePreferences();
+  const { run, pending } = useAsyncAction(
+    () => api("/api/goals/set-aside", { method: "DELETE", json: { id: item.id } }),
+    { successKey: "toast.movedToBin" },
+  );
+
+  return (
+    <li className="flex items-center justify-between gap-3 py-1.5">
+      <span className="tabular-nums">
+        {money(item.cents)}
+        <span className="text-muted"> · {formatDay(item.date, locale)}</span>
+      </span>
+      <button
+        type="button"
+        aria-disabled={pending}
+        className="min-h-11 text-xs font-semibold text-muted aria-disabled:opacity-60"
+        onClick={() => {
+          void run().then((result) => {
+            if (result.ok) onChanged();
+          });
+        }}
+      >
+        {pending ? <PendingLabel>{t("common.removing")}</PendingLabel> : t("common.moveToBin")}
+      </button>
+    </li>
+  );
+}
+
 /** Goals set in conversation with the coach, what would help most, and rewards for real progress. */
 export function GoalsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const [data, setData] = useState<GoalsPayload | null>(null);
+  // Tagged with the locale it was loaded for: a language change resets, a failed reload keeps it.
+  const [loaded, setLoaded] = useState<{ locale: string; payload: GoalsPayload } | null>(null);
+  const [failedLocale, setFailedLocale] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [tick, setTick] = useState(0);
+  const retried = useRef(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const data = loaded?.locale === locale ? loaded.payload : null;
+  const loadFailed = failedLocale === locale;
   const [editing, setEditing] = useState<GoalDraft | null>(null);
   const [saving, setSaving] = useState<{ id: string; name: string } | null>(null);
   const [euros, setEuros] = useState("");
@@ -64,56 +225,67 @@ export function GoalsView(): React.JSX.Element {
     let cancelled = false;
     api<GoalsPayload>(`/api/goals?locale=${locale}`)
       .then((payload) => {
-        if (!cancelled) setData(payload);
+        if (cancelled) return;
+        setLoaded({ locale, payload });
+        setFailedLocale(null);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setFailedLocale(locale);
+      })
+      .finally(() => {
+        if (!cancelled) setRetrying(false);
+      });
     return () => {
       cancelled = true;
     };
   }, [locale, tick]);
 
-  async function remove(id: string): Promise<void> {
-    await api("/api/goals", { method: "DELETE", json: { id } }).catch(() => undefined);
-    toast.notify("toast.movedToBin");
+  function retry(): void {
+    retried.current = true;
+    setRetrying(true);
+    setFailedLocale(null);
     setTick((value) => value + 1);
   }
 
-  async function undoSetAside(id: string): Promise<void> {
-    try {
-      await api("/api/goals/set-aside", { method: "DELETE", json: { id } });
-    } catch {
-      toast.fail();
-      return;
+  // The retry button is gone once the goals load, so move focus to the content.
+  useEffect(() => {
+    if (retried.current && data && !loadFailed) {
+      retried.current = false;
+      contentRef.current?.focus();
     }
-    toast.notify("toast.movedToBin");
-    setTick((value) => value + 1);
-  }
+  }, [data, loadFailed]);
+
+  const reload = (): void => setTick((value) => value + 1);
 
   const safe = data?.safeToSave ?? 0;
   const amount = Number(euros.replace(",", "."));
   const amountValid = euros.trim() !== "" && Number.isFinite(amount) && amount >= 1;
   const withinSafe = amountValid && Math.round(amount * 100) <= safe;
 
+  const { run: runSetAside } = useAsyncAction(
+    (goalId: string, cents: number) =>
+      api("/api/goals/set-aside", { method: "POST", json: { goalId, cents } }),
+    { successKey: "toast.saved", errorKey: () => null },
+  );
+
   async function confirmSetAside(): Promise<boolean> {
     if (!saving) return false;
     setSaveError(null);
-    try {
-      await api("/api/goals/set-aside", {
-        method: "POST",
-        json: { goalId: saving.id, cents: Math.round(amount * 100) },
-      });
-    } catch (failure) {
-      setSaveError(
-        failure instanceof ApiError && failure.code === "above_safe"
-          ? "goals.aside.aboveSafe"
-          : "toast.error",
-      );
+    const result = await runSetAside(saving.id, Math.round(amount * 100));
+    if (!result.ok) {
+      // Shown inside the wizard instead of as a toast; a 401 is handled by the api client.
+      if (!result.dropped && !isApiError(result.error, 401)) {
+        setSaveError(
+          result.error instanceof ApiError && result.error.code === "above_safe"
+            ? "goals.aside.aboveSafe"
+            : "toast.error",
+        );
+      }
       return false;
     }
-    toast.notify("toast.saved");
     setSaving(null);
     setEuros("");
-    setTick((value) => value + 1);
+    reload();
     return true;
   }
 
@@ -122,7 +294,7 @@ export function GoalsView(): React.JSX.Element {
   const askLink = (question: MessageKey): string => `/chat?q=${encodeURIComponent(t(question))}`;
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-4">
+    <div ref={contentRef} tabIndex={-1} className="flex flex-col gap-5 px-4 py-4 outline-none">
       <h1 className="text-xl font-semibold">{t("goals.title")}</h1>
 
       <Link
@@ -140,6 +312,22 @@ export function GoalsView(): React.JSX.Element {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">{t("goals.yours")}</h2>
+        {loadFailed ? <LoadError onRetry={retry} /> : null}
+        {retrying && data ? (
+          <LoadingRegion
+            labelKey="common.refreshing"
+            className="flex items-center gap-2 text-sm text-muted"
+          >
+            <Spinner />
+            <span aria-hidden="true">{t("common.refreshing")}</span>
+          </LoadingRegion>
+        ) : null}
+        {!data && !loadFailed ? (
+          <LoadingRegion className="flex flex-col gap-3">
+            <SkeletonCard />
+            <SkeletonCard />
+          </LoadingRegion>
+        ) : null}
         {data ? (
           <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
             {t(safe > 0 ? "goals.aside.safe" : "goals.aside.none", { amount: money(safe) })}
@@ -155,125 +343,27 @@ export function GoalsView(): React.JSX.Element {
             {t("goals.empty")}
           </p>
         ) : null}
-        {data?.goals.map(
-          ({ goal, fit, roomCents, savedCents, percent, monthsLeft, pace, setAsides }) => (
-            <article key={goal.id} className="rounded-2xl border border-border bg-surface p-4">
-              <h3 className="text-base font-semibold">{goal.name}</h3>
-              <p className="text-2xl font-semibold tabular-nums">{money(goal.targetCents)}</p>
-              <p className="mt-1 text-sm text-muted">
-                {t("goals.perMonth", { monthly: money(goal.monthlyCents), months: goal.months })}
-              </p>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-border" aria-hidden="true">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{
-                    width: `${Math.min(100, Math.round((roomCents / Math.max(1, goal.monthlyCents)) * 100))}%`,
-                  }}
-                />
-              </div>
-              <p className="mt-2 flex items-center justify-between gap-2 text-sm text-muted">
-                <span>
-                  {t("goal.row.room")}: {money(roomCents)}
-                </span>
-                <span className={`rounded-full px-2.5 py-1 font-medium ${FIT_TONE[fit]}`}>
-                  {t(`goals.fit.${fit}` as MessageKey)}
-                </span>
-              </p>
-              <div className="mt-4 rounded-xl bg-background p-3">
-                <p className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-semibold">{t("goals.progress")}</span>
-                  <span className="tabular-nums">
-                    {money(savedCents)} / {money(goal.targetCents)} · {percent} %
-                  </span>
-                </p>
-                <div
-                  className="mt-2 h-3 overflow-hidden rounded-full bg-border"
-                  role="meter"
-                  aria-label={t("goals.progress")}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={percent}
-                >
-                  <div
-                    className="fs-grow-x h-full rounded-full bg-accent"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-                  <span
-                    className={`rounded-full px-2.5 py-1 font-medium ${
-                      pace === "behind"
-                        ? "bg-warning-soft text-warning"
-                        : "bg-accent-soft text-accent"
-                    }`}
-                  >
-                    {t(`goals.pace.${pace}` as MessageKey)}
-                  </span>
-                  {percent >= 100
-                    ? t("goals.reached")
-                    : t("goals.monthsLeft", { months: monthsLeft })}
-                </p>
-                {setAsides.length > 0 ? (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-xs font-semibold text-accent">
-                      {t("goals.aside.history", { count: setAsides.length })}
-                    </summary>
-                    <ul className="mt-2 flex flex-col divide-y divide-border text-sm">
-                      {setAsides.map((item) => (
-                        <li
-                          key={item.id}
-                          className="flex items-center justify-between gap-3 py-1.5"
-                        >
-                          <span className="tabular-nums">
-                            {money(item.cents)}
-                            <span className="text-muted"> · {formatDay(item.date, locale)}</span>
-                          </span>
-                          <button
-                            type="button"
-                            className="text-xs font-semibold text-muted"
-                            onClick={() => void undoSetAside(item.id)}
-                          >
-                            {t("common.moveToBin")}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                ) : null}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEuros("");
-                    setSaveError(null);
-                    setSaving({ id: goal.id, name: goal.name });
-                  }}
-                  className="text-accent"
-                >
-                  {t("goals.aside.cta")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEditing({
-                      id: goal.id,
-                      name: goal.name,
-                      euros: String(goal.targetCents / 100),
-                      months: String(goal.months),
-                    })
-                  }
-                  className="text-accent"
-                >
-                  {t("common.edit")}
-                </button>
-                <button type="button" onClick={() => void remove(goal.id)} className="text-muted">
-                  {t("common.moveToBin")}
-                </button>
-              </div>
-            </article>
-          ),
-        )}
+        {data?.goals.map((plan) => (
+          <GoalCard
+            key={plan.goal.id}
+            plan={plan}
+            money={money}
+            onAside={() => {
+              setEuros("");
+              setSaveError(null);
+              setSaving({ id: plan.goal.id, name: plan.goal.name });
+            }}
+            onEdit={() =>
+              setEditing({
+                id: plan.goal.id,
+                name: plan.goal.name,
+                euros: String(plan.goal.targetCents / 100),
+                months: String(plan.goal.months),
+              })
+            }
+            onChanged={reload}
+          />
+        ))}
         <Link
           href={askLink("chat.suggest.goal")}
           className="rounded-full bg-primary px-5 py-3 text-center text-sm font-semibold text-on-primary"
@@ -382,9 +472,15 @@ export function GoalsView(): React.JSX.Element {
             onStale={() => setTick((value) => value + 1)}
             ladder={rewards.vouchers}
             onChange={(vouchers) =>
-              setData((current) =>
-                current?.rewards
-                  ? { ...current, rewards: { ...current.rewards, vouchers } }
+              setLoaded((current) =>
+                current?.payload.rewards
+                  ? {
+                      ...current,
+                      payload: {
+                        ...current.payload,
+                        rewards: { ...current.payload.rewards, vouchers },
+                      },
+                    }
                   : current,
               )
             }

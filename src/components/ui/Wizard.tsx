@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon } from "@/components/ui/icons";
+import { PendingLabel } from "@/components/ui/Spinner";
 import {
   TAB_SHEET_MAX_H,
   TAB_SHEET_POSITION,
@@ -84,6 +85,9 @@ export function Wizard({
     try {
       // Returning false means the save was refused: stay on this step so nothing typed is lost.
       if ((await onFinish()) !== false) setIndex(0);
+    } catch (failure) {
+      // A throwing caller must not become an unhandled rejection; stay on the step too.
+      console.error("wizard finish failed", failure);
     } finally {
       setBusy(false);
     }
@@ -161,10 +165,16 @@ export function Wizard({
               ) : null}
               <button
                 type="submit"
-                disabled={!step.valid || busy}
-                className="flex-1 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary disabled:opacity-40"
+                aria-disabled={!step.valid || busy}
+                className="min-h-11 flex-1 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary aria-disabled:opacity-40"
               >
-                {last ? finishLabel : t("wizard.next")}
+                {busy ? (
+                  <PendingLabel>{t("common.saving")}</PendingLabel>
+                ) : last ? (
+                  finishLabel
+                ) : (
+                  t("wizard.next")
+                )}
               </button>
             </div>
           </form>

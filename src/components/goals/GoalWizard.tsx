@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { api } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -46,13 +47,20 @@ export function GoalWizard({
   const amountOk = Number.isFinite(euros) && euros >= 1 && euros <= 1_000_000;
   const monthsOk = Number.isFinite(months) && months >= 1 && months <= 120;
 
-  async function save(): Promise<void> {
-    await api("/api/goals", {
+  const { run } = useAsyncAction(() =>
+    api("/api/goals", {
       method: value.id ? "PATCH" : "POST",
       json: { id: value.id, name: value.name.trim(), targetCents, months },
-    });
+    }),
+  );
+
+  // False keeps the wizard open on the review step; the error toast comes from the hook.
+  async function save(): Promise<boolean> {
+    const result = await run();
+    if (!result.ok) return false;
     setEdited(null);
     onSaved();
+    return true;
   }
 
   return (

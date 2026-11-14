@@ -10,6 +10,8 @@ import type { Locale } from "@/lib/i18n/config";
  */
 export function useVoice(locale: Locale) {
   const [recording, setRecording] = useState(false);
+  /** True while the recorded audio is being sent to be turned into text. */
+  const [transcribing, setTranscribing] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [error, setError] = useState<"mic" | "unavailable" | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
@@ -81,6 +83,8 @@ export function useVoice(locale: Locale) {
     active.stream.getTracks().forEach((track) => track.stop());
     recorder.current = null;
     setRecording(false);
+    setError(null);
+    setTranscribing(true);
 
     const form = new FormData();
     form.append("audio", new Blob(chunks.current, { type: active.mimeType || "audio/webm" }));
@@ -93,8 +97,19 @@ export function useVoice(locale: Locale) {
     } catch {
       setError("unavailable");
       return null;
+    } finally {
+      setTranscribing(false);
     }
   }, [locale]);
 
-  return { recording, speakingId, error, speak, stopSpeaking, startRecording, stopRecording };
+  return {
+    recording,
+    transcribing,
+    speakingId,
+    error,
+    speak,
+    stopSpeaking,
+    startRecording,
+    stopRecording,
+  };
 }
