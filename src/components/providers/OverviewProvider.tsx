@@ -7,6 +7,7 @@ import { notifyNewInsights, setAppBadge } from "@/components/notifications/useNo
 import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Logo } from "@/components/ui/icons";
+import { LoadError } from "@/components/ui/LoadError";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
 import { translate } from "@/lib/i18n/translate";
 
@@ -40,12 +41,18 @@ export interface Me {
 interface OverviewValue {
   overview: Overview | null;
   me: Me | null;
+  /** True until the first overview has arrived or failed. */
+  overviewLoading: boolean;
+  /** True when the overview could not be loaded and there is none to show. */
+  overviewFailed: boolean;
   refresh: () => void;
 }
 
 const OverviewContext = createContext<OverviewValue>({
   overview: null,
   me: null,
+  overviewLoading: false,
+  overviewFailed: false,
   refresh: () => undefined,
 });
 
@@ -55,6 +62,8 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   const router = useRouter();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [me, setMe] = useState<Me | null>(null);
+  const [overviewFailed, setOverviewFailed] = useState(false);
+  const [meFailed, setMeFailed] = useState(false);
   const [tick, setTick] = useState(0);
 
   const ready = me?.termsAccepted === true;
@@ -64,9 +73,13 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     let cancelled = false;
     api<Overview>(`/api/overview?locale=${locale}`)
       .then((data) => {
-        if (!cancelled) setOverview(data);
+        if (cancelled) return;
+        setOverview(data);
+        setOverviewFailed(false);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setOverviewFailed(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -76,9 +89,13 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     let cancelled = false;
     api<Me>("/api/me")
       .then((data) => {
-        if (!cancelled) setMe(data);
+        if (cancelled) return;
+        setMe(data);
+        setMeFailed(false);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setMeFailed(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -103,11 +120,31 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   }, [unread, locale]);
 
   const refresh = useCallback(() => setTick((value) => value + 1), []);
-  const value = useMemo(() => ({ overview, me, refresh }), [overview, me, refresh]);
+  const overviewLoading = ready && overview === null && !overviewFailed;
+  const value = useMemo(
+    () => ({
+      overview,
+      me,
+      overviewLoading,
+      overviewFailed: overview === null && overviewFailed,
+      refresh,
+    }),
+    [overview, me, overviewLoading, overviewFailed, refresh],
+  );
   return (
     <OverviewContext.Provider value={value}>
       {/* Nothing of the customer's is shown until the terms are accepted. */}
-      {me === null ? (
+      {me === null && meFailed ? (
+        <div className="flex min-h-dvh flex-1 items-center justify-center px-4">
+          <LoadError
+            className="w-full max-w-sm"
+            onRetry={() => {
+              setMeFailed(false);
+              refresh();
+            }}
+          />
+        </div>
+      ) : me === null ? (
         <div
           className="flex min-h-dvh flex-1 items-center justify-center"
           role="status"

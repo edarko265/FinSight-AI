@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { BellIcon, Logo } from "@/components/ui/icons";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { formatDay } from "@/lib/i18n/config";
 
 export function AppHeader(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const { overview } = useOverview();
+  const { overview, overviewLoading } = useOverview();
   const unread = overview?.unreadInsights ?? 0;
 
   return (
@@ -20,9 +21,13 @@ export function AppHeader(): React.JSX.Element {
           <span className="flex flex-col leading-tight">
             <span className="text-base font-semibold tracking-tight">{t("app.name")}</span>
             <span className="text-xs">
-              {overview
-                ? t("app.asOf", { date: formatDay(overview.asOf, locale) })
-                : t("app.synthetic")}
+              {overview ? (
+                t("app.asOf", { date: formatDay(overview.asOf, locale) })
+              ) : overviewLoading ? (
+                <Skeleton className="h-4 w-24 bg-white/20" />
+              ) : (
+                t("app.synthetic")
+              )}
             </span>
           </span>
         </Link>
