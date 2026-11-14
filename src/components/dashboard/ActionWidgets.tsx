@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
 import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { MicIcon, PhoneIcon } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
-import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api-client";
+import { isApiError } from "@/lib/async-action";
 import type { ActionWidget } from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
 
@@ -88,27 +90,51 @@ function CallWidget(): React.JSX.Element {
 }
 
 /** Placeholder sized like a short list of rows, so the card does not jump when data arrives. */
-function WidgetSkeleton(): React.JSX.Element {
+function WidgetSkeleton({ focus }: { focus: boolean }): React.JSX.Element {
   return (
-    <LoadingRegion className="flex flex-col gap-3">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-5 w-1/3" />
-    </LoadingRegion>
+    <FocusedRegion focus={focus}>
+      <div aria-hidden="true" className="flex flex-col gap-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-5 w-1/3" />
+      </div>
+    </FocusedRegion>
   );
 }
 
-function WidgetLoadError({ onRetry }: { onRetry: () => void }): React.JSX.Element {
-  return <LoadError onRetry={onRetry} />;
-}
-
-/** Clears the failure and bumps the attempt counter so the effect runs again. */
-function retry(
-  setFailed: (value: boolean) => void,
-  setAttempt: (change: (value: number) => number) => void,
-): void {
-  setFailed(false);
-  setAttempt((value) => value + 1);
+/** Loads a widget's data, with a retry that keeps focus on the placeholder. */
+function useWidgetData<T>(path: string): {
+  data: T | null;
+  failed: boolean;
+  retried: boolean;
+  retry: () => void;
+} {
+  const [data, setData] = useState<T | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [retried, setRetried] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    api<T>(path)
+      .then((result) => {
+        if (cancelled) return;
+        setData(result);
+        setFailed(false);
+      })
+      .catch((error: unknown) => {
+        // A 401 has already signed the user out.
+        if (!cancelled && !isApiError(error, 401)) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [path, attempt]);
+  const retry = (): void => {
+    setFailed(false);
+    setRetried(true);
+    setAttempt((value) => value + 1);
+  };
+  return { data, failed, retried, retry };
 }
 
 interface GoalRow {
@@ -120,24 +146,12 @@ interface GoalRow {
 /** The customer's goals at a glance: what each needs a month, and whether the usual month covers it. */
 function GoalsWidget(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const [goals, setGoals] = useState<GoalRow[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let cancelled = false;
-    api<{ goals: GoalRow[] }>(`/api/goals?locale=${locale}`)
-      .then((data) => {
-        if (!cancelled) setGoals(data.goals);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, attempt]);
-  if (failed) return <WidgetLoadError onRetry={() => retry(setFailed, setAttempt)} />;
-  if (!goals) return <WidgetSkeleton />;
+  const { data, failed, retried, retry } = useWidgetData<{ goals: GoalRow[] }>(
+    `/api/goals?locale=${locale}`,
+  );
+  if (failed) return <LoadError onRetry={retry} />;
+  if (!data) return <WidgetSkeleton focus={retried} />;
+  const goals = data.goals;
   return (
     <div className="flex flex-col gap-3">
       {goals.length === 0 ? <p className="text-sm text-muted">{t("goals.empty")}</p> : null}
@@ -189,24 +203,12 @@ interface InsightRow {
 /** The newest things that need attention. */
 function InsightsWidget(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const [insights, setInsights] = useState<InsightRow[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let cancelled = false;
-    api<{ insights: InsightRow[] }>(`/api/insights?locale=${locale}`)
-      .then((data) => {
-        if (!cancelled) setInsights(data.insights);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, attempt]);
-  if (failed) return <WidgetLoadError onRetry={() => retry(setFailed, setAttempt)} />;
-  if (!insights) return <WidgetSkeleton />;
+  const { data, failed, retried, retry } = useWidgetData<{ insights: InsightRow[] }>(
+    `/api/insights?locale=${locale}`,
+  );
+  if (failed) return <LoadError onRetry={retry} />;
+  if (!data) return <WidgetSkeleton focus={retried} />;
+  const insights = data.insights;
   return (
     <div className="flex flex-col gap-3">
       {insights.length === 0 ? (

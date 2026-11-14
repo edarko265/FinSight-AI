@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { notifyNewInsights, setAppBadge } from "@/components/notifications/useNotifications";
+import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
 import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Logo } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
+import { isApiError } from "@/lib/async-action";
 import { translate } from "@/lib/i18n/translate";
 
 export interface Overview {
@@ -64,6 +66,7 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   const [me, setMe] = useState<Me | null>(null);
   const [overviewFailed, setOverviewFailed] = useState(false);
   const [meFailed, setMeFailed] = useState(false);
+  const [meRetried, setMeRetried] = useState(false);
   const [tick, setTick] = useState(0);
 
   const ready = me?.termsAccepted === true;
@@ -77,8 +80,9 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
         setOverview(data);
         setOverviewFailed(false);
       })
-      .catch(() => {
-        if (!cancelled) setOverviewFailed(true);
+      .catch((error: unknown) => {
+        // A 401 has already signed the user out.
+        if (!cancelled && !isApiError(error, 401)) setOverviewFailed(true);
       });
     return () => {
       cancelled = true;
@@ -93,8 +97,8 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
         setMe(data);
         setMeFailed(false);
       })
-      .catch(() => {
-        if (!cancelled) setMeFailed(true);
+      .catch((error: unknown) => {
+        if (!cancelled && !isApiError(error, 401)) setMeFailed(true);
       });
     return () => {
       cancelled = true;
@@ -119,7 +123,12 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     );
   }, [unread, locale]);
 
-  const refresh = useCallback(() => setTick((value) => value + 1), []);
+  // Clearing the failures shows the loading state again, so a retry visibly does something.
+  const refresh = useCallback(() => {
+    setOverviewFailed(false);
+    setMeFailed(false);
+    setTick((value) => value + 1);
+  }, []);
   const overviewLoading = ready && overview === null && !overviewFailed;
   const value = useMemo(
     () => ({
@@ -139,19 +148,21 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
           <LoadError
             className="w-full max-w-sm"
             onRetry={() => {
-              setMeFailed(false);
+              setMeRetried(true);
               refresh();
             }}
           />
         </div>
       ) : me === null ? (
-        <div
-          className="flex min-h-dvh flex-1 items-center justify-center"
-          role="status"
-          aria-label="FinSight-AI"
-        >
-          <Logo className="size-16 animate-pulse" />
-        </div>
+        <FocusedRegion focus={meRetried} className="flex min-h-dvh flex-1">
+          <div
+            className="flex flex-1 items-center justify-center"
+            role="status"
+            aria-label="FinSight-AI"
+          >
+            <Logo className="size-16 animate-pulse" />
+          </div>
+        </FocusedRegion>
       ) : !me.termsAccepted ? (
         <OnboardingGate aiAvailable={me.aiEnabled} onDone={refresh} />
       ) : (

@@ -9,22 +9,21 @@ import { AffordWizard } from "@/components/dashboard/AffordWizard";
 import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
+import { useDashboardSave } from "@/components/dashboard/useDashboardSave";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { CountUp } from "@/components/ui/CountUp";
-import { DASHBOARD_CHANGED } from "@/components/chat/PinnableChat";
 import { PlusIcon } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
-import { LoadingRegion, Skeleton, SkeletonCard } from "@/components/ui/Skeleton";
-import { useAsyncAction } from "@/components/ui/useAsyncAction";
+import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api-client";
 import {
   CUSTOM_PERIOD,
   VIEW_PERIODS,
-  type DashboardPayload,
-  type DashboardState,
   type DashboardView as SavedView,
   type SavedWidget,
   type ViewPeriod,
@@ -50,7 +49,8 @@ export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const { overview, overviewLoading, overviewFailed, refresh } = useOverview();
-  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  const { dashboard, saving, loadFailed, retried, retry, update } = useDashboardSave(locale);
+  const [overviewRetried, setOverviewRetried] = useState(false);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -58,20 +58,9 @@ export function DashboardView(): React.JSX.Element {
   const [affordOpen, setAffordOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    api<DashboardPayload>(`/api/dashboard?locale=${locale}`)
-      .then((data) => {
-        if (cancelled) return;
-        setDashboard(data);
-        setLoadFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      });
     api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
       .then((data) => {
         if (!cancelled) setBanner(data.insights.find((insight) => !insight.read) ?? null);
@@ -80,17 +69,6 @@ export function DashboardView(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [locale, attempt]);
-
-  // A chart pinned from the floating coach changes the dashboard open behind it.
-  useEffect(() => {
-    const reload = (): void => {
-      api<DashboardPayload>(`/api/dashboard?locale=${locale}`)
-        .then(setDashboard)
-        .catch(() => undefined);
-    };
-    window.addEventListener(DASHBOARD_CHANGED, reload);
-    return () => window.removeEventListener(DASHBOARD_CHANGED, reload);
   }, [locale]);
 
   const active = dashboard?.views.find((view) => view.id === dashboard.activeId);
@@ -101,26 +79,7 @@ export function DashboardView(): React.JSX.Element {
     view.name ||
     (view.preset ? t(`views.preset.${view.preset}` as MessageKey) : t("views.unnamed"));
 
-  // The screen only changes once the server has answered, so a failed save needs no revert.
-  const { run: runSave, pending: saving } = useAsyncAction(
-    async (next: DashboardState): Promise<void> => {
-      setDashboard(
-        await api<DashboardPayload>(`/api/dashboard?locale=${locale}`, {
-          method: "PUT",
-          json: next,
-        }),
-      );
-    },
-    { errorKey: "common.saveFailed" },
-  );
-
-  /** Resolves to true once the change is saved. */
-  async function update(change: (state: DashboardState) => DashboardState): Promise<boolean> {
-    if (!dashboard) return false;
-    const result = await runSave(change({ activeId: dashboard.activeId, views: dashboard.views }));
-    return result.ok;
-  }
-
+  /** Each change is computed from the latest state, so quick edits stack instead of clobbering. */
   const updateActive = (change: (view: SavedView) => SavedView): Promise<boolean> =>
     update((state) => ({
       ...state,
@@ -160,22 +119,22 @@ export function DashboardView(): React.JSX.Element {
     });
   }
 
-  function saveView(name: string, period: ViewPeriod): void {
-    if (!active || !viewDraft) return;
-    const saved =
-      viewDraft.mode === "rename"
-        ? updateActive((view) => ({ ...view, name, period, preset: undefined }))
-        : update((state) => {
-            const id = newId("view");
-            return {
-              activeId: id,
-              views: [...state.views, { id, name, period, widgets: active.widgets }],
-            };
-          });
-    void saved.then((ok) => {
-      if (!ok) return;
-      toast.notify("toast.saved");
-      setViewDraft(null);
+  function saveView(name: string, period: ViewPeriod): Promise<boolean> {
+    if (!viewDraft) return Promise.resolve(false);
+    const rename = viewDraft.mode === "rename";
+    const saved = rename
+      ? updateActive((view) => ({ ...view, name, period, preset: undefined }))
+      : update((state) => {
+          const id = newId("view");
+          const widgets = state.views.find((view) => view.id === state.activeId)?.widgets ?? [];
+          return { activeId: id, views: [...state.views, { id, name, period, widgets }] };
+        });
+    return saved.then((ok) => {
+      if (ok) {
+        toast.notify("toast.saved");
+        setViewDraft(null);
+      }
+      return ok;
     });
   }
 
@@ -198,7 +157,20 @@ export function DashboardView(): React.JSX.Element {
         </Link>
       ) : null}
 
-      {overviewFailed ? <LoadError onRetry={refresh} /> : null}
+      {overviewFailed ? (
+        <LoadError
+          onRetry={() => {
+            setOverviewRetried(true);
+            refresh();
+          }}
+        />
+      ) : overviewRetried && overviewLoading ? (
+        <FocusedRegion focus>
+          <LoadingRegion>
+            <Skeleton className="h-[4.25rem] w-full rounded-2xl" />
+          </LoadingRegion>
+        </FocusedRegion>
+      ) : null}
 
       <section className="rounded-2xl bg-brand p-5 text-on-brand">
         <p className="text-sm opacity-80">{t("dashboard.balance")}</p>
@@ -265,42 +237,11 @@ export function DashboardView(): React.JSX.Element {
         </button>
       </div>
 
-      {dashboard === null && loadFailed ? (
-        <LoadError
-          onRetry={() => {
-            setLoadFailed(false);
-            setAttempt((value) => value + 1);
-          }}
-        />
-      ) : null}
-
-      {dashboard === null && !loadFailed ? (
-        <LoadingRegion className="flex flex-col gap-4">
-          <div
-            aria-hidden="true"
-            className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3"
-          >
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-24 rounded-full" />
-              <Skeleton className="h-10 w-24 rounded-full" />
-            </div>
-            <Skeleton className="h-10 w-full rounded-full" />
-            <Skeleton className="h-6 w-full" />
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-        </LoadingRegion>
-      ) : null}
+      {dashboard === null && loadFailed ? <LoadError onRetry={retry} /> : null}
+      {dashboard === null && !loadFailed ? <DashboardSkeleton focus={retried} /> : null}
 
       {dashboard ? (
-        <section
-          aria-busy={saving}
-          className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3"
-        >
+        <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3">
           <div role="tablist" aria-label={t("views.label")} className="flex flex-wrap gap-2">
             {dashboard.views.map((view) => (
               <button
@@ -407,10 +348,7 @@ export function DashboardView(): React.JSX.Element {
           {t("dashboard.empty")}
         </p>
       ) : dashboard === null ? null : (
-        <div
-          aria-busy={saving}
-          className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:gap-4 xl:grid-cols-3"
-        >
+        <div className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:gap-4 xl:grid-cols-3">
           {dashboard.cards.map((widget, index, all) => (
             <WidgetCard
               key={widget.id}
@@ -460,16 +398,23 @@ export function DashboardView(): React.JSX.Element {
           asOf={overview.asOf}
           initial={customRange ?? undefined}
           onClose={() => setPeriodOpen(false)}
-          onApply={(from, to) => {
-            void updateActive((view) => ({ ...view, period: `${from}..${to}` })).then((ok) => {
-              if (!ok) return;
+          saving={saving}
+          onApply={async (from, to) => {
+            const ok = await updateActive((view) => ({ ...view, period: `${from}..${to}` }));
+            if (ok) {
               setPeriodOpen(false);
               toast.notify("toast.saved");
-            });
+            }
+            return ok;
           }}
         />
       ) : null}
-      <ViewWizard draft={viewDraft} onClose={() => setViewDraft(null)} onSave={saveView} />
+      <ViewWizard
+        draft={viewDraft}
+        saving={saving}
+        onClose={() => setViewDraft(null)}
+        onSave={saveView}
+      />
 
       <AddWidgetWizard
         open={addOpen}
