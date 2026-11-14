@@ -107,4 +107,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- **Benchmark download.** The script that fetches Statistics Finland's figures now writes only
+  numbers it has range-checked, under names and labels fixed in the script, so nothing the
+  service sends can reach the saved file as text.
+
 - `minimatch` overridden to a patched version.
