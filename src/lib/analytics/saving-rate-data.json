@@ -1,0 +1,33 @@
+{
+  "source": {
+    "name": "Statistics Finland, Annual national accounts, household net saving rate (net saving / net disposable income)",
+    "table": "15ac",
+    "url": "https://pxdata.stat.fi/PXWeb/pxweb/en/StatFin/StatFin__ntp/15ac.px",
+    "licence": "CC BY 4.0",
+    "updated": "2026-09-18"
+  },
+  "year": 2025,
+  "ratePercent": 5.9,
+  "history": [
+    {
+      "year": 2021,
+      "ratePercent": 4.3
+    },
+    {
+      "year": 2022,
+      "ratePercent": 1.5
+    },
+    {
+      "year": 2023,
+      "ratePercent": 2.2
+    },
+    {
+      "year": 2024,
+      "ratePercent": 4.1
+    },
+    {
+      "year": 2025,
+      "ratePercent": 5.9
+    }
+  ]
+}
