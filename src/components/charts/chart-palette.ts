@@ -11,8 +11,8 @@ export const CHART_COLORS: readonly string[] = [
 export const CHART_EMPHASIS = "var(--chart-1)";
 /**
  * The rest of the items: calmer than the emphasis, set per theme in globals.css (--chart-rest).
- * Measured against the card: light #4da07a on #fff 3.17:1 (emphasis 5.7:1); dark #348259 on
- * #14261c 3.39:1 (emphasis 6.2:1 there). Both clear the 3:1 minimum for graphics.
+ * Measured against the card: light #4da07a on #fff 3.17:1 (emphasis 5.58:1); dark #348259 on
+ * #14261c 3.39:1 (emphasis #4cc486 7.21:1). Both clear the 3:1 minimum for graphics.
  */
 export const CHART_REST = "var(--chart-rest)";
 
