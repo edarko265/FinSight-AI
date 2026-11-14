@@ -41,7 +41,7 @@ All notable changes to this project are documented here. The format follows
   daily reminders for goals, bills, shortfalls and habits going the wrong way.
 - **Layout.** Responsive from 320 px phones to desktops; custom date ranges with a date
   picker; language as a selector; error and not-found pages.
-- **Demo video.** A 50-second product film made with HyperFrames; source in `video/`.
+- **Demo video.** A 55-second narrated product film made with HyperFrames, voiced with ElevenLabs; source in `video/`.
 - **Documentation.** `docs/how-it-works.md`: the logic step by step with flowcharts, and
   how the statistical data is used.
 - **Privacy.** Terms of use and privacy notice accepted at first sign-in; optional AI

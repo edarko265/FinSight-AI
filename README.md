@@ -88,7 +88,7 @@ real progress.
 | 🔐 **Data**        | 5,100 customers and 3,626,755 transactions, every one encrypted per customer             |
 | 🧪 **Tests**       | 88, including the real migrations on an in-memory PostgreSQL                             |
 
-🎬 [Watch the 50-second demo](docs/media/finsight-demo.mp4) ([how it was made](video/README.md))
+🎬 [Watch the 55-second narrated demo](docs/media/finsight-demo.mp4) ([how it was made](video/README.md))
 
 📖 [Feature guide](docs/features.md) · [How it works](docs/how-it-works.md) ·
 [Admin guide](docs/admin-guide.md) ·
