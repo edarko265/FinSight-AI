@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Goal } from "@/lib/coach/advice";
+import type { Plan } from "@/lib/coach/plans";
 import type { DashboardState, DashboardView } from "@/lib/contracts/chart";
 import { readState, writeState } from "@/lib/data/repository";
 
@@ -11,6 +12,7 @@ import { readState, writeState } from "@/lib/data/repository";
  */
 export type TrashItem =
   | { id: string; kind: "goal"; deletedAt: string; label: string; item: Goal }
+  | { id: string; kind: "plan"; deletedAt: string; label: string; item: Plan }
   | { id: string; kind: "view"; deletedAt: string; label: string; item: DashboardView }
   | {
       id: string;

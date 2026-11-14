@@ -30,6 +30,8 @@ export const settingsSchema = z.object({
     voice: z.boolean(),
     rewards: z.boolean(),
     advisor: z.boolean(),
+    /** Sharing and copying plans between customers. */
+    sharing: z.boolean(),
   }),
   /** Which AI provider answers. "auto" follows the AI_PROVIDER environment variable. */
   aiProvider: z.enum(["auto", "openai", "gemini"]),
@@ -53,7 +55,7 @@ export const settingsSchema = z.object({
 export type AppSettings = z.infer<typeof settingsSchema>;
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  features: { ai: true, voice: true, rewards: true, advisor: true },
+  features: { ai: true, voice: true, rewards: true, advisor: true, sharing: true },
   aiProvider: "auto",
   advisorFeeCents: 1900,
   aiDailyRequestLimit: 2000,

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { restoreGoal } from "@/lib/coach/goals";
+import { restorePlan } from "@/lib/coach/plans";
 import { emptyTrash, listTrash, takeFromTrash } from "@/lib/coach/trash";
 import { restoreToDashboard } from "@/lib/coach/views";
 
@@ -39,6 +40,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!item) return Response.json({ error: "not_found" }, { status: 404 });
   if (parsed.data.action === "restore") {
     if (item.kind === "goal") await restoreGoal(ctx, item.item);
+    else if (item.kind === "plan") await restorePlan(ctx, item.item);
     else await restoreToDashboard(ctx, item);
   }
   return Response.json({ ok: true });

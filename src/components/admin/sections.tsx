@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { AdminControls } from "@/components/admin/AdminControls";
 import { AdminTrash } from "@/components/admin/AdminTrash";
+import { SharedPlans } from "@/components/admin/SharedPlans";
 import { Team } from "@/components/admin/Team";
 import { Training } from "@/components/admin/Training";
 import { isManager, useAdminData, type AdminData } from "@/components/admin/AdminShell";
@@ -715,6 +716,19 @@ export function TrashSection(): React.JSX.Element {
         <p className="mt-1 text-sm text-muted">{t("admin.trash.intro")}</p>
       </div>
       <AdminTrash manager={isManager(data.me.role)} />
+    </>
+  );
+}
+
+export function PlansSection(): React.JSX.Element {
+  const { t } = usePreferences();
+  return (
+    <>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.plans")}</h1>
+        <p className="mt-1 text-sm text-muted">{t("admin.plans.intro")}</p>
+      </div>
+      <SharedPlans />
     </>
   );
 }

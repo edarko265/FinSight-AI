@@ -10,7 +10,7 @@ import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
 interface TrashEntry {
   id: string;
-  kind: "goal" | "view" | "widget";
+  kind: "goal" | "plan" | "view" | "widget";
   label: string;
   deletedAt: string;
 }
@@ -51,7 +51,7 @@ export function TrashView(): React.JSX.Element {
   /** Built-in views and widgets are stored by key; show their translated names. */
   const label = (item: TrashEntry): string => {
     const key = item.kind === "view" ? `views.preset.${item.label}` : `admin.topic.${item.label}`;
-    return item.kind !== "goal" && hasMessage(key) ? t(key) : item.label;
+    return item.kind !== "goal" && item.kind !== "plan" && hasMessage(key) ? t(key) : item.label;
   };
 
   return (

@@ -18,7 +18,7 @@ export type ProviderChoice = "auto" | "openai" | "gemini";
 
 export interface AppSettings {
   aiProvider: ProviderChoice;
-  features: { ai: boolean; voice: boolean; rewards: boolean; advisor: boolean };
+  features: { ai: boolean; voice: boolean; rewards: boolean; advisor: boolean; sharing: boolean };
   advisorFeeCents: number;
   aiDailyRequestLimit: number;
   rewards: {
@@ -30,7 +30,7 @@ export interface AppSettings {
   };
 }
 
-const FLAGS = ["ai", "voice", "rewards", "advisor"] as const;
+const FLAGS = ["ai", "voice", "rewards", "advisor", "sharing"] as const;
 const RULES = [
   "under_average",
   "choice_down",

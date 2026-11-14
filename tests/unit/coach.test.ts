@@ -3,6 +3,14 @@ import { describe, expect, it } from "vitest";
 import { themeOf } from "@/lib/admin/themes";
 import { buildRewards, DEFAULT_REWARD_RULES, planGoal, type Goal } from "@/lib/coach/advice";
 import { checkGrounding, parseAmountToCents } from "@/lib/coach/grounding";
+import {
+  actualSplit,
+  applySplit,
+  isValidSplit,
+  nameCarriesAmount,
+  TEMPLATES,
+  toPercents,
+} from "@/lib/coach/plan-math";
 import { runQuery, runTool } from "@/lib/coach/registry";
 import { detectChart, detectGoal, routeQuestion } from "@/lib/coach/router";
 import type { CoachContext } from "@/lib/coach/tools";
@@ -310,5 +318,55 @@ describe("question themes", () => {
     expect(themeOf("Can I get a mortgage for a flat?")).toBe("loans");
     expect(themeOf("Mihin rahastoon kannattaa sijoittaa?")).toBe("investing");
     expect(themeOf("what's the weather")).toBe("other");
+  });
+});
+
+describe("plans", () => {
+  it("turns amounts into whole percentages that add up to exactly 100", () => {
+    expect(toPercents([1, 1, 1])).toEqual([34, 33, 33]);
+    expect(toPercents([90_000, 0, 64_000, 96_000, 0])).toEqual([36, 0, 26, 38, 0]);
+    expect(toPercents([0, 0])).toEqual([0, 0]);
+    for (const amounts of [
+      [3, 7, 11, 13, 17],
+      [1, 999],
+      [333, 333, 334],
+    ]) {
+      expect(toPercents(amounts).reduce((sum, value) => sum + value, 0)).toBe(100);
+    }
+  });
+
+  it("splits the last three months of income into the five slices", () => {
+    const actual = actualSplit(ctx.record.transactions, ctx.asOf);
+    expect(actual.incomeCents).toBe(250_000);
+    // Rent 900 of 2,500 is 36 %; what was not spent is saving.
+    expect(actual.percent.bills).toBe(36);
+    expect(actual.cents.saving).toBe(
+      250_000 - actual.cents.bills - actual.cents.essentials - actual.cents.everyday,
+    );
+    expect(isValidSplit(actual.percent)).toBe(true);
+  });
+
+  it("works out a copied plan on the copier's own income", () => {
+    expect(applySplit(TEMPLATES.balanced, 300_000)).toEqual({
+      bills: 105_000,
+      essentials: 30_000,
+      everyday: 90_000,
+      saving: 60_000,
+      investing: 15_000,
+    });
+  });
+
+  it("refuses splits that do not add up and names that carry an amount", () => {
+    expect(isValidSplit({ ...TEMPLATES.balanced, saving: 25 })).toBe(false);
+    expect(isValidSplit({ ...TEMPLATES.balanced, saving: 20.5, investing: 4.5 })).toBe(false);
+    expect(nameCarriesAmount("Saving 2500 for a car")).toBe(true);
+    expect(nameCarriesAmount("My 400 € plan")).toBe(true);
+    expect(nameCarriesAmount("50/30/20 for students")).toBe(false);
+  });
+
+  it("answers a budget question with the split, in basic mode", () => {
+    const result = routeQuestion(ctx, "Make me a budget plan");
+    expect(result.tool).toBe("plan");
+    expect(result.card?.chart.kind).toBe("donut");
   });
 });

@@ -92,6 +92,7 @@ export const ADMIN_SECTIONS: { href: string; label: MessageKey; manager?: boolea
   { href: "/admin/usage", label: "admin.nav.usage" },
   { href: "/admin/training", label: "admin.nav.training" },
   { href: "/admin/advisers", label: "admin.nav.advisers" },
+  { href: "/admin/plans", label: "admin.nav.plans" },
   { href: "/admin/ai", label: "admin.nav.ai", manager: true },
   { href: "/admin/announcements", label: "admin.nav.announcements", manager: true },
   { href: "/admin/notifications", label: "admin.nav.notifications", manager: true },

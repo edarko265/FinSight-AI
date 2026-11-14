@@ -175,6 +175,12 @@ export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
       inputSchema: TOOL_SCHEMAS.profile.extend(chartField),
       execute: async ({ chart }) => run(runTool(ctx, "profile", {}, chart)),
     }),
+    get_budget_split: tool({
+      description:
+        "The user's typical month as a plan: the percentage of income going to regular bills, irregular essentials, everyday spending, saving and investing. Use when they ask for a budget, a plan for their money, or how they split their income. They can keep, change and share the plan (percentages only) on the Plans page.",
+      inputSchema: TOOL_SCHEMAS.plan.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "plan", {}, chart)),
+    }),
     get_regular_payments: tool({
       description: "Regular monthly bills and the usual income pattern, suggested from history.",
       inputSchema: TOOL_SCHEMAS.recurring.extend(chartField),

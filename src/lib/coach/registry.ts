@@ -8,6 +8,7 @@ import {
   flowTool,
   peersTool,
   PERIOD_KEYS,
+  planTool,
   profileTool,
   recurringTool,
   safeToSpendTool,
@@ -63,6 +64,7 @@ export const TOOL_SCHEMAS = {
   profile: z.object({}),
   recurring: z.object({}),
   recommend: z.object({}),
+  plan: z.object({}),
 } as const;
 
 export type ToolName = keyof typeof TOOL_SCHEMAS;
@@ -106,6 +108,8 @@ function execute<T extends ToolName>(ctx: CoachContext, tool: T, raw: unknown): 
       return recurringTool(ctx);
     case "recommend":
       return recommendTool(ctx);
+    case "plan":
+      return planTool(ctx);
     default:
       return fallbackResult(ctx);
   }

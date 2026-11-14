@@ -370,3 +370,84 @@ describe("taught answers", () => {
     expect(await taught.listTaught()).toEqual([]);
   });
 });
+
+describe("shared plans", () => {
+  it("publish percentages only, can be copied by code, and stop when unshared or binned", async () => {
+    const plans = await import("@/lib/coach/plans");
+    const { TEMPLATES } = await import("@/lib/coach/plan-math");
+    const { loadCustomer } = await import("@/lib/data/repository");
+    const contextFor = async (ref: string) => ({
+      customerRef: ref,
+      record: (await loadCustomer(ref))!,
+      asOf: "2026-09-15",
+      locale: "en" as const,
+      benchmarks: [],
+    });
+    const alice = await contextFor(refA);
+    const bob = await contextFor(refB);
+
+    expect(
+      await plans.createPlan(alice, {
+        name: "Save 5000 €",
+        split: TEMPLATES.saver,
+        origin: "template",
+      }),
+    ).toBe("name_has_amount");
+    const created = await plans.createPlan(alice, {
+      name: "Student budget",
+      split: TEMPLATES.saver,
+      origin: "template",
+      goals: [{ label: "Engagement ring", percent: 100 }],
+    });
+    if (typeof created === "string") throw new Error(created);
+
+    const shared = await plans.sharePlan(alice, created.id, { listed: true, showGoalNames: false });
+    if (typeof shared === "string") throw new Error(shared);
+    const code = shared.shareCode!;
+    expect(code).toMatch(/^[A-Z2-9]{8}$/);
+
+    // What is public: the name and percentages. The goal name was hidden.
+    const open = await plans.sharedPlan(code.toLowerCase());
+    expect(open).toMatchObject({ name: "Student budget", split: TEMPLATES.saver, copies: 0 });
+    expect(open?.goals).toEqual([{ label: "#1", percent: 100 }]);
+    expect(Object.keys(open!).sort()).toEqual([
+      "code",
+      "copies",
+      "goals",
+      "listed",
+      "name",
+      "split",
+    ]);
+
+    // The stored row holds no customer reference and nothing readable.
+    const rows = await db.query<Record<string, unknown>>("SELECT * FROM shared_plans");
+    const stored = JSON.stringify(rows);
+    for (const secret of [refA, "Student budget", "Engagement ring", "TESTA"]) {
+      expect(stored).not.toContain(secret);
+    }
+
+    expect(await plans.listedPlans()).toHaveLength(1);
+    const copy = await plans.copyPlan(bob, code);
+    expect(copy).toMatchObject({
+      name: "Student budget",
+      origin: "copied",
+      split: TEMPLATES.saver,
+    });
+    expect((await plans.sharedPlan(code))?.copies).toBe(1);
+    // The copy is Bob's own and is not itself shared.
+    expect((await plans.listPlans(bob))[0]?.shareCode).toBeUndefined();
+
+    // Editing the original updates what is shared.
+    await plans.updatePlan(alice, created.id, {
+      name: "Student budget",
+      split: TEMPLATES.balanced,
+    });
+    expect((await plans.sharedPlan(code))?.split).toEqual(TEMPLATES.balanced);
+
+    // Moving it to the recycle bin ends the sharing.
+    expect(await plans.deletePlan(alice, created.id)).toBe(true);
+    expect(await plans.sharedPlan(code)).toBeNull();
+    expect(await plans.copyPlan(bob, code)).toBe("not_found");
+    expect(await plans.listPlans(alice)).toEqual([]);
+  });
+});

@@ -21,5 +21,6 @@ export async function GET(): Promise<Response> {
     voiceAgentEnabled: features.voice && Boolean(env.ELEVENLABS_API_KEY && env.ELEVENLABS_AGENT_ID),
     advisorEnabled: features.advisor,
     rewardsEnabled: features.rewards,
+    sharingEnabled: features.sharing,
   });
 }

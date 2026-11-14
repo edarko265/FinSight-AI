@@ -7,7 +7,15 @@ import { getDb } from "@/lib/db/client";
  * language, and whether AI was used: never who asked or what they typed.
  */
 export type UsageKind =
-  "question" | "consent" | "goal" | "voice" | "widget" | "advisor" | "unanswered" | "grounding";
+  | "question"
+  | "consent"
+  | "goal"
+  | "voice"
+  | "widget"
+  | "advisor"
+  | "unanswered"
+  | "grounding"
+  | "plan";
 
 export async function recordUsage(
   kind: UsageKind,

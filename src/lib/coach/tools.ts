@@ -1,3 +1,4 @@
+import { actualSplit, SLICES } from "@/lib/coach/plan-math";
 import {
   ageBand,
   customerMetrics,
@@ -750,6 +751,50 @@ export function flowTool(ctx: CoachContext, input: { period?: PeriodKey }): Tool
     evidence: h.evidence(period, count),
     lesson: h.t("basket.regular.lesson"),
     followUps: [h.t("chat.suggest.safe"), h.t("chat.suggest.whatif")],
+  };
+}
+
+/**
+ * The customer's typical month as a plan: what share of income goes to each
+ * of five slices. This is the starting point for a plan they can keep, change
+ * and share (as percentages only) on the Plans page.
+ */
+export function planTool(ctx: CoachContext): ToolResult {
+  const h = makeHelpers(ctx);
+  const period = resolvePeriod("last_3_months", ctx.asOf);
+  const actual = actualSplit(ctx.record.transactions, ctx.asOf);
+  const spent = SLICES.reduce((sum, key) => sum + actual.cents[key], 0);
+  if (actual.incomeCents === 0 && spent === 0) {
+    return {
+      tool: "plan",
+      text: h.t("coach.none", { period: h.periodLabel(period) }),
+      facts: [],
+      followUps: [],
+    };
+  }
+  const points = SLICES.filter((key) => actual.cents[key] > 0).map((key) => ({
+    label: `${h.t(`plan.slice.${key}` as MessageKey)} ${actual.percent[key]} %`,
+    valueCents: actual.cents[key],
+  }));
+  const text = h.t("coach.plan.summary", {
+    bills: actual.percent.bills,
+    essentials: actual.percent.essentials,
+    everyday: actual.percent.everyday,
+    saving: actual.percent.saving,
+    investing: actual.percent.investing,
+  });
+  return {
+    tool: "plan",
+    text,
+    card: {
+      title: h.t("coach.plan.title"),
+      summary: text,
+      chart: { kind: "donut", points },
+      basis: h.basis(period),
+    },
+    facts: [{ label: h.t("coach.flow.income"), valueCents: actual.incomeCents }, ...points],
+    lesson: h.t("coach.plan.lesson"),
+    followUps: [h.t("chat.suggest.whatif"), h.t("chat.suggest.recommend")],
   };
 }
 

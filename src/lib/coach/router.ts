@@ -49,6 +49,7 @@ const PATTERNS = {
     /recommend|advice|advise|suggest|tips?\b|improve|better with|what should i|suosit|neuvo|vinkk|paranta|mitä minun|rekommend|råd\b|tips|förbättra|vad borde/,
   recurring:
     /recurring|subscription|regular (bill|payment)|upcoming|coming up|bills?\b|salary|payday|lasku|säännölli|toistuva|tilauks|palkka|räkning|regelbund|prenumeration|lön/,
+  plan: /\bbudget|\bmy plan\b|spending plan|savings? plan|split my (income|money|salary)|budjet|suunnitelma|jakaa tulo|sparplan|fördela/,
   baskets: /basket|mandatory|essential|kori|pakolli|välttämät|korg|obligatorisk|nödvändig/,
   flow: /flow|income go|sankey|diagram|virta|tuloni|kaavio|flöde|min inkomst/,
   balance:
@@ -114,6 +115,7 @@ function route(ctx: CoachContext, question: string): ToolResult {
       otherOutflowsCents: Number.isFinite(euros) && euros > 0 ? Math.round(euros * 100) : undefined,
     });
   }
+  if (PATTERNS.plan.test(text)) return runTool(ctx, "plan", {});
   if (PATTERNS.flow.test(text)) return runTool(ctx, "flow", { period });
   if (PATTERNS.peers.test(text)) return runTool(ctx, "peers", { target });
   if (PATTERNS.profile.test(text)) return runTool(ctx, "profile", {});

@@ -71,6 +71,19 @@ export function GoalsView(): React.JSX.Element {
     <div className="flex flex-col gap-5 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("goals.title")}</h1>
 
+      <Link
+        href="/plans"
+        className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm"
+      >
+        <span>
+          <span className="block font-semibold">{t("plans.title")}</span>
+          <span className="block text-muted">{t("goals.plansLink")}</span>
+        </span>
+        <span className="shrink-0 font-semibold text-accent" aria-hidden="true">
+          →
+        </span>
+      </Link>
+
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">{t("goals.yours")}</h2>
         {data && data.goals.length === 0 ? (
