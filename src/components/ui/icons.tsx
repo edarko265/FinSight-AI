@@ -37,6 +37,12 @@ export const ChatIcon = (p: IconProps): React.JSX.Element => (
     <path d="M4 5h16v11H9l-5 4V5z" />
   </Svg>
 );
+export const NewChatIcon = (p: IconProps): React.JSX.Element => (
+  <Svg {...p}>
+    <path d="M4 5h16v11H9l-5 4V5z" />
+    <path d="M12 8v5M9.5 10.5h5" />
+  </Svg>
+);
 export const BellIcon = (p: IconProps): React.JSX.Element => (
   <Svg {...p}>
     <path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16z" />
