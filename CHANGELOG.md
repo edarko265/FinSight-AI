@@ -50,12 +50,26 @@ All notable changes to this project are documented here. The format follows
 - **Subscriptions.** Payments that repeat monthly at one merchant, with the yearly cost.
 - **Mortgage guide.** The application process taught from the dataset, and the customer's
   own application where one exists. No prediction of outcomes.
+- **Working shown.** Every answer can show the steps that produced it.
+- **Saved conversation.** Kept between visits, sealed, clearable.
+- **Limits and plan following.** Monthly limits per kind of spending; follow a plan and be
+  told when the month drifts from it.
+- **Friends and reports.** Add a friend by code and see the plans they share; report a
+  shared plan to staff.
+- **Notification preferences** per kind, and quiet hours.
+- **Two-step sign-in** with authenticator codes, for customers and staff.
+- **Provider interfaces** for payment, the bonus programme and other banks' accounts, each
+  with a clearly labelled simulated implementation.
+- **Admin.** Period selector, scheduled and translated announcements, staff change their
+  own password, adviser replies carry a name, reports on shared plans.
+- **Widgets** drag by touch and come in three widths; goals show a progress curve.
+- **Browser tests** with an automated accessibility audit, run in CI.
 - **Charts and widgets.** Fifteen chart types any widget can switch between, by selector
   or by asking; a step-by-step add-widget form with a chart gallery and live preview;
   widgets can be dragged, moved, made wide or small, minimised and removed; shortcut and
   live widgets for asking by voice, calling the coach, checking a purchase, goals and
   insights.
-- **Demo video.** A 55-second narrated product film made with HyperFrames, voiced with ElevenLabs; source in `video/`.
+- **Demo video.** An 83-second narrated product film, with music, made with HyperFrames, voiced with ElevenLabs; source in `video/`.
 - **Documentation.** `docs/how-it-works.md`: the logic step by step with flowcharts, and
   how the statistical data is used.
 - **Privacy.** Terms of use and privacy notice accepted at first sign-in; optional AI

@@ -66,8 +66,8 @@ flowchart TB
 6. **The wording is checked.** If the model wrote the text, every euro amount in it must be
    one the calculation produced. If not, the model's text is dropped and the calculation's
    own sentence is used ([`grounding.ts`](../src/lib/coach/grounding.ts)).
-7. **The answer is returned** with the chart, the facts, the evidence reference and the
-   saved-widget query ([`answer.ts`](../src/lib/coach/answer.ts)).
+7. **The answer is returned** with the chart, the facts, the evidence reference, the steps
+   that produced it ([`steps.ts`](../src/lib/coach/steps.ts)) and the saved-widget query ([`answer.ts`](../src/lib/coach/answer.ts)).
 8. **Only the topic is counted** for the admin statistics
    ([`usage.ts`](../src/lib/admin/usage.ts)).
 
@@ -180,6 +180,12 @@ Routes marked 🔒 also require the terms to be accepted.
 | 🔒 `/api/corrections`                                     | GET, POST                | Basket corrections and bill adjustments, with undo                                                             |
 | 🔒 `/api/goals/set-aside`                                 | POST, DELETE             | Mark money as set aside for a goal; take it back                                                               |
 | 🔒 `/api/mortgage`                                        | GET                      | Mortgage guide figures and the customer's own application                                                      |
+| 🔒 `/api/chat/history`                                    | GET, DELETE              | The saved conversation; clearing sends it to the recycle bin                                                   |
+| 🔒 `/api/budgets`                                         | GET, POST                | Monthly limits and how the month is going against them                                                         |
+| 🔒 `/api/friends`                                         | GET, POST                | Friend code, friends and the plans they share                                                                  |
+| 🔒 `/api/notifications/prefs`                             | GET, PUT                 | Which notifications to send, and quiet hours                                                                   |
+| 🔒 `/api/security/totp`                                   | GET, POST                | Two-step sign-in: set up, confirm, switch off                                                                  |
+| 🔒 `/api/rewards`                                         | GET, POST                | Redeem a reward (bonus programme simulated)                                                                    |
 | 🔒 `/api/plans`                                           | GET, POST                | Plans: make, edit, share by code, copy, preview                                                                |
 | 🔒 `/api/push`                                            | GET, POST, DELETE        | Device notification subscriptions                                                                              |
 | `/api/cron/reminders`                                     | GET                      | The daily reminder job (needs `CRON_SECRET`)                                                                   |
@@ -188,16 +194,16 @@ Routes marked 🔒 also require the terms to be accepted.
 
 ## 6. Stack
 
-| Layer       | Choice                                                 | Why                                             |
-| ----------- | ------------------------------------------------------ | ----------------------------------------------- |
-| App         | Next.js 16 App Router, TypeScript strict               | One codebase for the mobile web app and its API |
-| UI          | Tailwind CSS 4, hand-written components and SVG charts | Small, accessible, no chart library to fight    |
-| Database    | PostgreSQL 17+ over TLS; embedded PGlite locally       | See [database.md](database.md)                  |
-| Data access | Parameterised SQL through a small `Db` interface       | Five kinds of table do not need an ORM          |
-| Validation  | Zod on every boundary                                  | Requests, tool inputs, settings, environment    |
-| AI          | Vercel AI SDK with OpenAI and Google providers         | Tool calling behind a replaceable interface     |
-| Voice       | ElevenLabs speech and Agents                           | Human-sounding voice in three languages         |
-| Tests       | Vitest; PGlite for integration                         | The real migrations run in memory               |
+| Layer       | Choice                                                 | Why                                                           |
+| ----------- | ------------------------------------------------------ | ------------------------------------------------------------- |
+| App         | Next.js 16 App Router, TypeScript strict               | One codebase for the mobile web app and its API               |
+| UI          | Tailwind CSS 4, hand-written components and SVG charts | Small, accessible, no chart library to fight                  |
+| Database    | PostgreSQL 17+ over TLS; embedded PGlite locally       | See [database.md](database.md)                                |
+| Data access | Parameterised SQL through a small `Db` interface       | Five kinds of table do not need an ORM                        |
+| Validation  | Zod on every boundary                                  | Requests, tool inputs, settings, environment                  |
+| AI          | Vercel AI SDK with OpenAI and Google providers         | Tool calling behind a replaceable interface                   |
+| Voice       | ElevenLabs speech and Agents                           | Human-sounding voice in three languages                       |
+| Tests       | Vitest; PGlite for integration; Playwright with axe    | Real migrations in memory; browser tests on made-up customers |
 
 ## 7. What is deliberately simple
 
@@ -207,5 +213,6 @@ Routes marked 🔒 also require the terms to be accepted.
   labelled simulation; a real connection would replace the generator behind the same merge.
 - **The demo clock is fixed** by `DEMO_AS_OF_DATE`.
 - **Adviser chat polls** every few seconds instead of using a socket.
-- **Conversations are not stored.** The last few turns are sent with each question from the
+- **Conversations are kept for the customer only**, sealed with their key and capped at 60
+  messages; they can clear them. The last few turns are sent with each question from the
   browser.

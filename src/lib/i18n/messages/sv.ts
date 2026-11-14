@@ -301,7 +301,7 @@ export const sv: Record<MessageKey, string> = {
     "Du kan se och ladda ner dina uppgifter, återkalla samtycke och radera det appen har lagrat om dig, allt från Inställningar. Du kan också klaga hos dataskyddsmyndigheten.",
   "privacy.retention.title": "Hur länge",
   "privacy.retention.body":
-    "Inloggningssessioner avslutas efter åtta timmar. Samtal sparas inte. Sparade vyer och samtycke finns kvar tills du raderar dem.",
+    "Inloggningssessioner avslutas efter åtta timmar. Ditt samtal med coachen sparas åt dig, krypterat med din egen nyckel, så att du kan fortsätta där du slutade; personalen kan inte läsa det och du kan rensa det när som helst. Sparade vyer, mål, planer och samtycke finns kvar tills du raderar dem.",
   "privacy.back": "Tillbaka",
   "nav.goals": "Mål",
   "chat.suggest.goal": "Jag vill spara till något",

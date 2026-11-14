@@ -309,7 +309,7 @@ export const en = {
     "You can see and download your data, withdraw consent, and delete what the app has stored about you, all from Settings. You may also complain to the data protection authority.",
   "privacy.retention.title": "How long",
   "privacy.retention.body":
-    "Sign-in sessions end after eight hours. Conversations are not stored. Saved views and consent are kept until you delete them.",
+    "Sign-in sessions end after eight hours. Your conversation with the coach is kept for you, encrypted with your own key, so you can pick up where you left off; staff cannot read it, and you can clear it at any time. Saved views, goals, plans and consent are kept until you delete them.",
   "privacy.back": "Back",
   "nav.goals": "Goals",
   "chat.suggest.goal": "I want to save for something",

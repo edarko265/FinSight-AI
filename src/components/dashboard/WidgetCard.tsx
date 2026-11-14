@@ -151,7 +151,7 @@ export function WidgetCard({
         over ? "border-accent ring-2 ring-accent" : "border-border"
       } ${dragged ? "opacity-60" : ""} ${compact ? "p-3" : "p-4"}`}
     >
-      <header className={`flex items-center gap-1 ${compact ? "flex-wrap justify-end" : ""}`}>
+      <header className={`flex items-center gap-1 ${compact ? "flex-wrap justify-between" : ""}`}>
         <button
           type="button"
           aria-label={`${t("widget.drag")}: ${title}`}
@@ -176,7 +176,7 @@ export function WidgetCard({
           <Glyph d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />
         </button>
         <h2
-          className={`line-clamp-2 min-w-0 font-semibold ${compact ? "basis-full text-sm" : "flex-1 text-base"}`}
+          className={`line-clamp-2 min-w-0 font-semibold ${compact ? "order-first basis-full text-sm" : "flex-1 text-base"}`}
         >
           {title}
         </h2>

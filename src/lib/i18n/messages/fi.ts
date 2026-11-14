@@ -301,7 +301,7 @@ export const fi: Record<MessageKey, string> = {
     "Voit nähdä ja ladata tietosi, peruuttaa suostumuksesi ja poistaa sovelluksen sinusta tallentamat tiedot asetuksista. Voit myös tehdä valituksen tietosuojaviranomaiselle.",
   "privacy.retention.title": "Kuinka kauan",
   "privacy.retention.body":
-    "Kirjautumisistunnot päättyvät kahdeksan tunnin kuluttua. Keskusteluja ei tallenneta. Tallennetut näkymät ja suostumus säilyvät, kunnes poistat ne.",
+    "Kirjautumisistunnot päättyvät kahdeksan tunnin kuluttua. Keskustelusi valmentajan kanssa säilytetään sinua varten omalla avaimellasi salattuna, jotta voit jatkaa siitä, mihin jäit; henkilökunta ei voi lukea sitä, ja voit tyhjentää sen milloin tahansa. Tallennetut näkymät, tavoitteet, suunnitelmat ja suostumus säilyvät, kunnes poistat ne.",
   "privacy.back": "Takaisin",
   "nav.goals": "Tavoitteet",
   "chat.suggest.goal": "Haluan säästää johonkin",
