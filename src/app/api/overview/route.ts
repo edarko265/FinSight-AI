@@ -11,7 +11,11 @@ export async function GET(request: Request): Promise<Response> {
   if (blocked) return blocked;
   const balance = recordedBalance(ctx.record.transactions, ctx.asOf);
   const forecast = forecastFor(ctx, { horizonDays: 7 });
-  const read = new Set((await readState<string[]>(ctx.customerRef, "insights_read")) ?? []);
+  const [readIds, insights] = await Promise.all([
+    readState<string[]>(ctx.customerRef, "insights_read"),
+    allInsights(ctx),
+  ]);
+  const read = new Set(readIds ?? []);
   return Response.json({
     asOf: ctx.asOf,
     balanceCents: balance?.balanceCents ?? 0,
@@ -21,6 +25,6 @@ export async function GET(request: Request): Promise<Response> {
       shortfallCents: forecast.shortfallCents,
       horizonDays: forecast.assumptions.horizonDays,
     },
-    unreadInsights: (await allInsights(ctx)).filter((insight) => !read.has(insight.id)).length,
+    unreadInsights: insights.filter((insight) => !read.has(insight.id)).length,
   });
 }

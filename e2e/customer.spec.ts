@@ -33,7 +33,8 @@ test.describe("signed in", () => {
 
   test("the dashboard shows the balance and what is safe to spend", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByText("Recorded balance")).toBeVisible();
+    // The balance card; a balance widget on the dashboard may carry the same words.
+    await expect(page.getByText("Recorded balance").first()).toBeVisible();
     await expect(page.getByText(/Safe to spend, next|Estimated shortfall, next/)).toBeVisible();
     await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
     // Nothing may scroll sideways on a phone.

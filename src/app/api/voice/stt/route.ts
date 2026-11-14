@@ -1,6 +1,6 @@
 import { getSettings } from "@/lib/admin/settings";
 import { recordUsage } from "@/lib/admin/usage";
-import { hasAiConsent, readConsent } from "@/lib/coach/consent";
+import { hasAiConsent } from "@/lib/coach/consent";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
 import { transcribeSpeech } from "@/lib/voice/elevenlabs";
@@ -21,7 +21,7 @@ export async function POST(request: Request): Promise<Response> {
   const blocked = await termsRequired(ctx);
   if (blocked) return blocked;
   // Speech goes to an outside provider, so it needs the same consent as the AI coach.
-  if (!hasAiConsent(await readConsent(ctx.customerRef))) {
+  if (!hasAiConsent(ctx.consent)) {
     return Response.json({ error: "consent_required" }, { status: 403 });
   }
   if (!(await rateLimit(`stt:${ctx.customerRef}`, 20, 60_000))) {

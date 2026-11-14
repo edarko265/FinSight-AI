@@ -19,7 +19,14 @@ const DRIFT_POINTS = 5;
  * transactions.
  */
 export async function allInsights(ctx: SessionContext): Promise<Insight[]> {
-  const notices: Insight[] = (await activeAnnouncements()).map((notice) => ({
+  // Four independent reads, made side by side rather than one after another.
+  const [announcements, goalPlans, plans, budgets] = await Promise.all([
+    activeAnnouncements(),
+    listGoalPlans(ctx),
+    listPlans(ctx),
+    budgetStatuses(ctx),
+  ]);
+  const notices: Insight[] = announcements.map((notice) => ({
     id: `announcement-${notice.id}-${notice.updatedAt}`,
     severity: notice.severity,
     // In the customer's language where staff wrote one.
@@ -29,7 +36,7 @@ export async function allInsights(ctx: SessionContext): Promise<Insight[]> {
 
   // One reminder per goal per month, so it comes back each month until the goal is removed.
   const month = ctx.asOf.slice(0, 7);
-  const reminders: Insight[] = (await listGoalPlans(ctx)).map((plan) => ({
+  const reminders: Insight[] = goalPlans.map((plan) => ({
     id: `goal-${plan.goal.id}-${month}`,
     severity: plan.fit === "hard" ? "warning" : "info",
     title: translate(ctx.locale, "insight.goal.title", { name: plan.goal.name }),
@@ -42,7 +49,7 @@ export async function allInsights(ctx: SessionContext): Promise<Insight[]> {
 
   // The plan the customer follows: say so when the month has drifted from it.
   const drift: Insight[] = [];
-  const followed = (await listPlans(ctx)).find((plan) => plan.tracked);
+  const followed = plans.find((plan) => plan.tracked);
   if (followed) {
     const actual = actualSplit(ctx.record.transactions, ctx.asOf).percent;
     for (const slice of SLICES) {
@@ -71,7 +78,7 @@ export async function allInsights(ctx: SessionContext): Promise<Insight[]> {
   }
 
   // Monthly limits that are nearly or fully used.
-  const limits: Insight[] = (await budgetStatuses(ctx))
+  const limits: Insight[] = budgets
     .filter((budget) => budget.level !== "ok")
     .map((budget) => ({
       id: `budget-${budget.id}-${month}-${budget.level}`,

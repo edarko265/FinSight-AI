@@ -1,3 +1,4 @@
+import { readConsent } from "@/lib/coach/consent";
 import "server-only";
 
 import { takeDueAnnouncements } from "@/lib/admin/announcements";
@@ -47,7 +48,14 @@ export async function runReminders(): Promise<ReminderRun> {
     const record = await personalRecord(customerRef, base, asOf);
     const stored = await pushLocale(customerRef);
     const locale = isLocale(stored) ? stored : DEFAULT_LOCALE;
-    const ctx: SessionContext = { customerRef, record, asOf, locale, benchmarks };
+    const ctx: SessionContext = {
+      customerRef,
+      record,
+      asOf,
+      locale,
+      benchmarks,
+      consent: await readConsent(customerRef),
+    };
 
     const prefs = await readPrefs(customerRef);
     const now = new Date();

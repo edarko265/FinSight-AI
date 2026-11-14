@@ -21,9 +21,14 @@
   --chart-2: #006e87;
   --chart-3: #885600;
   --chart-4: #757575;
-  --chart-5: #91fa9b;
+  --chart-5: #6a4c9c;
+  --chart-6: #b3365e;
   --chart-ink: #ffffff;
-  --chart-bar-muted: #b7d9c4;
+  --chart-ink-5: #ffffff;
+  --chart-bar-muted: #8fc4a5;
+
+  /* Browser-drawn parts (menus, scroll bars, date pickers) follow the theme too. */
+  color-scheme: light;
 }
 
 /* Dark theme: follows the system unless the user picks a theme in Settings. */
@@ -45,8 +50,12 @@
     --chart-3: #d9a441;
     --chart-4: #9aa3a8;
     --chart-5: #91fa9b;
+    --chart-6: #e58aa5;
     --chart-ink: #04291a;
+    --chart-ink-5: #04291a;
     --chart-bar-muted: #2c5a43;
+
+    color-scheme: dark;
   }
 }
 
@@ -67,8 +76,12 @@
   --chart-3: #d9a441;
   --chart-4: #9aa3a8;
   --chart-5: #91fa9b;
+  --chart-6: #e58aa5;
   --chart-ink: #04291a;
+  --chart-ink-5: #04291a;
   --chart-bar-muted: #2c5a43;
+
+  color-scheme: dark;
 }
 
 @theme inline {

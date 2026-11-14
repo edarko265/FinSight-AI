@@ -1,5 +1,5 @@
 import { getSettings } from "@/lib/admin/settings";
-import { hasAcceptedTerms, hasAiConsent, hasDecidedOnAi, readConsent } from "@/lib/coach/consent";
+import { hasAcceptedTerms, hasAiConsent, hasDecidedOnAi } from "@/lib/coach/consent";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
 import { getCoachModel } from "@/lib/coach/llm";
 import { getEnv } from "@/lib/env";
@@ -8,7 +8,7 @@ export async function GET(): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
   const env = getEnv();
-  const consent = await readConsent(ctx.customerRef);
+  const { consent } = ctx;
   const { features, aiProvider } = await getSettings();
   return Response.json({
     customerId: ctx.record.profile.customerId,

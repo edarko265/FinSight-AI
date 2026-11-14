@@ -9,6 +9,8 @@ const SHORT_LABEL = 5;
 /** Bars with longer names are drawn as rows, so the labels stay readable on a phone. */
 function Rows({ points }: { points: ChartPoint[] }): React.JSX.Element {
   const max = Math.max(...points.map((point) => point.valueCents), 1);
+  // Named things are not in time order, so the one that stands out is the largest.
+  const top = points.findIndex((point) => point.valueCents === max);
   return (
     <ul className="flex flex-col gap-2" aria-hidden="true">
       {points.map((point, index) => (
@@ -19,8 +21,7 @@ function Rows({ points }: { points: ChartPoint[] }): React.JSX.Element {
               className="block h-full rounded-full fs-grow-x"
               style={{
                 width: `${Math.max((Math.max(point.valueCents, 0) / max) * 100, 1)}%`,
-                background:
-                  index === points.length - 1 ? "var(--chart-1)" : "var(--chart-bar-muted)",
+                background: index === top ? "var(--chart-1)" : "var(--chart-bar-muted)",
               }}
             />
           </span>

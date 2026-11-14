@@ -33,8 +33,13 @@ const EMPTY: ConsentRecord = {
   withdrawnAt: null,
 };
 
+/** A stored consent record with anything missing filled in as "not agreed". */
+export function consentFrom(stored: unknown): ConsentRecord {
+  return { ...EMPTY, ...((stored as Partial<ConsentRecord> | null | undefined) ?? {}) };
+}
+
 export async function readConsent(customerRef: string): Promise<ConsentRecord> {
-  return { ...EMPTY, ...(await readState<Partial<ConsentRecord>>(customerRef, "consent")) };
+  return consentFrom(await readState<Partial<ConsentRecord>>(customerRef, "consent"));
 }
 
 export function hasAcceptedTerms(record: ConsentRecord): boolean {
