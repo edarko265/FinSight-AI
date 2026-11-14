@@ -22,15 +22,13 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
   const { t } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const onKeyDown = useSheetDialog(dialogRef, open, onClose);
+  const dismiss = useSheetDialog(dialogRef, open, () => onClose());
 
   return (
     <>
-      {open ? <TabSheetBackdrop onClick={onClose} /> : null}
+      {open ? <TabSheetBackdrop onClick={() => dismiss("backdrop")} /> : null}
       <dialog
         ref={dialogRef}
-        onClose={onClose}
-        onKeyDown={onKeyDown}
         aria-labelledby="new-widget-title"
         className={`${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H} h-[88dvh] flex-col bg-background p-0 text-foreground open:flex`}
       >

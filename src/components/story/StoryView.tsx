@@ -12,6 +12,7 @@ import { useVoice } from "@/components/voice/useVoice";
 import { api } from "@/lib/api-client";
 import type { ChartCard } from "@/lib/contracts/chart";
 import { InfoTip } from "@/components/ui/InfoTip";
+import { useEscapeClose } from "@/components/ui/TabSheet";
 
 interface Slide {
   id: string;
@@ -94,6 +95,10 @@ export function StoryView(): React.JSX.Element {
     router.push("/dashboard");
   };
 
+  const closeButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => closeButton.current?.focus(), []);
+  useEscapeClose(true, close);
+
   return (
     <div
       role="dialog"
@@ -143,6 +148,7 @@ export function StoryView(): React.JSX.Element {
               </button>
             ) : null}
             <button
+              ref={closeButton}
               type="button"
               onClick={close}
               aria-label={t("story.close")}

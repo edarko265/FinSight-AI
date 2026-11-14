@@ -2,8 +2,8 @@
 
 /* Palette follows S-Pankki's published design system: deep green, mint accent, neutral greys. */
 :root {
-  /* Height of the phone tab bar above the safe-area inset; 0 where the bar is hidden. */
-  --bottom-nav-h: 3.75rem;
+  /* Height of the phone tab bar above the safe-area inset; 0 where there is no tab bar. */
+  --bottom-nav-h: 0rem;
   --background: #f5f5f5;
   --surface: #ffffff;
   --foreground: #1f1f1f;
@@ -94,8 +94,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Only pages that render the tab bar (marked data-bottom-nav) make room for it. */
+:root:has([data-bottom-nav]) {
+  --bottom-nav-h: 3.75rem;
+}
+
 @media (min-width: 48rem) {
-  :root {
+  :root:has([data-bottom-nav]) {
     --bottom-nav-h: 0rem;
   }
 }

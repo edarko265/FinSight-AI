@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChartView } from "@/components/charts/ChartView";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon, MicIcon, PhoneIcon } from "@/components/ui/icons";
-import { useCloseOnNavigation } from "@/components/ui/TabSheet";
+import { useCloseOnNavigation, useEscapeClose } from "@/components/ui/TabSheet";
 import { api } from "@/lib/api-client";
 import type { AssistantMessage } from "@/lib/contracts/chat";
 
@@ -88,9 +88,22 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
     getOutputVolume,
   } = conversation;
 
-  // Tapping a tab hangs up: the dock keeps the chat mounted across pages.
-  useCloseOnNavigation(true, () => {
+  // The session is ended once, whether by navigation, Escape, the button or unmounting.
+  const ended = useRef(false);
+  const hangUp = (): void => {
+    if (ended.current) return;
+    ended.current = true;
     endSession();
+  };
+  const endButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => endButton.current?.focus(), []);
+  // Tapping a tab hangs up (the dock keeps the chat mounted across pages); so does Escape.
+  useCloseOnNavigation(true, () => {
+    hangUp();
+    onEnd();
+  });
+  useEscapeClose(true, () => {
+    hangUp();
     onEnd();
   });
 
@@ -102,7 +115,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
         startSession({ signedUrl, overrides: { agent: { language: localeRef.current } } }),
       )
       .catch(() => setFailed(true));
-    return () => endSession();
+    return () => hangUp();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once when the call opens, end when it closes
   }, []);
 
@@ -144,6 +157,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
           {t("voice.call.title")}
         </span>
         <button
+          ref={endButton}
           type="button"
           onClick={onEnd}
           aria-label={t("voice.call.end")}
@@ -226,7 +240,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
         ) : null}
       </div>
 
-      <div className="flex items-center justify-center gap-4 px-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+      <div className="flex items-center justify-center gap-4 px-6 pb-6">
         <button
           type="button"
           onClick={() => setMuted(!isMuted)}

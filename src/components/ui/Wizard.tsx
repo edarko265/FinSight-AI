@@ -9,6 +9,7 @@ import {
   TAB_SHEET_POSITION,
   TabSheetBackdrop,
   useSheetDialog,
+  type DismissReason,
 } from "@/components/ui/TabSheet";
 
 export interface WizardStep {
@@ -26,6 +27,11 @@ interface WizardProps {
   steps: WizardStep[];
   finishLabel: string;
   onClose: () => void;
+  /**
+   * Tells why a dismissable wizard was closed. When given it is called instead of `onClose`,
+   * so a caller can treat a tap on a tab differently from the close button.
+   */
+  onDismiss?: (reason: DismissReason) => void;
   onFinish: () => Promise<void | boolean> | void | boolean;
   /** Shown above the buttons, for example when saving failed. */
   error?: string | null;
@@ -44,6 +50,7 @@ export function Wizard({
   steps,
   finishLabel,
   onClose,
+  onDismiss,
   onFinish,
   error,
   dismissable = true,
@@ -53,13 +60,14 @@ export function Wizard({
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  const close = (): void => {
+  const close = (reason: DismissReason = "close"): void => {
     setIndex(0);
     setBusy(false);
-    onClose();
+    if (onDismiss) onDismiss(reason);
+    else onClose();
   };
   // Dismissable wizards stay above the tab bar and leave it usable; the others cover everything.
-  const onKeyDown = useSheetDialog(dialogRef, open, close, !dismissable);
+  const dismiss = useSheetDialog(dialogRef, open, close, !dismissable);
 
   const current = Math.min(index, steps.length - 1);
   const step = steps[current];
@@ -83,18 +91,16 @@ export function Wizard({
 
   return (
     <>
-      {dismissable && open ? <TabSheetBackdrop onClick={close} /> : null}
+      {dismissable && open ? <TabSheetBackdrop onClick={() => dismiss("backdrop")} /> : null}
       <dialog
         ref={dialogRef}
-        onClose={close}
-        onKeyDown={onKeyDown}
         onCancel={(event) => {
           if (!dismissable) event.preventDefault();
         }}
         aria-labelledby="wizard-title"
         className={`${
           dismissable
-            ? `${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H}`
+            ? `${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H} md:h-fit`
             : "m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl"
         } flex-col bg-background p-0 text-foreground backdrop:bg-black/50 open:flex`}
       >
@@ -105,7 +111,7 @@ export function Wizard({
           {dismissable ? (
             <button
               type="button"
-              onClick={close}
+              onClick={() => close()}
               aria-label={t("evidence.close")}
               className="-m-1 rounded-full p-1 text-muted"
             >

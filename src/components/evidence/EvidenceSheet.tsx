@@ -84,7 +84,7 @@ export function EvidenceSheet({
     }
   }, [evidence]);
   // Runs after the effect above, which still sees the dialog closed on the first render of `evidence`.
-  const onKeyDown = useSheetDialog(dialogRef, evidence !== null, onClose);
+  const dismiss = useSheetDialog(dialogRef, evidence !== null, () => onClose());
 
   const label = (prefix: string, value: string): string => {
     const key = `${prefix}.${value}`;
@@ -93,11 +93,9 @@ export function EvidenceSheet({
 
   return (
     <>
-      {evidence ? <TabSheetBackdrop onClick={onClose} /> : null}
+      {evidence ? <TabSheetBackdrop onClick={() => dismiss("backdrop")} /> : null}
       <dialog
         ref={dialogRef}
-        onClose={onClose}
-        onKeyDown={onKeyDown}
         aria-labelledby="evidence-title"
         className={`${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H} h-[80dvh] flex-col bg-background p-0 text-foreground open:flex`}
       >
