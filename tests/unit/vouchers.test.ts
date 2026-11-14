@@ -46,9 +46,21 @@ const targets = (result: ReturnType<typeof voucherLadder>): number[] =>
   result.tiers.map((tier) => tier.targetCents);
 
 describe("voucher ladder", () => {
-  it("defines four tiers with multipliers 1 to 4", () => {
-    expect(VOUCHER_TIERS.map((tier) => tier.multiplier)).toEqual([1, 2, 3, 4]);
-    expect(VOUCHER_TIERS.every((tier) => tier.options.length >= 2)).toBe(true);
+  it("defines three tiers with multipliers 1 to 3", () => {
+    expect(VOUCHER_TIERS.map((tier) => tier.multiplier)).toEqual([1, 2, 3]);
+    expect(VOUCHER_TIERS.map((tier) => tier.id)).toEqual(["bronze", "silver", "gold"]);
+    expect(
+      VOUCHER_TIERS.map((tier) =>
+        tier.options.map((o) => (o.kind === "grocery" ? o.percentOff : o.centsPerLitre)),
+      ),
+    ).toEqual([
+      [5, 5],
+      [10, 10],
+      [15, 15],
+    ]);
+    expect(
+      VOUCHER_TIERS.every((tier) => tier.options.map((o) => o.kind).join() === "grocery,fuel"),
+    ).toBe(true);
   });
 
   it("floors the base rate at 3% when the national rate is negative", () => {
@@ -59,7 +71,7 @@ describe("voucher ladder", () => {
       floorApplied: true,
       ratePercent: 5.9,
     });
-    expect(targets(result)).toEqual([9000, 18000, 27000, 36000]);
+    expect(targets(result)).toEqual([9000, 18000, 27000]);
   });
 
   it("switches from the floor to the national rate at 3.0 versus 2.9", () => {
@@ -74,19 +86,19 @@ describe("voucher ladder", () => {
   it("uses the national rate when it is above the floor", () => {
     const result = ladder({ nationalRatePercent: 5.9 });
     expect(result.source).toMatchObject({ baseRatePercent: 5.9, floorApplied: false });
-    expect(targets(result)).toEqual([17700, 35400, 53100, 70800]);
+    expect(targets(result)).toEqual([17700, 35400, 53100]);
   });
 
   it("rounds each target once to whole cents", () => {
     const result = ladder({ incomeCents: 123457, nationalRatePercent: 3 });
     // 123457 * 0.03 = 3703.71 -> 3704; x2 = 7407.42 -> 7407, not 2 * 3704
-    expect(targets(result)).toEqual([3704, 7407, 11111, 14815]);
+    expect(targets(result)).toEqual([3704, 7407, 11111]);
   });
 
   it("rounds half a cent up", () => {
     // 50 cents * 3% = 1.5 -> 2; x3 = 4.5 -> 5
     const result = ladder({ incomeCents: 50, nationalRatePercent: 0 });
-    expect(targets(result)).toEqual([2, 3, 5, 6]);
+    expect(targets(result)).toEqual([2, 3, 5]);
   });
 
   it("unlocks exactly at the target and not one cent below", () => {
@@ -138,7 +150,7 @@ describe("voucher ladder", () => {
     const pick: VoucherSelection = {
       month: "2026-03",
       tierId: "silver",
-      optionId: "silver-cinema",
+      optionId: "silver-fuel",
     };
     const valid = ladder({ savedCents: 18000, nationalRatePercent: 0, selection: pick });
     expect(valid.selected).toEqual(pick);
@@ -165,10 +177,10 @@ describe("voucher ladder", () => {
 
   it("validates new picks with canSelect", () => {
     const result = ladder({ savedCents: 18000, nationalRatePercent: 0 });
-    expect(canSelect(result, "bronze", "bronze-coffee")).toBe(true);
-    expect(canSelect(result, "silver", "silver-cinema")).toBe(true);
-    expect(canSelect(result, "gold", "gold-books")).toBe(false);
-    expect(canSelect(result, "silver", "bronze-coffee")).toBe(false);
+    expect(canSelect(result, "bronze", "bronze-grocery")).toBe(true);
+    expect(canSelect(result, "silver", "silver-fuel")).toBe(true);
+    expect(canSelect(result, "gold", "gold-grocery")).toBe(false);
+    expect(canSelect(result, "silver", "bronze-fuel")).toBe(false);
     expect(canSelect(result, "silver", "nope")).toBe(false);
   });
 
@@ -187,22 +199,34 @@ describe("voucher ladder", () => {
 describe("voucher schemas", () => {
   it("is strict about the POST body", () => {
     expect(
-      voucherSelectionSchema.safeParse({ tierId: "gold", optionId: "gold-books" }).success,
+      voucherSelectionSchema.safeParse({ tierId: "gold", optionId: "gold-fuel" }).success,
     ).toBe(true);
     expect(
       voucherSelectionSchema.safeParse({ tierId: "gold", optionId: "gold-yacht" }).success,
     ).toBe(false);
+    expect(voucherSelectionSchema.safeParse({ tierId: "tin", optionId: "gold-fuel" }).success).toBe(
+      false,
+    );
     expect(
-      voucherSelectionSchema.safeParse({ tierId: "tin", optionId: "gold-books" }).success,
-    ).toBe(false);
-    expect(
-      voucherSelectionSchema.safeParse({ tierId: "gold", optionId: "gold-books", month: "2026-03" })
+      voucherSelectionSchema.safeParse({ tierId: "gold", optionId: "gold-fuel", month: "2026-03" })
         .success,
     ).toBe(false);
   });
 
+  it("reads a stored pick with a retired tier or option id as no pick", () => {
+    for (const old of [
+      { tierId: "bronze", optionId: "bronze-coffee" },
+      { tierId: "gold", optionId: "gold-books" },
+      { tierId: "platinum", optionId: "platinum-groceries" },
+    ]) {
+      expect(voucherStoredSelectionSchema.safeParse({ month: "2026-03", ...old }).success).toBe(
+        false,
+      );
+    }
+  });
+
   it("validates a stored pick", () => {
-    const pick = { month: "2026-03", tierId: "gold", optionId: "gold-books" };
+    const pick = { month: "2026-03", tierId: "gold", optionId: "gold-fuel" };
     expect(voucherStoredSelectionSchema.safeParse(pick).success).toBe(true);
     expect(voucherStoredSelectionSchema.safeParse({ ...pick, month: "March" }).success).toBe(false);
     expect(voucherStoredSelectionSchema.safeParse({ ...pick, extra: 1 }).success).toBe(false);

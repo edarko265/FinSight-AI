@@ -1,4 +1,6 @@
-import type { VoucherTier, VoucherTierId } from "@/lib/contracts/rewards";
+import type { VoucherOption, VoucherTier, VoucherTierId } from "@/lib/contracts/rewards";
+import { LOCALE_INFO, type Locale } from "@/lib/i18n/config";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 /** Below this share the ring shows nothing: a round cap alone would read as about 5%. */
 export const RING_MIN_PROGRESS = 0.02;
@@ -17,4 +19,42 @@ export function nextTierId(tiers: readonly VoucherTier[]): VoucherTierId | undef
 /** Text appended to the source year: the provisional note, or nothing. */
 export function statusKey(provisional: boolean): "voucher.provisional" | null {
   return provisional ? "voucher.provisional" : null;
+}
+
+export interface OfferText {
+  /** Message keys: what the voucher is, what it is for, and the chosen-voucher sentence. */
+  titleKey: MessageKey;
+  whatKey: MessageKey;
+  chosenKey: MessageKey;
+  /** Placeholder values for the keys above, already formatted for the locale. */
+  params: Record<string, string>;
+}
+
+/** Wording for an offer. Numbers go through Intl; the unit lives in the messages. */
+export function offerText(
+  option: VoucherOption,
+  t: (key: MessageKey) => string,
+  locale: Locale,
+): OfferText {
+  const intl = LOCALE_INFO[locale].intl;
+  if (option.kind === "grocery") {
+    return {
+      titleKey: "voucher.kind.grocery.title",
+      whatKey: "voucher.kind.grocery.what",
+      chosenKey: "voucher.kind.grocery.chosen",
+      params: {
+        percent: new Intl.NumberFormat(intl, { style: "percent" }).format(option.percentOff / 100),
+        brand: t("voucher.brand.grocery"),
+      },
+    };
+  }
+  return {
+    titleKey: "voucher.kind.fuel.title",
+    whatKey: "voucher.kind.fuel.what",
+    chosenKey: "voucher.kind.fuel.chosen",
+    params: {
+      brand: t("voucher.brand.fuel"),
+      cents: new Intl.NumberFormat(intl).format(option.centsPerLitre),
+    },
+  };
 }

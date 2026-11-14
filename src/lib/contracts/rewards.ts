@@ -6,18 +6,28 @@ import { z } from "zod";
  * cents.
  */
 
-export const VOUCHER_TIER_IDS = ["bronze", "silver", "gold", "platinum"] as const;
+export const VOUCHER_TIER_IDS = ["bronze", "silver", "gold"] as const;
 export type VoucherTierId = (typeof VOUCHER_TIER_IDS)[number];
 
-export const VOUCHER_KINDS = ["coffee", "groceries", "cinema", "books"] as const;
+export const VOUCHER_KINDS = ["grocery", "fuel"] as const;
 export type VoucherKind = (typeof VOUCHER_KINDS)[number];
 
-export interface VoucherOption {
-  /** `<tier>-<kind>`. */
-  id: string;
-  kind: VoucherKind;
-  valueCents: number;
-}
+/**
+ * What a voucher is for: the group's own offers. A grocery voucher takes a percentage off one
+ * product, a fuel voucher takes cents per litre off one top-up. Both are whole numbers.
+ */
+export type VoucherOption =
+  | {
+      /** `<tier>-<kind>`. */
+      id: string;
+      kind: "grocery";
+      percentOff: number;
+    }
+  | {
+      id: string;
+      kind: "fuel";
+      centsPerLitre: number;
+    };
 
 export interface VoucherTier {
   id: VoucherTierId;
