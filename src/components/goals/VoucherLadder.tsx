@@ -3,12 +3,13 @@
 import { useRef, useState } from "react";
 
 import { TIER_COLOUR, VoucherArt } from "@/components/goals/VoucherArt";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { nextTierId, offerText, ringOffset, statusKey } from "@/components/goals/voucher-view";
 import { api, ApiError } from "@/lib/api-client";
 import type { VoucherLadder as Ladder, VoucherOption, VoucherTier } from "@/lib/contracts/rewards";
-import { formatMoney, formatMonth } from "@/lib/i18n/config";
+import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 const RING_RADIUS = 42;
@@ -97,10 +98,6 @@ export function VoucherLadder({
     const text = offer(option);
     return t(text.titleKey, text.params);
   };
-  const offerWhat = (option: VoucherOption): string => {
-    const text = offer(option);
-    return t(text.whatKey, text.params);
-  };
 
   async function run(request: () => Promise<Ladder>, done: MessageKey): Promise<void> {
     if (inFlight.current) return;
@@ -182,9 +179,6 @@ export function VoucherLadder({
             >
               <VoucherArt kind={chosen.kind} className="size-14 shrink-0 text-accent" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-muted">
-                  {t("voucher.yours", { month: formatMonth(ladder.month, locale, "long") })}
-                </p>
                 <p className="text-base font-semibold">
                   {t(offer(chosen).chosenKey, offer(chosen).params)}
                 </p>
@@ -207,10 +201,6 @@ export function VoucherLadder({
               {t("voucher.invalid")}
             </p>
           ) : null}
-
-          <p className="text-sm text-muted">
-            {t("voucher.intro", { month: formatMonth(ladder.month, locale, "long") })}
-          </p>
 
           <ul className="flex flex-col gap-3">
             {ladder.tiers.map((tier) => {
@@ -247,18 +237,13 @@ export function VoucherLadder({
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-sm tabular-nums">
+                      <p className="mt-1 flex items-center gap-1.5 text-sm tabular-nums">
+                        {tier.unlocked ? null : <LockIcon />}
                         {t("voucher.progress", {
                           saved: money(Math.max(0, ladder.savedCents)),
                           target: money(tier.targetCents),
                         })}
                       </p>
-                      {!tier.unlocked ? (
-                        <p className="mt-1 flex items-start gap-1.5 text-sm text-muted">
-                          <LockIcon />
-                          <span>{t("voucher.locked", { amount: money(tier.remainingCents) })}</span>
-                        </p>
-                      ) : null}
                     </div>
                   </div>
 
@@ -292,12 +277,7 @@ export function VoucherLadder({
                               kind={option.kind}
                               className="size-8 shrink-0 text-accent"
                             />
-                            <span className="min-w-0">
-                              <span className="block">{offerTitle(option)}</span>
-                              <span className="block text-xs font-normal text-muted">
-                                {offerWhat(option)}
-                              </span>
-                            </span>
+                            <span className="min-w-0">{offerTitle(option)}</span>
                           </label>
                         );
                       })}
@@ -323,7 +303,7 @@ export function VoucherLadder({
         </>
       )}
 
-      <p className="text-xs text-muted">
+      <InfoTip>
         {ladder.available
           ? `${t("voucher.basis", {
               base: source.baseRatePercent,
@@ -343,7 +323,7 @@ export function VoucherLadder({
         {ladder.available && source.floorApplied
           ? ` ${t("voucher.floor", { floor: source.baseRatePercent })}`
           : ""}
-      </p>
+      </InfoTip>
     </div>
   );
 }
