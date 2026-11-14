@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
+import { callPossible } from "@/components/chat/call-possible";
 import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { PinnableChat } from "@/components/chat/PinnableChat";
 import { useOverview } from "@/components/providers/OverviewProvider";
@@ -122,7 +123,7 @@ export function ChatDock(): React.JSX.Element | null {
 
   if (hidden) return null;
   const full = mode === "full";
-  const canCall = Boolean(me?.voiceAgentEnabled && me.aiConsent);
+  const canCall = callPossible(me);
   const fabLabel = t(unread ? "dock.unread" : "dock.open");
 
   return (

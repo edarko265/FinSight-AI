@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
+import { callPossible } from "@/components/chat/call-possible";
 import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
@@ -69,17 +70,9 @@ function CallWidget(): React.JSX.Element {
   const { t } = usePreferences();
   const dock = useChatDock();
   const { me } = useOverview();
-  if (me && !(me.voiceAgentEnabled && me.aiConsent)) {
-    return (
-      <p className="text-sm text-muted">
-        {t(me.voiceAgentEnabled ? "widget.call.needsConsent" : "widget.call.off")}{" "}
-        {me.voiceAgentEnabled ? (
-          <Link href="/settings" className="font-semibold text-accent">
-            {t("nav.settings")}
-          </Link>
-        ) : null}
-      </p>
-    );
+  // With the AI coach not yet agreed to, the button still works: the coach asks first.
+  if (me && !callPossible(me)) {
+    return <p className="text-sm text-muted">{t("widget.call.off")}</p>;
   }
   return (
     <button type="button" onClick={() => dock.open({ start: "call" })} className={primary}>
