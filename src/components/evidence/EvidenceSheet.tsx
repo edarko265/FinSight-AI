@@ -22,6 +22,8 @@ interface EvidenceItem {
   key: string;
   kindKey: string;
   account: string | null;
+  manual?: boolean;
+  note?: string | null;
   corrected: boolean;
   originalBasket: string;
   originalNecessity: string;
@@ -131,6 +133,8 @@ export function EvidenceSheet({
                   {label("necessity", item.necessity)}
                   {item.corrected ? ` · ${t("corrections.yours")}` : ""}
                   {item.account ? ` · ${t("accounts.simulated")}` : ""}
+                  {item.manual ? ` · ${t("entries.yours")}` : ""}
+                  {item.note ? ` · ${item.note}` : ""}
                 </p>
                 <button
                   type="button"

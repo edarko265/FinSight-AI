@@ -83,6 +83,12 @@ All notable changes to this project are documented here. The format follows
 - **Project.** CI (validation, branch policy, CodeQL, dependency review), Dependabot,
   templates, MIT licence, documentation.
 
+- **Income and expenses you record.** Add income and Add expense on the balance card and
+  on a new My entries screen: a four-step form with suggestions, edit, recycle bin and
+  restore. An entry counts in the balance, the baskets, the monthly limits and the plan at
+  once, and saving one says straight away if it took a limit or the plan off course.
+  Stored sealed with the customer's key. English, Finnish and Swedish.
+
 ### Changed
 
 - **Speed.** The server functions now run in Frankfurt, next to the database (they had been
@@ -96,6 +102,9 @@ All notable changes to this project are documented here. The format follows
   first; the light theme's fifth colour is now readable on white; the bar chart highlights
   the largest row; menus, scroll bars and date pickers follow the chosen theme.
 - **Node.** The engine is pinned to 24.x, which clears the Vercel build warning.
+
+- The play button for "My month in 30 seconds" is a drawn icon, not a text character, so
+  it looks the same on every device.
 
 ### Fixed
 

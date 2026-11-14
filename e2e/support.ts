@@ -10,9 +10,12 @@ const HEADERS = { Origin: `http://localhost:${E2E_PORT}` };
 export async function signIn(page: Page, customerId = E2E_CUSTOMER): Promise<void> {
   // The first-use notification prompt is not what these tests are about.
   await page.addInitScript(() => window.localStorage.setItem("fs_notify_asked", "1"));
+  // Sign-ins are limited per visitor address. Each test is its own visitor, so the suite
+  // as a whole does not run into the limit that one address would.
+  const visitor = `10.0.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250) + 1}`;
   const login = await page.request.post("/api/auth/login", {
     data: { customerId, password: E2E_DEMO_PASSWORD },
-    headers: HEADERS,
+    headers: { ...HEADERS, "x-forwarded-for": visitor },
   });
   expect(login.ok()).toBe(true);
   const consent = await page.request.post("/api/consent", {
