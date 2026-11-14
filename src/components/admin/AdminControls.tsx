@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 
+import { assertSignedIn } from "@/components/admin/admin-api";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -26,7 +28,6 @@ export interface AppSettings {
       "under_average" | "choice_down" | "buffer" | "surplus_streak" | "investing" | "goal",
       number
     >;
-    couponUnlockAt: Record<"coffee" | "groceries" | "voucher", number>;
   };
 }
 
@@ -39,7 +40,6 @@ const RULES = [
   "investing",
   "goal",
 ] as const;
-const COUPONS = ["coffee", "groceries", "voucher"] as const;
 type Editing = "fee" | "limit" | "rules" | "provider" | null;
 
 /** What staff can change without a deploy: feature switches, the adviser fee, the AI budget and reward rules. */
@@ -66,20 +66,28 @@ export function AdminControls({
   const [rules, setRules] = useState(settings.rewards);
   const [provider, setProvider] = useState<ProviderChoice>(settings.aiProvider);
 
-  async function save(next: AppSettings): Promise<void> {
-    const response = await fetch("/api/admin/settings", {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    if (!response.ok) {
-      toast.fail();
-      return;
-    }
-    onSaved(((await response.json()) as { settings: AppSettings }).settings);
-    toast.notify("toast.updated");
-    setEditing(null);
+  const saver = useAsyncAction(
+    async (next: AppSettings): Promise<void> => {
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      assertSignedIn(response);
+      if (!response.ok) throw new Error("settings failed");
+      onSaved(((await response.json()) as { settings: AppSettings }).settings);
+      setEditing(null);
+    },
+    { successKey: "toast.updated", errorKey: "common.saveFailed" },
+  );
+
+  /** True when saved; false keeps a wizard open on its last step. */
+  async function save(next: AppSettings): Promise<boolean> {
+    const result = await saver.run(next);
+    // A run dropped because a save is still pending says nothing by itself, so say so.
+    if (!result.ok && result.dropped) toast.fail("common.saveFailed");
+    return result.ok;
   }
 
   const feeEuros = Number(fee.replace(",", "."));
@@ -112,8 +120,6 @@ export function AdminControls({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted">{t("admin.controls.note")}</p>
-
       <ul className="grid gap-2 md:grid-cols-2">
         {FLAGS.map((flag) => (
           <li key={flag}>
@@ -127,13 +133,15 @@ export function AdminControls({
               <input
                 type="checkbox"
                 checked={settings.features[flag]}
+                aria-disabled={saver.pending}
                 onChange={(event) =>
+                  !saver.pending &&
                   void save({
                     ...settings,
                     features: { ...settings.features, [flag]: event.target.checked },
                   })
                 }
-                className="size-5 shrink-0 accent-(--accent)"
+                className="size-5 shrink-0 accent-(--accent) aria-disabled:opacity-60"
               />
             </label>
           </li>
@@ -208,9 +216,6 @@ export function AdminControls({
           <span className="text-xs text-muted">
             {t("admin.rules.summary", {
               count: RULES.length,
-              a: settings.rewards.couponUnlockAt.coffee,
-              b: settings.rewards.couponUnlockAt.groceries,
-              c: settings.rewards.couponUnlockAt.voucher,
             })}
           </span>
         </span>
@@ -398,26 +403,6 @@ export function AdminControls({
             ),
           },
           {
-            title: t("admin.rules.coupons"),
-            hint: t("admin.rules.couponsHint"),
-            valid: true,
-            content: (
-              <div className="flex flex-col gap-3">
-                {COUPONS.map((coupon) =>
-                  numberField(
-                    rules.couponUnlockAt[coupon],
-                    (next) =>
-                      setRules({
-                        ...rules,
-                        couponUnlockAt: { ...rules.couponUnlockAt, [coupon]: next },
-                      }),
-                    t(`reward.coupon.${coupon}.title` as MessageKey),
-                  ),
-                )}
-              </div>
-            ),
-          },
-          {
             title: t("wizard.review"),
             hint: t("wizard.reviewHint"),
             valid: true,
@@ -427,10 +412,6 @@ export function AdminControls({
                   ...RULES.map((rule) => ({
                     label: t(`admin.rule.${rule}` as MessageKey),
                     value: String(rules.points[rule]),
-                  })),
-                  ...COUPONS.map((coupon) => ({
-                    label: t(`reward.coupon.${coupon}.title` as MessageKey),
-                    value: String(rules.couponUnlockAt[coupon]),
                   })),
                 ]}
               />

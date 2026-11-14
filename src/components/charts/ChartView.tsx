@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart } from "@/components/charts/BarChart";
+import { barVariant, formatPercent, sharePercents } from "@/components/charts/chart-data";
 import { chartColor } from "@/components/charts/chart-palette";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { FlowChart } from "@/components/charts/FlowChart";
@@ -73,24 +74,44 @@ const KEYED = new Set([
   "lollipop",
   "flow",
 ]);
-/** Shapes that already write every number out. */
-const SELF_EXPLAINING = new Set(["table", "stat"]);
+/** Shapes that already write every number out next to the mark. */
+const SELF_EXPLAINING = new Set(["table", "stat", "hbar"]);
+/** Shares of a whole: the list also gives each part's percentage. */
+const SHARES = new Set(["donut", "pie", "stack", "treemap", "radial", "flow"]);
+
+/** Shapes with no names on the marks themselves: compact widgets still show the list as a legend. */
+const UNLABELLED = new Set(["donut", "pie", "radial", "flow"]);
+
+function isSelfExplaining(chart: ChartSpec): boolean {
+  if (SELF_EXPLAINING.has(chart.kind)) return true;
+  return chart.kind === "bar" && barVariant(chart.points) === "rows";
+}
 
 /**
- * A chart is never the only carrier of the numbers: every one is paired with a values list, so the
- * data is readable without colour, and by screen readers.
+ * A chart is never the only carrier of the numbers: unless the marks are labelled with their
+ * amounts, every chart is paired with a values list, readable without colour and by screen
+ * readers. Compact widgets keep that list screen-reader-only, except for shapes that carry no names on the marks.
  */
-function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
-  const { t, locale } = usePreferences();
-  const isDonut = KEYED.has(chart.kind);
-  const total = chart.points.reduce((sum, point) => sum + point.valueCents, 0);
+function Values({
+  chart,
+  className = "",
+}: {
+  chart: ChartSpec;
+  className?: string;
+}): React.JSX.Element {
+  const { locale } = usePreferences();
+  const keyed = KEYED.has(chart.kind);
+  const percents = SHARES.has(chart.kind)
+    ? sharePercents(chart.points.map((point) => point.valueCents))
+    : null;
+  const lastIndex = chart.points.length - 1;
 
-  const list = (
-    <ul className="grid grid-cols-1 gap-1.5 text-sm">
+  return (
+    <ul className={`mt-3 grid grid-cols-1 gap-1.5 text-sm ${className}`}>
       {chart.points.map((point, index) => (
-        <li key={point.label} className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2">
-            {isDonut ? (
+        <li key={`${index}-${point.label}`} className="flex items-baseline justify-between gap-3">
+          <span className="flex min-w-0 items-baseline gap-2 break-words">
+            {keyed ? (
               <span
                 className="size-2.5 shrink-0 rounded-full"
                 style={{ background: chartColor(index) }}
@@ -99,34 +120,38 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
             ) : null}
             {point.label}
           </span>
-          <span className="tabular-nums text-muted">
+          <span
+            className={`shrink-0 whitespace-nowrap text-right tabular-nums ${
+              index === lastIndex && !keyed ? "font-semibold" : "text-muted"
+            }`}
+          >
             {formatMoney(point.valueCents, locale)}
-            {isDonut && total > 0 ? ` · ${Math.round((point.valueCents / total) * 100)} %` : null}
+            {percents ? ` · ${formatPercent(percents[index] ?? 0, locale)}` : null}
           </span>
         </li>
       ))}
     </ul>
   );
-
-  if (isDonut) {
-    return <div className="mt-3">{list}</div>;
-  }
-  return (
-    <details className="group mt-3">
-      <summary className="cursor-pointer text-sm font-medium text-accent">
-        {t("chart.showValues")}
-      </summary>
-      <div className="mt-2">{list}</div>
-    </details>
-  );
 }
 
-export function ChartView({ card }: { card: ChartCard }): React.JSX.Element {
+export function ChartView({
+  card,
+  compact = false,
+}: {
+  card: ChartCard;
+  /** Keep the full value list available to assistive technology without repeating it in compact widgets. */
+  compact?: boolean;
+}): React.JSX.Element {
   return (
     <figure aria-label={card.title}>
       <ChartPlot chart={card.chart} />
       <figcaption className="sr-only">{card.summary}</figcaption>
-      {SELF_EXPLAINING.has(card.chart.kind) ? null : <Values chart={card.chart} />}
+      {isSelfExplaining(card.chart) ? null : (
+        <Values
+          chart={card.chart}
+          className={compact && !UNLABELLED.has(card.chart.kind) ? "sr-only" : ""}
+        />
+      )}
     </figure>
   );
 }

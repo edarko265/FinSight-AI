@@ -31,10 +31,13 @@ export function ViewWizard({
   draft,
   onClose,
   onSave,
+  saving = false,
 }: {
   draft: ViewDraft | null;
   onClose: () => void;
-  onSave: (name: string, period: ViewPeriod) => void;
+  /** Resolves true once saved. On false the dialog stays open with what was typed. */
+  onSave: (name: string, period: ViewPeriod) => Promise<boolean>;
+  saving?: boolean;
 }): React.JSX.Element {
   const { t } = usePreferences();
   const [edited, setEdited] = useState<ViewDraft | null>(null);
@@ -50,14 +53,15 @@ export function ViewWizard({
     <Wizard
       open={draft !== null}
       title={t(value.mode === "rename" ? "views.wizard.rename" : "views.wizard.new")}
-      finishLabel={t("views.save")}
+      finishLabel={saving ? t("common.saving") : t("views.save")}
       onClose={() => {
         setEdited(null);
         onClose();
       }}
-      onFinish={() => {
-        onSave(value.name.trim(), value.period);
-        setEdited(null);
+      onFinish={async () => {
+        const ok = await onSave(value.name.trim(), value.period);
+        if (ok) setEdited(null);
+        return ok;
       }}
       steps={[
         {

@@ -1,12 +1,11 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { PlansView } from "@/components/plans/PlansView";
-
-export const metadata: Metadata = { title: "Plans · FinSight-AI" };
-
-/** Waits for the signed-in account state before rendering; see the (app) layout. */
-export const instant = false;
-
-export default function PlansPage(): React.JSX.Element {
-  return <PlansView />;
+/** Plans now live on the goals page; old links and shared codes land there. */
+export default async function PlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}): Promise<never> {
+  const { code } = await searchParams;
+  redirect(code ? `/goals?code=${encodeURIComponent(code)}` : "/goals");
 }

@@ -9,6 +9,9 @@ import { AffordWizard } from "@/components/dashboard/AffordWizard";
 import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
+import { useDashboardSave } from "@/components/dashboard/useDashboardSave";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { EntryWizard, type EntryDraft } from "@/components/entries/EntryWizard";
 import { MORE } from "@/components/layout/BottomNav";
@@ -17,14 +20,16 @@ import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { CountUp } from "@/components/ui/CountUp";
 import { PlayIcon, PlusIcon } from "@/components/ui/icons";
-import { api, load, peek, remember } from "@/lib/api-client";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
+import { api } from "@/lib/api-client";
 import {
   CUSTOM_PERIOD,
   VIEW_PERIODS,
+  type DashboardView as SavedView,
   type DashboardPayload,
   type DashboardState,
   type DashboardWidget,
-  type DashboardView as SavedView,
   type SavedWidget,
   type ViewPeriod,
   type WidgetQuery,
@@ -77,12 +82,10 @@ function applyLocally(before: DashboardPayload, next: DashboardState): Dashboard
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const { overview } = useOverview();
-  // What was shown last time is drawn at once, then brought up to date.
-  const [dashboard, setDashboard] = useState<DashboardPayload | null>(
-    () => peek<DashboardPayload>(`/api/dashboard?locale=${locale}`) ?? null,
-  );
-  const saveCount = useRef(0);
+  const { overview, overviewLoading, overviewFailed, refresh, setDashboardBalanceVisible } =
+    useOverview();
+  const { dashboard, saving, loadFailed, retried, retry, update } = useDashboardSave(locale);
+  const [overviewRetried, setOverviewRetried] = useState(false);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -94,15 +97,25 @@ export function DashboardView(): React.JSX.Element {
   const [entryDraft, setEntryDraft] = useState<EntryDraft | null>(null);
   // Counts recorded income and expenses, so the charts and the banner are fetched again.
   const [recorded, setRecorded] = useState(0);
+  const balanceRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const balance = balanceRef.current;
+    if (!balance || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setDashboardBalanceVisible(entry?.isIntersecting ?? true),
+      { threshold: 0.1 },
+    );
+    observer.observe(balance);
+    return () => {
+      observer.disconnect();
+      setDashboardBalanceVisible(true);
+    };
+  }, [setDashboardBalanceVisible]);
 
   useEffect(() => {
     let cancelled = false;
-    load<DashboardPayload>(`/api/dashboard?locale=${locale}`)
-      .then((data) => {
-        if (!cancelled) setDashboard(data);
-      })
-      .catch(() => undefined);
-    load<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
+    api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
       .then((data) => {
         if (!cancelled) setBanner(data.insights.find((insight) => !insight.read) ?? null);
       })
@@ -120,38 +133,17 @@ export function DashboardView(): React.JSX.Element {
     view.name ||
     (view.preset ? t(`views.preset.${view.preset}` as MessageKey) : t("views.unnamed"));
 
-  function save(next: DashboardState): void {
-    const path = `/api/dashboard?locale=${locale}`;
-    const before = dashboard;
-    // Show the change straight away; the server's answer then replaces it.
-    if (before) setDashboard(applyLocally(before, next));
-    const mine = ++saveCount.current;
-    void api<DashboardPayload>(path, { method: "PUT", json: next })
-      .then((data) => {
-        remember(path, data);
-        // An older answer must not undo a newer change.
-        if (mine === saveCount.current) setDashboard(data);
-      })
-      .catch(() => {
-        if (mine === saveCount.current && before) {
-          setDashboard(before);
-          toast.fail();
-        }
-      });
-  }
-
-  function update(change: (state: DashboardState) => DashboardState): void {
-    if (!dashboard) return;
-    save(change({ activeId: dashboard.activeId, views: dashboard.views }));
-  }
-
-  const updateActive = (change: (view: SavedView) => SavedView): void =>
+  /** Each change is computed from the latest state, so quick edits stack instead of clobbering. */
+  const updateActive = (change: (view: SavedView) => SavedView): Promise<boolean> =>
     update((state) => ({
       ...state,
       views: state.views.map((view) => (view.id === state.activeId ? change(view) : view)),
     }));
 
-  const changeWidget = (id: string, change: (widget: SavedWidget) => SavedWidget): void =>
+  const changeWidget = (
+    id: string,
+    change: (widget: SavedWidget) => SavedWidget,
+  ): Promise<boolean> =>
     updateActive((view) => ({
       ...view,
       widgets: view.widgets.map((item) => (item.id === id ? change(item) : item)),
@@ -160,7 +152,7 @@ export function DashboardView(): React.JSX.Element {
   /** Puts widget `id` at the place of widget `beforeId`, shifting the rest along. */
   function reorder(id: string, beforeId: string): void {
     if (id === beforeId) return;
-    updateActive((view) => {
+    void updateActive((view) => {
       const moving = view.widgets.find((item) => item.id === id);
       if (!moving) return view;
       const from = view.widgets.findIndex((item) => item.id === id);
@@ -173,26 +165,31 @@ export function DashboardView(): React.JSX.Element {
   }
 
   function addWidget(widget: Omit<SavedWidget, "id">): void {
-    updateActive((view) => ({
+    void updateActive((view) => ({
       ...view,
       widgets: [{ id: newId("widget"), ...widget }, ...view.widgets].slice(0, 24),
-    }));
-    toast.notify("toast.added");
+    })).then((ok) => {
+      if (ok) toast.notify("toast.added");
+    });
   }
 
-  function saveView(name: string, period: ViewPeriod): void {
-    if (!active || !viewDraft) return;
-    if (viewDraft.mode === "rename") {
-      updateActive((view) => ({ ...view, name, period, preset: undefined }));
-    } else {
-      const id = newId("view");
-      update((state) => ({
-        activeId: id,
-        views: [...state.views, { id, name, period, widgets: active.widgets }],
-      }));
-    }
-    toast.notify("toast.saved");
-    setViewDraft(null);
+  function saveView(name: string, period: ViewPeriod): Promise<boolean> {
+    if (!viewDraft) return Promise.resolve(false);
+    const rename = viewDraft.mode === "rename";
+    const saved = rename
+      ? updateActive((view) => ({ ...view, name, period, preset: undefined }))
+      : update((state) => {
+          const id = newId("view");
+          const widgets = state.views.find((view) => view.id === state.activeId)?.widgets ?? [];
+          return { activeId: id, views: [...state.views, { id, name, period, widgets }] };
+        });
+    return saved.then((ok) => {
+      if (ok) {
+        toast.notify("toast.saved");
+        setViewDraft(null);
+      }
+      return ok;
+    });
   }
 
   const forecast = overview?.forecast;
@@ -214,28 +211,36 @@ export function DashboardView(): React.JSX.Element {
         </Link>
       ) : null}
 
-      <section className="rounded-2xl bg-brand p-5 text-on-brand">
+      {overviewFailed ? (
+        <LoadError
+          onRetry={() => {
+            setOverviewRetried(true);
+            refresh();
+          }}
+        />
+      ) : overviewRetried && overviewLoading ? (
+        <FocusedRegion focus>
+          <LoadingRegion>
+            <Skeleton className="h-[4.25rem] w-full rounded-2xl" />
+          </LoadingRegion>
+        </FocusedRegion>
+      ) : null}
+
+      <section ref={balanceRef} className="rounded-2xl bg-brand p-5 text-on-brand">
         <p className="text-sm opacity-80">{t("dashboard.balance")}</p>
-        <p className="mt-1 text-3xl font-semibold tabular-nums">
-          {overview ? <CountUp cents={overview.balanceCents} locale={locale} /> : "—"}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {(["income", "expense"] as const).map((kind) => (
-            <button
-              key={kind}
-              type="button"
-              onClick={() => setEntryDraft({ kind })}
-              className="flex items-center gap-1 rounded-full bg-white/15 px-3.5 py-2 text-xs font-semibold"
-            >
-              <PlusIcon className="size-3.5" />
-              {t(`entries.add.${kind}`)}
-            </button>
-          ))}
+        <div className="mt-1 text-3xl font-semibold tabular-nums">
+          {overview ? (
+            <CountUp cents={overview.balanceCents} locale={locale} />
+          ) : overviewLoading ? (
+            <Skeleton className="h-9 w-40 bg-white/20" />
+          ) : (
+            "—"
+          )}
         </div>
         {forecast && forecast.status !== "insufficient_data" ? (
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/15 pt-3">
             <div>
-              <p className="text-xs opacity-80">
+              <p className="text-sm opacity-80">
                 {t(shortfall ? "dashboard.shortfall" : "dashboard.safeToSpend")}
               </p>
               <p className="text-xl font-semibold tabular-nums">
@@ -248,7 +253,7 @@ export function DashboardView(): React.JSX.Element {
             <button
               type="button"
               onClick={() => setAffordOpen(true)}
-              className="rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary"
+              className="rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-on-primary"
             >
               {t("afford.cta")}
             </button>
@@ -304,6 +309,9 @@ export function DashboardView(): React.JSX.Element {
         </button>
       </div>
 
+      {dashboard === null && loadFailed ? <LoadError onRetry={retry} /> : null}
+      {dashboard === null && !loadFailed ? <DashboardSkeleton focus={retried} /> : null}
+
       {dashboard ? (
         <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3">
           <div role="tablist" aria-label={t("views.label")} className="flex flex-wrap gap-2">
@@ -313,7 +321,7 @@ export function DashboardView(): React.JSX.Element {
                 type="button"
                 role="tab"
                 aria-selected={view.id === dashboard.activeId}
-                onClick={() => update((state) => ({ ...state, activeId: view.id }))}
+                onClick={() => void update((state) => ({ ...state, activeId: view.id }))}
                 className={`max-w-full truncate rounded-full border px-3.5 py-2 text-sm font-medium ${
                   view.id === dashboard.activeId
                     ? "border-accent bg-accent-soft text-accent"
@@ -326,7 +334,7 @@ export function DashboardView(): React.JSX.Element {
           </div>
 
           <div className="flex items-center gap-2">
-            <label htmlFor="view-period" className="text-xs font-medium text-muted">
+            <label htmlFor="view-period" className="text-sm font-medium text-muted">
               {t("views.period")}
             </label>
             <select
@@ -335,7 +343,10 @@ export function DashboardView(): React.JSX.Element {
               onChange={(event) => {
                 if (event.target.value === "custom") setPeriodOpen(true);
                 else
-                  updateActive((view) => ({ ...view, period: event.target.value as ViewPeriod }));
+                  void updateActive((view) => ({
+                    ...view,
+                    period: event.target.value as ViewPeriod,
+                  }));
               }}
               className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-2 text-sm"
             >
@@ -388,11 +399,12 @@ export function DashboardView(): React.JSX.Element {
               <button
                 type="button"
                 onClick={() => {
-                  update((state) => ({
+                  void update((state) => ({
                     ...state,
                     views: state.views.filter((view) => view.id !== state.activeId),
-                  }));
-                  toast.notify("toast.movedToBin");
+                  })).then((ok) => {
+                    if (ok) toast.notify("toast.movedToBin");
+                  });
                 }}
                 className="text-muted"
               >
@@ -407,14 +419,12 @@ export function DashboardView(): React.JSX.Element {
         <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
           {t("dashboard.empty")}
         </p>
-      ) : (
+      ) : dashboard === null ? null : (
         <div className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:gap-4 xl:grid-cols-3">
-          {(dashboard?.cards ?? []).map((widget, index, all) => (
+          {dashboard.cards.map((widget) => (
             <WidgetCard
               key={widget.id}
               widget={widget}
-              first={index === 0}
-              last={index === all.length - 1}
               over={overId === widget.id}
               dragged={dragId === widget.id}
               onDragStart={setDragId}
@@ -424,21 +434,20 @@ export function DashboardView(): React.JSX.Element {
                 setDragId(null);
                 setOverId(null);
               }}
-              onMove={(id, by) => {
-                const neighbour = all[index + by];
-                if (neighbour) reorder(id, neighbour.id);
-              }}
-              onResize={(id, size) => changeWidget(id, (item) => ({ ...item, size }))}
-              onCollapse={(id, collapsed) => changeWidget(id, (item) => ({ ...item, collapsed }))}
+              onResize={(id, size) => void changeWidget(id, (item) => ({ ...item, size }))}
+              onCollapse={(id, collapsed) =>
+                void changeWidget(id, (item) => ({ ...item, collapsed }))
+              }
               onChart={(id, chart) =>
-                changeWidget(id, (item) => ({ ...item, query: { ...item.query, chart } }))
+                void changeWidget(id, (item) => ({ ...item, query: { ...item.query, chart } }))
               }
               onRemove={(id) => {
-                updateActive((view) => ({
+                void updateActive((view) => ({
                   ...view,
                   widgets: view.widgets.filter((item) => item.id !== id),
-                }));
-                toast.notify("toast.movedToBin");
+                })).then((ok) => {
+                  if (ok) toast.notify("toast.movedToBin");
+                });
               }}
             >
               {widget.action ? (
@@ -462,14 +471,23 @@ export function DashboardView(): React.JSX.Element {
           asOf={overview.asOf}
           initial={customRange ?? undefined}
           onClose={() => setPeriodOpen(false)}
-          onApply={(from, to) => {
-            updateActive((view) => ({ ...view, period: `${from}..${to}` }));
-            setPeriodOpen(false);
-            toast.notify("toast.saved");
+          saving={saving}
+          onApply={async (from, to) => {
+            const ok = await updateActive((view) => ({ ...view, period: `${from}..${to}` }));
+            if (ok) {
+              setPeriodOpen(false);
+              toast.notify("toast.saved");
+            }
+            return ok;
           }}
         />
       ) : null}
-      <ViewWizard draft={viewDraft} onClose={() => setViewDraft(null)} onSave={saveView} />
+      <ViewWizard
+        draft={viewDraft}
+        saving={saving}
+        onClose={() => setViewDraft(null)}
+        onSave={saveView}
+      />
 
       <AddWidgetWizard
         open={addOpen}

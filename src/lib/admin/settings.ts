@@ -11,6 +11,7 @@ import { getDb } from "@/lib/db/client";
 /**
  * Settings staff can change from the admin area without a deploy. Stored as
  * one validated document; anything missing falls back to the defaults here.
+ * Keys no longer in the schema (e.g. the old `couponUnlockAt`) are stripped, not rejected.
  */
 export const REWARD_IDS = [
   "under_average",
@@ -20,7 +21,6 @@ export const REWARD_IDS = [
   "investing",
   "goal",
 ] as const;
-export const COUPON_IDS = ["coffee", "groceries", "voucher"] as const;
 
 const points = z.number().int().min(0).max(1000);
 
@@ -48,7 +48,6 @@ export const settingsSchema = z.object({
       investing: points,
       goal: points,
     }),
-    couponUnlockAt: z.object({ coffee: points, groceries: points, voucher: points }),
   }),
 });
 
@@ -68,7 +67,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
       investing: 50,
       goal: 25,
     },
-    couponUnlockAt: { coffee: 100, groceries: 200, voucher: 350 },
   },
 };
 
@@ -92,10 +90,6 @@ export async function getSettings(): Promise<AppSettings> {
       features: { ...DEFAULT_SETTINGS.features, ...stored.features },
       rewards: {
         points: { ...DEFAULT_SETTINGS.rewards.points, ...stored.rewards?.points },
-        couponUnlockAt: {
-          ...DEFAULT_SETTINGS.rewards.couponUnlockAt,
-          ...stored.rewards?.couponUnlockAt,
-        },
       },
     };
     const parsed = settingsSchema.safeParse(merged);

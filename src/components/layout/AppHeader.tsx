@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 
+import { showHeaderBalance } from "@/components/dashboard/balance-visibility";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { BellIcon, Logo } from "@/components/ui/icons";
-import { formatDay } from "@/lib/i18n/config";
+import { Logo } from "@/components/ui/icons";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { formatDay, formatMoney } from "@/lib/i18n/config";
 
 export function AppHeader(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const { overview } = useOverview();
-  const unread = overview?.unreadInsights ?? 0;
+  const { overview, overviewLoading, dashboardBalanceVisible } = useOverview();
 
   return (
     <header className="shrink-0 bg-brand px-4 pt-[env(safe-area-inset-top)] text-on-brand">
@@ -20,29 +21,29 @@ export function AppHeader(): React.JSX.Element {
           <Logo className="size-8 rounded-[22%] ring-1 ring-white/30 md:hidden" />
           <span className="flex flex-col leading-tight">
             <span className="text-base font-semibold tracking-tight">{t("app.name")}</span>
-            <span className="text-[11px] opacity-75">
-              {overview
-                ? t("app.asOf", { date: formatDay(overview.asOf, locale) })
-                : t("app.synthetic")}
+            <span className="text-xs">
+              {overview ? (
+                t("app.asOf", { date: formatDay(overview.asOf, locale) })
+              ) : overviewLoading ? (
+                <Skeleton className="h-4 w-24 bg-white/20" />
+              ) : (
+                t("app.synthetic")
+              )}
             </span>
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-primary px-2.5 py-1 text-center text-[11px] leading-tight font-semibold text-on-primary">
+          {overview && showHeaderBalance(dashboardBalanceVisible) ? (
+            <span
+              aria-label={t("dashboard.balance")}
+              className="rounded-full bg-white/15 px-2.5 py-1 text-sm font-semibold tabular-nums"
+            >
+              {formatMoney(overview.balanceCents, locale)}
+            </span>
+          ) : null}
+          <span className="rounded-full bg-primary px-2.5 py-1 text-center text-xs leading-tight font-semibold text-on-primary">
             {t("app.synthetic")}
           </span>
-          <Link
-            href="/insights"
-            aria-label={unread > 0 ? `${t("nav.insights")} (${unread})` : t("nav.insights")}
-            className="relative -m-1 rounded-full p-1"
-          >
-            <BellIcon className="size-6" />
-            {unread > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">
-                {unread}
-              </span>
-            ) : null}
-          </Link>
         </div>
       </div>
     </header>

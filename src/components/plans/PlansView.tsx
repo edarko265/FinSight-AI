@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BudgetsSection } from "@/components/plans/BudgetsSection";
 import { FriendsSection } from "@/components/plans/FriendsSection";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useLoad } from "@/components/shared/useLoad";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
+import { PendingLabel, Spinner } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -17,6 +22,14 @@ import {
 import { api, ApiError } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { CloseIcon } from "@/components/ui/icons";
+import {
+  TAB_SHEET_MAX_H,
+  TAB_SHEET_POSITION,
+  TabSheetBackdrop,
+  useSheetDialog,
+} from "@/components/ui/TabSheet";
 
 const SLICES = ["bills", "essentials", "everyday", "saving", "investing"] as const;
 type SliceKey = (typeof SLICES)[number];
@@ -129,13 +142,19 @@ function SplitView({
   );
 }
 
-/** Plans: the customer's own splits, sharing them as percentages, and copying other people's. */
+/**
+ * Plans, as a section of the goals page: the customer's own splits, with sharing them as
+ * percentages and copying other people's kept behind the Share button.
+ */
 export function PlansView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const [data, setData] = useState<Payload | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [tick, setTick] = useState(0);
+  const {
+    data,
+    failed,
+    retry: reload,
+    setData,
+  } = useLoad(() => api<Payload>(`/api/plans?locale=${locale}`), locale);
 
   // Make or edit
   const [formOpen, setFormOpen] = useState(false);
@@ -146,6 +165,9 @@ export function PlansView(): React.JSX.Element {
   const [formError, setFormError] = useState<MessageKey | null>(null);
 
   // Share
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareDialog = useRef<HTMLDialogElement>(null);
+  const dismissShare = useSheetDialog(shareDialog, shareOpen, () => setShareOpen(false));
   const [sharing, setSharing] = useState<Plan | null>(null);
   const [listed, setListed] = useState<"friends" | "public">("friends");
   const [goalNames, setGoalNames] = useState<"hide" | "show">("hide");
@@ -155,26 +177,8 @@ export function PlansView(): React.JSX.Element {
   const [code, setCode] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [codeError, setCodeError] = useState<MessageKey | null>(null);
-
-  // Report a shared plan
   const [reporting, setReporting] = useState<string | null>(null);
   const [reason, setReason] = useState<"name" | "misleading" | "other">("name");
-
-  useEffect(() => {
-    let cancelled = false;
-    api<Payload>(`/api/plans?locale=${locale}`)
-      .then((payload) => {
-        if (cancelled) return;
-        setData(payload);
-        setFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, tick]);
 
   // A link a friend sent opens straight on their plan.
   useEffect(() => {
@@ -183,6 +187,7 @@ export function PlansView(): React.JSX.Element {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the address the page was opened with
     setCode(shared.toUpperCase().slice(0, 8));
     setCodeOpen(true);
+    setShareOpen(true);
   }, []);
 
   // Looks the code up as soon as it is complete.
@@ -210,7 +215,20 @@ export function PlansView(): React.JSX.Element {
     };
   }, [codeOpen, cleanCode]);
 
-  const reload = useCallback(() => setTick((value) => value + 1), []);
+  // The plan changes at once, so its buttons cannot be pressed again before the reload lands.
+  function changePlan(id: string, update: Partial<Plan> | null): void {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            plans: current.plans.flatMap((plan) =>
+              plan.id !== id ? [plan] : update ? [{ ...plan, ...update }] : [],
+            ),
+          }
+        : null,
+    );
+    reload();
+  }
   const money = (cents: number): string => formatMoney(cents, locale);
 
   function openMake(): void {
@@ -316,7 +334,7 @@ export function PlansView(): React.JSX.Element {
   }
 
   async function copyLink(shareCode: string): Promise<void> {
-    const link = `${window.location.origin}/plans?code=${shareCode}`;
+    const link = `${window.location.origin}/goals?code=${shareCode}`;
     try {
       if (navigator.share) await navigator.share({ title: t("plans.title"), url: link });
       else {
@@ -337,41 +355,35 @@ export function PlansView(): React.JSX.Element {
   const quiet = "rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-semibold";
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-4">
-      <div>
-        <h1 className="text-xl font-semibold">{t("plans.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("plans.intro")}</p>
+    <section className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <InfoTip lead={<h2 className="text-xl font-semibold">{t("plans.title")}</h2>}>
+          {t("plans.intro")}
+        </InfoTip>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          className="shrink-0 rounded-full bg-accent-soft px-5 py-2.5 text-sm font-semibold text-accent"
+          onClick={() => setShareOpen(true)}
+        >
+          {t("plans.share")}
+        </button>
       </div>
 
-      {failed ? (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm"
-        >
-          <span>{t("admin.loadFailed")}</span>
-          <button type="button" className="font-semibold underline" onClick={reload}>
-            {t("admin.retry")}
-          </button>
-        </div>
-      ) : null}
+      {failed ? <LoadError onRetry={reload} /> : null}
 
       {data ? (
         <>
           <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
             <h2 className="text-base font-semibold">{t("plans.today")}</h2>
             <SplitView split={data.actual.percent} amounts={data.actual.cents} />
-            <p className="text-xs text-muted">{t("plans.today.note")}</p>
+            <InfoTip>{t("plans.today.note")}</InfoTip>
           </section>
 
           <div className="flex flex-wrap gap-3">
             <button type="button" className={button} onClick={openMake}>
               {t("plans.make")}
             </button>
-            {data.sharing ? (
-              <button type="button" className={quiet} onClick={() => setCodeOpen(true)}>
-                {t("plans.addCode")}
-              </button>
-            ) : null}
             <Link href={`/chat?q=${encodeURIComponent(t("plans.ask"))}`} className={quiet}>
               {t("plans.askCoach")}
             </Link>
@@ -392,8 +404,7 @@ export function PlansView(): React.JSX.Element {
                 >
                   <div>
                     <h3 className="text-base font-semibold">{plan.name}</h3>
-                    <p className="text-xs text-muted">
-                      {plan.tracked ? `${t("plans.following")} · ` : ""}
+                    <p className="text-sm text-muted">
                       {t(`plans.origin.${plan.origin}`)}
                       {plan.shareCode
                         ? ` · ${t(plan.shareListed ? "plans.shared.listed" : "plans.shared.code")}`
@@ -405,29 +416,12 @@ export function PlansView(): React.JSX.Element {
                     amounts={plan.forMe}
                     compare={data.actual.percent}
                   />
-                  <p className="text-xs text-muted">{t("plans.forYou.note")}</p>
+                  <InfoTip>{t("plans.forYou.note")}</InfoTip>
                   {plan.goals.length > 0 ? (
-                    <p className="text-xs text-muted">
+                    <p className="text-sm text-muted">
                       {t("plans.goals")}:{" "}
                       {plan.goals.map((goal) => `${goal.label} ${goal.percent} %`).join(" · ")}
                     </p>
-                  ) : null}
-                  {plan.shareCode ? (
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-accent-soft px-3 py-2 text-sm">
-                      <span>
-                        {t("plans.code")}{" "}
-                        <span className="font-mono font-semibold tracking-widest">
-                          {plan.shareCode}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        className="font-semibold text-accent"
-                        onClick={() => void copyLink(plan.shareCode ?? "")}
-                      >
-                        {t("plans.sendLink")}
-                      </button>
-                    </div>
                   ) : null}
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
                     <button type="button" className="text-accent" onClick={() => openEdit(plan)}>
@@ -446,39 +440,13 @@ export function PlansView(): React.JSX.Element {
                     >
                       {t(plan.tracked ? "plans.unfollow" : "plans.follow")}
                     </button>
-                    {data.sharing && !plan.shareCode ? (
-                      <button
-                        type="button"
-                        className="text-accent"
-                        onClick={() => {
-                          setListed("friends");
-                          setGoalNames("hide");
-                          setSharing(plan);
-                        }}
-                      >
-                        {t("plans.share")}
-                      </button>
-                    ) : null}
-                    {plan.shareCode ? (
-                      <button
-                        type="button"
-                        className="text-muted"
-                        onClick={() =>
-                          void act({ action: "unshare", id: plan.id }, "toast.planUnshared")
-                        }
-                      >
-                        {t("plans.stopSharing")}
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="text-muted"
-                      onClick={() =>
-                        void act({ action: "delete", id: plan.id }, "toast.movedToBin")
-                      }
-                    >
-                      {t("common.moveToBin")}
-                    </button>
+                    <PlanActionButton
+                      payload={{ action: "delete", id: plan.id }}
+                      onChanged={() => changePlan(plan.id, null)}
+                      successKey="toast.movedToBin"
+                      pendingKey="common.removing"
+                      labelKey="common.moveToBin"
+                    />
                   </div>
                 </article>
               ))}
@@ -486,78 +454,172 @@ export function PlansView(): React.JSX.Element {
           </section>
 
           <BudgetsSection />
-
-          <FriendsSection
-            onTry={(shared) => {
-              setCode(shared);
-              setCodeOpen(true);
-            }}
-            onReport={(shared) => {
-              setReason("name");
-              setReporting(shared);
-            }}
-          />
-
-          {data.sharing ? (
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold">{t("plans.popular")}</h2>
-              <p className="text-xs text-muted">{t("plans.popular.note")}</p>
-              {data.listed.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
-                  {t("plans.popular.empty")}
-                </p>
-              ) : null}
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.listed.map((plan) => (
-                  <article
-                    key={plan.code}
-                    className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4"
-                  >
-                    <div>
-                      <h3 className="text-base font-semibold">{plan.name}</h3>
-                      <p className="text-xs text-muted">
-                        {t("plans.copies", { count: plan.copies })}
-                        {plan.mine ? ` · ${t("plans.mine")}` : ""}
-                      </p>
-                    </div>
-                    <SplitView split={plan.split} />
-                    {plan.mine ? null : (
-                      <div className="flex flex-wrap items-center gap-4">
-                        <button
-                          type="button"
-                          className={quiet}
-                          onClick={() => {
-                            setCode(plan.code);
-                            setCodeOpen(true);
-                          }}
-                        >
-                          {t("plans.tryIt")}
-                        </button>
-                        <button
-                          type="button"
-                          className="text-sm font-semibold text-muted"
-                          onClick={() => {
-                            setReason("name");
-                            setReporting(plan.code);
-                          }}
-                        >
-                          {t("plans.report")}
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : (
-            <p className="text-xs text-muted">{t("plans.sharingOff")}</p>
-          )}
         </>
       ) : failed ? null : (
-        <p className="py-10 text-center text-sm text-muted" role="status">
-          …
-        </p>
+        <LoadingRegion className="flex flex-col gap-5">
+          <SkeletonCard />
+          <div className="grid gap-3 md:grid-cols-2">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </LoadingRegion>
       )}
+
+      {/* Everything about sharing: adding a friend's plan, sharing your own, friends, public plans */}
+      {shareOpen ? <TabSheetBackdrop onClick={() => dismissShare("backdrop")} /> : null}
+      <dialog
+        ref={shareDialog}
+        aria-labelledby="share-title"
+        className={`${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H} flex-col bg-background p-0 text-foreground md:h-fit open:flex`}
+      >
+        <header className="flex items-center justify-between gap-3 px-5 pt-5">
+          <h2 id="share-title" className="text-base font-semibold">
+            {t("plans.share")}
+          </h2>
+          <button
+            type="button"
+            onClick={() => dismissShare("close")}
+            aria-label={t("evidence.close")}
+            className="-m-1 flex min-h-11 min-w-11 items-center justify-center rounded-full p-1 text-muted"
+          >
+            <CloseIcon />
+          </button>
+        </header>
+        {shareOpen && data ? (
+          <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-3 pb-5">
+            {data.sharing ? (
+              <>
+                <button type="button" className={button} onClick={() => setCodeOpen(true)}>
+                  {t("plans.addCode")}
+                </button>
+
+                {data.plans.length > 0 ? (
+                  <section className="flex flex-col gap-3">
+                    <h3 className="text-sm font-semibold">{t("plans.yours")}</h3>
+                    {data.plans.map((plan) => (
+                      <article
+                        key={plan.id}
+                        className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4"
+                      >
+                        <h4 className="text-base font-semibold">{plan.name}</h4>
+                        {plan.shareCode ? (
+                          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-accent-soft px-3 py-2 text-sm">
+                            <span>
+                              {t("plans.code")}{" "}
+                              <span className="font-mono font-semibold tracking-widest">
+                                {plan.shareCode}
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              className="font-semibold text-accent"
+                              onClick={() => void copyLink(plan.shareCode ?? "")}
+                            >
+                              {t("plans.sendLink")}
+                            </button>
+                          </div>
+                        ) : null}
+                        <div className="flex gap-4 text-sm font-semibold">
+                          {plan.shareCode ? (
+                            <PlanActionButton
+                              payload={{ action: "unshare", id: plan.id }}
+                              onChanged={() =>
+                                changePlan(plan.id, {
+                                  shareCode: undefined,
+                                  shareListed: undefined,
+                                })
+                              }
+                              successKey="toast.planUnshared"
+                              pendingKey="common.saving"
+                              labelKey="plans.stopSharing"
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              className="text-accent"
+                              onClick={() => {
+                                setListed("friends");
+                                setGoalNames("hide");
+                                setSharing(plan);
+                              }}
+                            >
+                              {t("plans.share")}
+                            </button>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </section>
+                ) : null}
+
+                <FriendsSection
+                  onTry={(shared) => {
+                    setCode(shared);
+                    setCodeOpen(true);
+                  }}
+                  onReport={(shared) => {
+                    setReason("name");
+                    setReporting(shared);
+                  }}
+                />
+
+                <section className="flex flex-col gap-3">
+                  <h2 className="text-sm font-semibold">{t("plans.popular")}</h2>
+                  <InfoTip>{t("plans.popular.note")}</InfoTip>
+                  {data.listed.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
+                      {t("plans.popular.empty")}
+                    </p>
+                  ) : null}
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {data.listed.map((plan) => (
+                      <article
+                        key={plan.code}
+                        className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4"
+                      >
+                        <div>
+                          <h3 className="text-base font-semibold">{plan.name}</h3>
+                          <p className="text-sm text-muted">
+                            {t("plans.copies", { count: plan.copies })}
+                            {plan.mine ? ` · ${t("plans.mine")}` : ""}
+                          </p>
+                        </div>
+                        <SplitView split={plan.split} />
+                        {plan.mine ? null : (
+                          <div className="flex flex-wrap items-center gap-4">
+                            <button
+                              type="button"
+                              className={quiet}
+                              onClick={() => {
+                                setCode(plan.code);
+                                setCodeOpen(true);
+                              }}
+                            >
+                              {t("plans.tryIt")}
+                            </button>
+                            <button
+                              type="button"
+                              className="text-sm font-semibold text-muted"
+                              onClick={() => {
+                                setReason("name");
+                                setReporting(plan.code);
+                              }}
+                            >
+                              {t("plans.report")}
+                            </button>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              </>
+            ) : (
+              <p className="text-sm text-muted">{t("plans.sharingOff")}</p>
+            )}
+          </div>
+        ) : null}
+      </dialog>
 
       {/* Make or edit a plan */}
       <Wizard
@@ -667,7 +729,7 @@ export function PlansView(): React.JSX.Element {
                       className="w-full accent-[var(--accent)]"
                     />
                     {data ? (
-                      <p className="text-xs text-muted">
+                      <p className="text-sm text-muted">
                         {t("plans.forYou", {
                           amount: money(Math.round((data.actual.incomeCents * split[key]) / 100)),
                         })}
@@ -777,7 +839,7 @@ export function PlansView(): React.JSX.Element {
                   <p className="mb-3 text-base font-semibold">{sharing.name}</p>
                   <SplitView split={sharing.split} />
                   {sharing.goals.length > 0 ? (
-                    <p className="mt-3 text-xs text-muted">
+                    <p className="mt-3 text-sm text-muted">
                       {t("plans.goals")}:{" "}
                       {sharing.goals
                         .map(
@@ -811,24 +873,32 @@ export function PlansView(): React.JSX.Element {
             hint: t("plans.code.hint"),
             valid: preview !== null && preview.plan.code === cleanCode,
             content: (
-              <WizardField
-                label={t("plans.code")}
-                value={code}
-                onChange={(event) => {
-                  setCode(event.target.value.toUpperCase().slice(0, 9));
-                  setPreview(null);
-                  setCodeError(null);
-                }}
-                placeholder="K7M2QX9P"
-                autoCapitalize="characters"
-                autoComplete="off"
-                maxLength={9}
-                autoFocus
-              />
+              <>
+                <WizardField
+                  label={t("plans.code")}
+                  value={code}
+                  onChange={(event) => {
+                    setCode(event.target.value.toUpperCase().slice(0, 9));
+                    setPreview(null);
+                    setCodeError(null);
+                  }}
+                  placeholder="K7M2QX9P"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  maxLength={9}
+                  autoFocus
+                />
+                {cleanCode.length === 8 && !preview && !codeError ? (
+                  <p role="status" className="flex items-center gap-2 text-sm text-muted">
+                    <Spinner />
+                    {t("common.loading")}
+                  </p>
+                ) : null}
+              </>
             ),
           },
           {
-            title: preview?.plan.name ?? "…",
+            title: preview?.plan.name ?? t("common.loading"),
             hint: t("plans.code.previewHint"),
             valid: preview !== null,
             content:
@@ -839,7 +909,7 @@ export function PlansView(): React.JSX.Element {
                     amounts={preview.forMe}
                     compare={data.actual.percent}
                   />
-                  <p className="text-xs text-muted">{t("plans.forYou.note")}</p>
+                  <InfoTip>{t("plans.forYou.note")}</InfoTip>
                 </div>
               ) : null,
           },
@@ -875,6 +945,42 @@ export function PlansView(): React.JSX.Element {
           },
         ]}
       />
-    </div>
+    </section>
+  );
+}
+
+/** Unshare or move-to-bin button for one plan. It owns its hook so it shows its own pending state. */
+function PlanActionButton({
+  payload,
+  successKey,
+  pendingKey,
+  labelKey,
+  onChanged,
+}: {
+  payload: Record<string, unknown>;
+  successKey: MessageKey;
+  pendingKey: MessageKey;
+  labelKey: MessageKey;
+  onChanged: () => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const action = useAsyncAction(() => api("/api/plans", { method: "POST", json: payload }), {
+    successKey,
+  });
+
+  async function onClick(): Promise<void> {
+    const result = await action.run();
+    if (result.ok) onChanged();
+  }
+
+  return (
+    <button
+      type="button"
+      className="min-h-11 text-muted"
+      aria-disabled={action.pending}
+      onClick={() => void onClick()}
+    >
+      {action.pending ? <PendingLabel>{t(pendingKey)}</PendingLabel> : t(labelKey)}
+    </button>
   );
 }

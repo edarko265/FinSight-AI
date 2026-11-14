@@ -10,8 +10,12 @@ import type { Locale } from "@/lib/i18n/config";
  */
 export function useVoice(locale: Locale) {
   const [recording, setRecording] = useState(false);
+  /** True while the recorded audio is being sent to be turned into text. */
+  const [transcribing, setTranscribing] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [error, setError] = useState<"mic" | "unavailable" | null>(null);
+  /** Speech-to-text failure only; a failed read-aloud sets `error` but not this. */
+  const [transcribeFailed, setTranscribeFailed] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -53,6 +57,7 @@ export function useVoice(locale: Locale) {
 
   const startRecording = useCallback(async () => {
     setError(null);
+    setTranscribeFailed(false);
     stopSpeaking();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -81,6 +86,9 @@ export function useVoice(locale: Locale) {
     active.stream.getTracks().forEach((track) => track.stop());
     recorder.current = null;
     setRecording(false);
+    setError(null);
+    setTranscribeFailed(false);
+    setTranscribing(true);
 
     const form = new FormData();
     form.append("audio", new Blob(chunks.current, { type: active.mimeType || "audio/webm" }));
@@ -92,9 +100,22 @@ export function useVoice(locale: Locale) {
       return data.text?.trim() || null;
     } catch {
       setError("unavailable");
+      setTranscribeFailed(true);
       return null;
+    } finally {
+      setTranscribing(false);
     }
   }, [locale]);
 
-  return { recording, speakingId, error, speak, stopSpeaking, startRecording, stopRecording };
+  return {
+    recording,
+    transcribing,
+    speakingId,
+    error,
+    transcribeFailed,
+    speak,
+    stopSpeaking,
+    startRecording,
+    stopRecording,
+  };
 }
