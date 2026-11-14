@@ -293,7 +293,6 @@ export function VoucherLadder({
           </ul>
         </>
       )}
-
     </div>
   );
 }
