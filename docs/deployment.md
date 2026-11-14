@@ -20,6 +20,9 @@ flowchart LR
 1. Create the project: region **AWS Europe Central 1 (Frankfurt)**, **Postgres database on**,
    every other service off (object storage, functions, AI gateway, realtime, auth are not used).
 2. Copy the **pooled** connection string and append `?sslmode=verify-full` if it is not there.
+   The app's functions are pinned to Vercel's Frankfurt region (`"regions": ["fra1"]` in
+   `vercel.json`) so they sit next to this database. If you move the database, move that too:
+   a function on another continent adds about a tenth of a second to every query.
 3. Load the data from your machine, once:
 
    ```bash

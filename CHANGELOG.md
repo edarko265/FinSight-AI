@@ -83,6 +83,20 @@ All notable changes to this project are documented here. The format follows
 - **Project.** CI (validation, branch policy, CodeQL, dependency review), Dependabot,
   templates, MIT licence, documentation.
 
+### Changed
+
+- **Speed.** The server functions now run in Frankfurt, next to the database (they had been
+  running in the United States, so every query crossed the Atlantic). Each request reads the
+  customer's state in one query instead of six, and independent reads run side by side.
+- **Loading.** The app asks for the account, the summary and the dashboard at the same time
+  rather than one after another, shows a screen it has shown before at once while it
+  refreshes, and applies dashboard changes (chart type, size, order, minimise, remove)
+  immediately instead of waiting for the save.
+- **Charts.** Six series colours instead of five, so a sixth category no longer repeats the
+  first; the light theme's fifth colour is now readable on white; the bar chart highlights
+  the largest row; menus, scroll bars and date pickers follow the chosen theme.
+- **Node.** The engine is pinned to 24.x, which clears the Vercel build warning.
+
 ### Fixed
 
 - Safe-to-spend returned no usable estimate when the model called it with empty optional

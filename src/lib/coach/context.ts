@@ -2,11 +2,11 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { hasAcceptedTerms, readConsent } from "@/lib/coach/consent";
+import { consentFrom, hasAcceptedTerms, type ConsentRecord } from "@/lib/coach/consent";
 import type { Goal } from "@/lib/coach/advice";
-import { personalise } from "@/lib/coach/personal";
+import { PERSONAL_KINDS, personalise } from "@/lib/coach/personal";
 import type { CoachContext } from "@/lib/coach/tools";
-import { loadBenchmarks, loadCustomer, readState } from "@/lib/data/repository";
+import { loadBenchmarks, loadCustomer, readStates } from "@/lib/data/repository";
 import type { CustomerRecord } from "@/lib/data/types";
 import { getEnv } from "@/lib/env";
 import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, type Locale } from "@/lib/i18n/config";
@@ -18,7 +18,14 @@ export async function currentLocale(preferred?: unknown): Promise<Locale> {
   return isLocale(stored) ? stored : DEFAULT_LOCALE;
 }
 
-export type SessionContext = CoachContext & { customerRef: string };
+export type SessionContext = CoachContext & {
+  customerRef: string;
+  /** What the customer had agreed to when the request began. */
+  consent: ConsentRecord;
+};
+
+/** Everything a request needs to know about the customer, fetched in one read. */
+const CONTEXT_KINDS = [...PERSONAL_KINDS, "goals", "consent"] as const;
 
 /** One customer's full picture. Money set aside only counts while its goal still exists. */
 export async function personalRecord(
@@ -26,8 +33,9 @@ export async function personalRecord(
   base: CustomerRecord,
   asOf: string,
 ): Promise<CustomerRecord> {
-  const goals = (await readState<Goal[]>(customerRef, "goals")) ?? [];
-  return personalise(customerRef, base, asOf, new Set(goals.map((goal) => goal.id)));
+  const states = await readStates(customerRef, CONTEXT_KINDS);
+  const goals = (states.get("goals") as Goal[] | undefined) ?? [];
+  return personalise(customerRef, base, asOf, new Set(goals.map((goal) => goal.id)), states);
 }
 
 /**
@@ -37,16 +45,29 @@ export async function personalRecord(
 export async function getSessionContext(preferredLocale?: unknown): Promise<SessionContext | null> {
   const customerRef = await getSessionCustomerRef();
   if (!customerRef) return null;
-  const base = await loadCustomer(customerRef);
+  // One trip to the database for the three things every request needs, side by side.
+  const [base, states, benchmarks] = await Promise.all([
+    loadCustomer(customerRef),
+    readStates(customerRef, CONTEXT_KINDS),
+    loadBenchmarks(),
+  ]);
   if (!base) return null;
   const asOf = getEnv().DEMO_AS_OF_DATE;
+  const goals = (states.get("goals") as Goal[] | undefined) ?? [];
   return {
     customerRef,
     // The bank's record plus what the customer added: linked accounts, corrections, set-asides.
-    record: await personalRecord(customerRef, base, asOf),
+    record: await personalise(
+      customerRef,
+      base,
+      asOf,
+      new Set(goals.map((goal) => goal.id)),
+      states,
+    ),
     asOf,
     locale: await currentLocale(preferredLocale),
-    benchmarks: await loadBenchmarks(),
+    benchmarks,
+    consent: consentFrom(states.get("consent")),
   };
 }
 
@@ -60,6 +81,6 @@ export function unauthorized(): Response {
  * every route that shows or changes customer data.
  */
 export async function termsRequired(ctx: SessionContext): Promise<Response | null> {
-  if (hasAcceptedTerms(await readConsent(ctx.customerRef))) return null;
+  if (hasAcceptedTerms(ctx.consent)) return null;
   return Response.json({ error: "terms_required" }, { status: 403 });
 }
