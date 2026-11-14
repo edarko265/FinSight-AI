@@ -11,8 +11,10 @@ export const maxDuration = 60;
  * present CRON_SECRET; without the secret configured the route is closed.
  */
 export async function GET(request: Request): Promise<Response> {
-  const secret = getEnv().CRON_SECRET;
+  // Reading the request first also tells the framework this route runs per request and is
+  // never evaluated while building.
   const given = request.headers.get("authorization") ?? "";
+  const secret = getEnv().CRON_SECRET;
   const expected = `Bearer ${secret ?? ""}`;
   if (
     !secret ||

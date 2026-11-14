@@ -113,8 +113,7 @@ export function usePreferences(): PreferencesValue {
 }
 
 /** Runs before first paint so the saved theme and text size apply without a flash. */
-export const PREFERENCES_BOOT_SCRIPT = `(function(){try{var p=JSON.parse(localStorage.getItem(${JSON.stringify(
-  PREFS_STORAGE_KEY,
-)})||"{}");var r=document.documentElement;var s=${JSON.stringify(
-  FONT_SIZES,
-)};if(p.theme==="light"||p.theme==="dark")r.setAttribute("data-theme",p.theme);if(s[p.fontSize])r.style.fontSize=s[p.fontSize];if(p.locale)r.lang=p.locale;}catch(e){}})();`;
+export const PREFERENCES_BOOT_SCRIPT =
+  // A fixed piece of text with nothing spliced into it. The storage key and the text sizes
+  // are written out here and must match PREFS_STORAGE_KEY and FONT_SIZES above.
+  '(function(){try{var p=JSON.parse(localStorage.getItem("fs_prefs")||"{}");var r=document.documentElement;var s={"small":"14px","medium":"16px","large":"18px","xlarge":"20px"};if(p.theme==="light"||p.theme==="dark")r.setAttribute("data-theme",p.theme);if(s[p.fontSize])r.style.fontSize=s[p.fontSize];if(p.locale)r.lang=p.locale;}catch(e){}})();';

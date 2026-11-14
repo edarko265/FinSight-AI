@@ -1,11 +1,12 @@
 import "server-only";
 
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { cookies } from "next/headers";
 
 import { activeStaff, type StaffRole } from "@/lib/admin/staff";
 import { getEnv } from "@/lib/env";
+import { secretsMatch } from "@/lib/security/compare";
 
 /**
  * Admin sign-in. The installation owner signs in with the password from the
@@ -42,9 +43,7 @@ export function adminPasswordMatches(submitted: string): boolean {
     );
     return false;
   }
-  const a = createHash("sha256").update(submitted).digest();
-  const b = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(a, b);
+  return secretsMatch(submitted, expected);
 }
 
 export async function createAdminSession(staffId: string = OWNER_ID): Promise<void> {

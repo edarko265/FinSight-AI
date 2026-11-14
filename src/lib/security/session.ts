@@ -1,11 +1,12 @@
 import "server-only";
 
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 import { cookies } from "next/headers";
 
 import { getDb } from "@/lib/db/client";
 import { getEnv } from "@/lib/env";
+import { secretsMatch } from "@/lib/security/compare";
 
 /**
  * Opaque server sessions. The browser holds a random token in an HttpOnly
@@ -62,9 +63,7 @@ export async function destroySession(): Promise<void> {
 export function passwordMatches(submitted: string): boolean {
   const expected = getEnv().DEMO_LOGIN_PASSWORD;
   if (!expected) return false;
-  const a = createHash("sha256").update(submitted).digest();
-  const b = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(a, b);
+  return secretsMatch(submitted, expected);
 }
 
 const localAttempts = new Map<string, { count: number; resetAt: number }>();

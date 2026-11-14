@@ -43,7 +43,7 @@ export function ViewWizard({
   const set = (patch: Partial<ViewDraft>): void => setEdited({ ...value, ...patch });
   const periodLabel = (period: ViewPeriod): string =>
     isCustomPeriod(period)
-      ? period.replace("..", " – ")
+      ? period.split("..").join(" – ")
       : t(`views.period.${period}` as MessageKey);
 
   return (
