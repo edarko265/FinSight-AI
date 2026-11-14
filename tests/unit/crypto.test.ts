@@ -122,3 +122,28 @@ describe("the boot script", () => {
     expect(PREFERENCES_BOOT_SCRIPT).toContain(JSON.stringify(FONT_SIZES));
   });
 });
+
+describe("one-time codes", () => {
+  it("matches the published test values (RFC 6238, SHA-1)", async () => {
+    const { totpCode, verifyTotp } = await import("@/lib/security/totp");
+    // The RFC's shared secret "12345678901234567890", in base32.
+    const secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+    expect(totpCode(secret, 59_000)).toBe("287082");
+    expect(totpCode(secret, 1_111_111_109_000)).toBe("081804");
+    expect(totpCode(secret, 1_234_567_890_000)).toBe("005924");
+    // The neighbouring 30-second steps are accepted; anything further away is not.
+    expect(verifyTotp(secret, "287082", 59_000 + 30_000)).toBe(true);
+    expect(verifyTotp(secret, "287 082", 59_000)).toBe(true);
+    expect(verifyTotp(secret, "287082", 59_000 + 90_000)).toBe(false);
+    expect(verifyTotp(secret, "000000", 59_000)).toBe(false);
+    expect(verifyTotp(secret, "28708", 59_000)).toBe(false);
+  });
+
+  it("makes secrets an authenticator app can read", async () => {
+    const { newTotpSecret, totpCode, totpUri, verifyTotp } = await import("@/lib/security/totp");
+    const secret = newTotpSecret();
+    expect(secret).toMatch(/^[A-Z2-7]{32}$/);
+    expect(verifyTotp(secret, totpCode(secret, 1_000_000), 1_000_000)).toBe(true);
+    expect(totpUri(secret, "CUST1")).toContain(`secret=${secret}`);
+  });
+});

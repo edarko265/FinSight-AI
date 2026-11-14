@@ -42,10 +42,19 @@ const view = z.object({
     )
     .max(24),
 });
-export const dashboardStateSchema = z.object({
-  activeId: z.string().max(60),
-  views: z.array(view).min(1).max(12),
-});
+export const dashboardStateSchema = z
+  .object({
+    activeId: z.string().max(60),
+    views: z.array(view).min(1).max(12),
+  })
+  // Two views, or two widgets in a view, may not share an identifier.
+  .refine(
+    (state) =>
+      new Set(state.views.map((item) => item.id)).size === state.views.length &&
+      state.views.every(
+        (item) => new Set(item.widgets.map((widget) => widget.id)).size === item.widgets.length,
+      ),
+  );
 
 const w = (
   id: string,

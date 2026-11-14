@@ -31,6 +31,8 @@ interface EvidenceItem {
   key: string;
   kindKey: string;
   account: string | null;
+  manual?: boolean;
+  note?: string | null;
   corrected: boolean;
   originalBasket: string;
   originalNecessity: string;

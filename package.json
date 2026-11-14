@@ -19,6 +19,7 @@
     "voice:setup": "tsx scripts/setup-voice-agent.ts",
     "db:check": "tsx scripts/db-check.ts",
     "build:check": "NEXT_DIST_DIR=.next-check next build",
+    "e2e": "playwright test",
     "data:mortgage": "tsx scripts/ingest-mortgage.ts",
     "data:saving-rate": "tsx scripts/fetch-saving-rate.ts",
     "limits:clear": "tsx scripts/clear-limits.ts"
@@ -32,6 +33,7 @@
     "csv-parse": "^7.0.3",
     "next": "16.4.6",
     "pg": "^8.23.1",
+    "qrcode": "1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
@@ -39,9 +41,12 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "1.65.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^24",
     "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
@@ -54,7 +59,7 @@
     "vitest": "^5.1.0"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": "24.x"
   },
   "packageManager": "pnpm@12.16.1"
 }

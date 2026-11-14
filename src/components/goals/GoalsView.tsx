@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { VoucherLadder } from "@/components/goals/VoucherLadder";
 import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useOverview } from "@/components/providers/OverviewProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { LoadError } from "@/components/ui/LoadError";
 import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
@@ -19,7 +20,14 @@ import { formatDay, formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 interface GoalPlan {
-  goal: { id: string; name: string; targetCents: number; months: number; monthlyCents: number };
+  goal: {
+    id: string;
+    name: string;
+    targetCents: number;
+    months: number;
+    monthlyCents: number;
+    createdOn: string;
+  };
   roomCents: number;
   fromCutsCents: number;
   fit: "fits" | "stretch" | "hard";
@@ -28,6 +36,7 @@ interface GoalPlan {
   monthsLeft: number;
   pace: "ahead" | "on_track" | "behind";
   setAsides: { id: string; cents: number; date: string }[];
+  curve: { month: string; plannedCents: number; savedCents: number }[];
 }
 
 interface Rewards {
@@ -205,6 +214,8 @@ function SetAsideRow({
 /** Goals set in conversation with the coach, what would help most, and rewards for real progress. */
 export function GoalsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
+  const { overview } = useOverview();
+  const asOf = overview?.asOf ?? "";
   const toast = useToast();
   // Tagged with the locale it was loaded for: a language change resets, a failed reload keeps it.
   const [loaded, setLoaded] = useState<{ locale: string; payload: GoalsPayload } | null>(null);
@@ -216,9 +227,11 @@ export function GoalsView(): React.JSX.Element {
   const data = loaded?.locale === locale ? loaded.payload : null;
   const loadFailed = failedLocale === locale;
   const [editing, setEditing] = useState<GoalDraft | null>(null);
-  const [saving, setSaving] = useState<{ id: string; name: string } | null>(null);
+  const [saving, setSaving] = useState<{ id: string; name: string; from: string } | null>(null);
+  const [when, setWhen] = useState("");
   const [euros, setEuros] = useState("");
   const [saveError, setSaveError] = useState<MessageKey | null>(null);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -259,7 +272,8 @@ export function GoalsView(): React.JSX.Element {
   const safe = data?.safeToSave ?? 0;
   const amount = Number(euros.replace(",", "."));
   const amountValid = euros.trim() !== "" && Number.isFinite(amount) && amount >= 1;
-  const withinSafe = amountValid && Math.round(amount * 100) <= safe;
+  // Money recorded as set aside earlier is a fact about the past: only today's is tested.
+  const withinSafe = amountValid && (when !== "" || Math.round(amount * 100) <= safe);
 
   const { run: runSetAside } = useAsyncAction(
     (goalId: string, cents: number) =>
@@ -287,6 +301,7 @@ export function GoalsView(): React.JSX.Element {
     reload();
     return true;
   }
+
 
   const rewards = data?.rewards;
   const money = (cents: number): string => formatMoney(cents, locale);
@@ -350,7 +365,7 @@ export function GoalsView(): React.JSX.Element {
             onAside={() => {
               setEuros("");
               setSaveError(null);
-              setSaving({ id: plan.goal.id, name: plan.goal.name });
+              setSaving({ id: plan.goal.id, name: plan.goal.name, from: plan.goal.createdOn });
             }}
             onEdit={() =>
               setEditing({
@@ -518,6 +533,22 @@ export function GoalsView(): React.JSX.Element {
                     onPick={setEuros}
                   />
                 ) : null}
+                <label className="flex flex-col gap-1.5 text-sm font-medium">
+                  {t("goals.aside.date")}
+                  <input
+                    type="date"
+                    value={when}
+                    min={saving?.from}
+                    max={asOf}
+                    onChange={(event) =>
+                      setWhen(event.target.value === asOf ? "" : event.target.value)
+                    }
+                    className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal"
+                  />
+                  <span className="text-xs font-normal text-muted">
+                    {t("goals.aside.dateHint")}
+                  </span>
+                </label>
                 {amountValid && !withinSafe ? (
                   <p className="rounded-xl bg-warning-soft px-3 py-2 text-sm text-warning">
                     {t("goals.aside.aboveSafe")}

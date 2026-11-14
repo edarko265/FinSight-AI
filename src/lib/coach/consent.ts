@@ -13,7 +13,8 @@ import { readState, writeState } from "@/lib/data/repository";
  *
  * Both are versioned: changing a version asks again.
  */
-export const TERMS_VERSION = "2026-11-14";
+// Bumped when the privacy notice changed: conversations are now kept for the customer.
+export const TERMS_VERSION = "2026-11-14.2";
 export const AI_TERMS_VERSION = "2026-11-14";
 
 export interface ConsentRecord {
@@ -32,8 +33,13 @@ const EMPTY: ConsentRecord = {
   withdrawnAt: null,
 };
 
+/** A stored consent record with anything missing filled in as "not agreed". */
+export function consentFrom(stored: unknown): ConsentRecord {
+  return { ...EMPTY, ...((stored as Partial<ConsentRecord> | null | undefined) ?? {}) };
+}
+
 export async function readConsent(customerRef: string): Promise<ConsentRecord> {
-  return { ...EMPTY, ...(await readState<Partial<ConsentRecord>>(customerRef, "consent")) };
+  return consentFrom(await readState<Partial<ConsentRecord>>(customerRef, "consent"));
 }
 
 export function hasAcceptedTerms(record: ConsentRecord): boolean {

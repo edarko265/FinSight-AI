@@ -106,16 +106,26 @@ remains a non-goal: linked accounts are a labelled simulation.
 | 8   | Ask the bank the open questions                                                | Jennifer                | [decisions.md](decisions.md)                                         |
 | 9   | Set strong `ADMIN_PASSWORD` and `DEMO_LOGIN_PASSWORD`; keep the daily AI limit | Eric                    | Before sharing the link                                              |
 
-The hosted database is migrated up to 008 and the mortgage files are loaded.
+The hosted database is migrated up to 009 and the mortgage files are loaded.
+
+## Simulated, on purpose
+
+Four things cannot be made real in a prototype. Each is built behind an interface with one
+implementation, a simulated one, and says so on screen.
+
+| What                       | What is simulated                          | What a real version needs                      |
+| -------------------------- | ------------------------------------------ | ---------------------------------------------- |
+| Accounts at other banks    | Made-up banks, generated transactions      | A licensed account-information provider (PSD2) |
+| Payment of the adviser fee | No card asked for, no money taken          | A payment provider                             |
+| Bonus programme            | A code with no value                       | The bank's bonus programme                     |
+| Bank-grade sign-in         | Demo password, optional authenticator code | The bank's strong customer authentication      |
 
 ## Ideas not built
 
-1. Goal progress as a curve over months: the demo date is fixed and the data ends two
-   weeks after it, so progress shows as an amount and a pace, not a history.
-2. A real connection to other banks (PSD2). Out of scope for a prototype.
-3. Matching a transfer out of one account with the transfer into another, so money moved
-   between a customer's own accounts is recognised as such.
-4. Second-factor or single sign-on for staff.
+1. Matching transfers into savings or onto a card against the exact outgoing payment (they
+   are treated as the customer's own money by kind of account).
+2. A screen-reader pass by a person; the audit so far is automated.
+3. Single sign-on for staff.
 
 ## Cut order, if something has to go before the demo
 

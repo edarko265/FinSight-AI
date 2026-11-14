@@ -15,7 +15,10 @@ export type UsageKind =
   | "advisor"
   | "unanswered"
   | "grounding"
-  | "plan";
+  | "plan"
+  | "payment"
+  | "reward"
+  | "friend";
 
 export async function recordUsage(
   kind: UsageKind,
@@ -55,7 +58,8 @@ export interface UsageSummary {
   unansweredThemes: { topic: string; count: number }[];
 }
 
-export async function usageSummary(): Promise<UsageSummary> {
+/** The figures for the last `span` days: 7, 30 or 90. */
+export async function usageSummary(span = 30): Promise<UsageSummary> {
   const db = await getDb();
   const rows = await db.query<{
     day: string | Date;
@@ -65,7 +69,8 @@ export async function usageSummary(): Promise<UsageSummary> {
     mode: string;
     count: number;
   }>(
-    "SELECT day, kind, topic, locale, mode, count FROM usage_events WHERE day > CURRENT_DATE - 30",
+    "SELECT day, kind, topic, locale, mode, count FROM usage_events WHERE day > CURRENT_DATE - $1::int",
+    [span],
   );
   const sum = (map: Map<string, number>, key: string, count: number): void => {
     map.set(key, (map.get(key) ?? 0) + count);

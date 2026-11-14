@@ -1,8 +1,9 @@
 import "server-only";
 
 import { setBillAdjustments, type BillAdjustment } from "@/lib/analytics/recurrence";
+import { applyEntries, type Entry } from "@/lib/data/entries";
+import { accountProvider } from "@/lib/data/account-providers";
 import {
-  generateLinked,
   mergeAccounts,
   transactionKey,
   type DemoBank,
@@ -10,7 +11,7 @@ import {
   type LinkedKind,
 } from "@/lib/data/linked-accounts";
 import type { MortgageStory } from "@/lib/data/mortgage";
-import { readState, writeState } from "@/lib/data/repository";
+import { readState, readStates, writeState, type StateSnapshot } from "@/lib/data/repository";
 import type { SetAside } from "@/lib/coach/goal-progress";
 
 export type { SetAside };
@@ -18,7 +19,7 @@ import type { CustomerRecord, Transaction } from "@/lib/data/types";
 
 /**
  * What a customer has added on top of the bank's own records: accounts linked
- * from elsewhere, their own corrections to how spending is sorted, their
+ * from elsewhere, income and expenses they recorded, their own corrections to how spending is sorted, their
  * adjustments to expected bills, and money they have set aside for goals.
  * All of it is sealed with the customer's key, and all of it is applied in one
  * place, here, so every calculation sees the same picture.
@@ -26,6 +27,7 @@ import type { CustomerRecord, Transaction } from "@/lib/data/types";
 const LINKED = "linked_accounts";
 const CORRECTIONS = "corrections";
 const SET_ASIDES = "set_asides";
+export const ENTRIES = "entries";
 const MAX_LINKED = 4;
 
 export type Override = NonNullable<Transaction["override"]>;
@@ -59,25 +61,40 @@ export async function listSetAsides(ref: string): Promise<SetAside[]> {
 export const writeSetAsides = (ref: string, items: SetAside[]): Promise<void> =>
   writeState(ref, SET_ASIDES, items.slice(0, 200));
 
+/** The kinds of state `personalise` needs, so a caller can fetch them with others in one read. */
+export const PERSONAL_KINDS = [LINKED, CORRECTIONS, SET_ASIDES, ENTRIES, "mortgage"] as const;
+
 /**
  * Builds the customer's full picture from the bank's record: linked accounts
- * merged in, corrections applied, bill adjustments attached.
+ * merged in, corrections applied, bill adjustments attached. Pass `states`
+ * when they were already read, to save a round trip to the database.
  */
 export async function personalise(
   ref: string,
   base: CustomerRecord,
   asOf: string,
   goalIds?: ReadonlySet<string>,
+  states?: StateSnapshot,
 ): Promise<CustomerRecord> {
-  const [linked, corrections, setAsides, mortgage] = await Promise.all([
-    listLinked(ref),
-    readCorrections(ref),
-    listSetAsides(ref),
-    readState<MortgageStory>(ref, "mortgage"),
-  ]);
+  const snapshot = states ?? (await readStates(ref, PERSONAL_KINDS));
+  const linked = (snapshot.get(LINKED) as LinkedAccount[] | undefined) ?? [];
+  const corrections: Corrections = {
+    ...EMPTY,
+    ...((snapshot.get(CORRECTIONS) as Corrections | undefined) ?? {}),
+  };
+  const setAsides = (snapshot.get(SET_ASIDES) as SetAside[] | undefined) ?? [];
+  const mortgage = (snapshot.get("mortgage") as MortgageStory | undefined) ?? null;
+  const entries = (snapshot.get(ENTRIES) as Entry[] | undefined) ?? [];
+  const provider = accountProvider();
   const merged = mergeAccounts(
-    base.transactions,
-    linked.map((account) => ({ account, transactions: generateLinked(account, ref, asOf) })),
+    // What the customer recorded themselves is part of their own account's history.
+    applyEntries(base.transactions, entries, asOf),
+    await Promise.all(
+      linked.map(async (account) => ({
+        account,
+        transactions: await provider.transactions(account, ref, asOf),
+      })),
+    ),
     asOf,
   );
   const hasCorrections =

@@ -500,6 +500,38 @@ flowchart TD
 - **A correction** can cover one purchase or every purchase of the same category and
   merchant code. The single purchase wins over the kind; both win over the rules.
 
+### Money moving between the customer's own accounts
+
+```mermaid
+flowchart TD
+    IN([Money arrives in a linked account]) --> K{What kind of account?}
+    K -- "savings or credit card" --> OWN[The customer's own money:<br/>a deposit or a card payment.<br/>Not income]
+    K -- everyday --> M{"A transfer out of another of their<br/>accounts within 3 days,<br/>same amount within 2 %?"}
+    M -- yes --> OWN2[The same money, counted once.<br/>Not income, not spending]
+    M -- no --> EXT[Arrived from outside:<br/>counted as income]
+```
+
+Each outgoing transfer is matched at most once.
+
+### How an answer shows its working
+
+Every answer carries the steps that produced it
+([`steps.ts`](../src/lib/coach/steps.ts)). They are built from the same result the answer
+shows and from the same functions, so they cannot drift from what was actually done. For
+safe to spend, for example: the starting balance, what was taken off up front, the daily
+amount and bills over the walk, the lowest point reached, and that expected income was not
+counted.
+
+### Limits, plan drift and notification rules
+
+| Rule                          | Fires when                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| Monthly limit: close          | Spent this month ≥ 80 % of the limit                                        |
+| Monthly limit: over           | Spent this month ≥ 100 % of the limit                                       |
+| Plan drift: spending slice    | Share of income ≥ 5 points **above** the followed plan                      |
+| Plan drift: saving, investing | Share of income ≥ 5 points **below** the followed plan                      |
+| A notification may be sent    | That kind is switched on **and** the hour in Finland is outside quiet hours |
+
 ### Subscriptions
 
 ```mermaid

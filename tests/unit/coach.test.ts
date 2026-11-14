@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DEFAULT_SETTINGS, settingsSchema } from "@/lib/admin/settings";
 import { themeOf } from "@/lib/admin/themes";
-import { classify, classifyByRules } from "@/lib/analytics/classify";
+import { classify, classifyByRules, flowOf } from "@/lib/analytics/classify";
 import { lastCompletedMonth } from "@/lib/analytics/periods";
 import { cashFlow } from "@/lib/analytics/spending";
 import {
@@ -12,7 +12,14 @@ import {
   setBillAdjustments,
 } from "@/lib/analytics/recurrence";
 import { goalProgress } from "@/lib/coach/goal-progress";
-import { generateLinked, mergeAccounts, type LinkedAccount } from "@/lib/data/linked-accounts";
+import {
+  generateLinked,
+  mergeAccounts,
+  reconcileTransfers,
+  type LinkedAccount,
+} from "@/lib/data/linked-accounts";
+import { explain } from "@/lib/coach/steps";
+import { formatMoney } from "@/lib/i18n/config";
 import {
   buildRewards,
   DEFAULT_REWARD_RULES,
@@ -404,7 +411,10 @@ describe("recycle bin", () => {
     };
     const removed = removedFromDashboard(before, after);
     expect(
-      removed.map((item) => [item.kind, item.kind === "widget" ? item.item.id : item.item.id]),
+      removed.map((item) => [
+        item.kind,
+        item.kind === "widget" || item.kind === "view" ? item.item.id : "",
+      ]),
     ).toEqual([
       ["widget", "w2"],
       ["view", "b"],
@@ -648,5 +658,108 @@ describe("safe to save and goal progress", () => {
     expect(
       goalProgress(plan, [{ ...aside(50_000, "c"), goalId: "other" }], ctx.asOf).savedCents,
     ).toBe(0);
+  });
+});
+
+describe("money moving between the customer's own accounts", () => {
+  const everyday: LinkedAccount = {
+    id: "acct-e",
+    bank: "aurora",
+    kind: "everyday",
+    nickname: "Other",
+    included: true,
+    linkedOn: "2026-09-15",
+  };
+  const tx = (over: Partial<Transaction>): Transaction => ({
+    row: 1,
+    date: "2026-08-10",
+    time: "10:00:00",
+    amountCents: 0,
+    balanceCents: 0,
+    category: "Transfer",
+    type: "transfer_in",
+    merchantId: null,
+    mcc: null,
+    ...over,
+  });
+
+  it("counts a matched transfer once, and an unmatched inflow as income", () => {
+    const main = [
+      tx({ row: 1, type: "salary_sweep", amountCents: -40_000, date: "2026-08-09" }),
+      tx({ row: 2, type: "salary_sweep", amountCents: -99_000, date: "2026-08-20" }),
+    ];
+    const linked = [
+      tx({ row: 1, account: "acct-e", amountCents: 40_000, date: "2026-08-10" }),
+      tx({ row: 2, account: "acct-e", amountCents: 55_000, date: "2026-08-12" }),
+    ];
+    const result = reconcileTransfers(main, [{ account: everyday, transactions: linked }]);
+    // 400 left the main account the day before: the same money, so not income.
+    expect(result.linked[0]?.transfer).toBe("internal");
+    expect(flowOf(result.linked[0]!)).toBe("internal");
+    expect(result.main[0]?.transfer).toBe("internal");
+    // 550 has no matching outflow: it arrived from outside.
+    expect(result.linked[1]?.transfer).toBe("external");
+    expect(flowOf(result.linked[1]!)).toBe("other_income");
+    expect(result.main[1]?.transfer).toBeUndefined();
+  });
+
+  it("never treats a savings deposit or a card payment as income", () => {
+    for (const kind of ["savings", "credit"] as const) {
+      const result = reconcileTransfers(
+        [],
+        [
+          {
+            account: { ...everyday, kind },
+            transactions: [tx({ account: "acct-e", amountCents: 20_000 })],
+          },
+        ],
+      );
+      expect(flowOf(result.linked[0]!)).toBe("internal");
+    }
+  });
+});
+
+describe("how an answer was worked out", () => {
+  it("gives the steps behind a figure, with the same numbers as the answer", () => {
+    const result = runTool(ctx, "safe_to_spend", {});
+    const steps = explain(ctx, result);
+    expect(steps.length).toBeGreaterThanOrEqual(4);
+    expect(steps[0]).toContain("recorded balance");
+    // The step that states the answer carries the answer's own amount.
+    const answer = result.facts.find((fact) =>
+      steps.some((step) => step.includes(formatMoney(fact.valueCents, "en"))),
+    );
+    expect(answer).toBeDefined();
+    expect(
+      explain(ctx, runTool(ctx, "spending", {})).some((step) => step.includes("purchases")),
+    ).toBe(true);
+    expect(explain(ctx, routeQuestion(ctx, "tell me a joke"))).toEqual([]);
+  });
+});
+
+describe("notification preferences", () => {
+  it("sorts insights into kinds and respects quiet hours across midnight", async () => {
+    const { DEFAULT_PREFS, isQuiet, mayNotify, typeOfInsight } = await import("@/lib/push/prefs");
+    expect(typeOfInsight("pace-Restaurants-2026-09")).toBe("habit");
+    expect(typeOfInsight("budget-b1-2026-09-over")).toBe("budget");
+    expect(typeOfInsight("announcement-1-x")).toBe("announcement");
+    expect(typeOfInsight("spike-Travel-2026-08")).toBe("tips");
+    const prefs = { ...DEFAULT_PREFS, quiet: { from: 21, to: 8 } };
+    expect([20, 21, 23, 0, 7, 8].map((hour) => isQuiet(prefs, hour))).toEqual([
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+    ]);
+    // 12:00 UTC is mid-afternoon in Finland: allowed, unless that kind is switched off.
+    const noon = new Date("2026-09-15T12:00:00Z");
+    expect(mayNotify(prefs, "bill", noon)).toBe(true);
+    expect(mayNotify({ ...prefs, types: { ...prefs.types, bill: false } }, "bill", noon)).toBe(
+      false,
+    );
+    // 21:30 UTC is after midnight in Finland: quiet.
+    expect(mayNotify(prefs, "bill", new Date("2026-09-15T21:30:00Z"))).toBe(false);
   });
 });

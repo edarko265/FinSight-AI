@@ -5,6 +5,7 @@ import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypt
 import { getDb } from "@/lib/db/client";
 import { decryptField, encryptField } from "@/lib/security/crypto";
 import { serviceKey, staffIndex } from "@/lib/security/keys";
+import { newTotpSecret, verifyTotp } from "@/lib/security/totp";
 
 /**
  * Staff accounts for the admin area.
@@ -25,6 +26,8 @@ export interface StaffMember {
   role: StaffRole;
   createdAt: string;
   deletedAt: string | null;
+  /** Whether this member signs in with a second step. */
+  twoStep: boolean;
 }
 
 type Row = {
@@ -43,17 +46,27 @@ interface Profile {
   name: string;
   username: string;
   role: StaffRole;
+  /** Two-step sign-in secret, once the member has set it up. */
+  totp?: string;
+  /** A secret that is being set up but not confirmed yet. */
+  totpPending?: string;
 }
 
 function seal(id: string, profile: Profile): string {
   return encryptField(JSON.stringify(profile), key(), context(id));
 }
 
+function readProfile(row: Row): Profile {
+  return JSON.parse(decryptField(row.sealed_profile, key(), context(row.id))) as Profile;
+}
+
 function toMember(row: Row): StaffMember {
-  const profile = JSON.parse(decryptField(row.sealed_profile, key(), context(row.id))) as Profile;
+  const { totp, totpPending: _pending, ...profile } = readProfile(row);
+  void _pending;
   return {
     id: row.id,
     ...profile,
+    twoStep: Boolean(totp),
     createdAt: new Date(row.created_at).toISOString(),
     deletedAt: row.deleted_at ? new Date(row.deleted_at).toISOString() : null,
   };
@@ -121,8 +134,8 @@ export async function updateStaff(
   const db = await getDb();
   const rows = await db.query<Row>(`SELECT ${COLUMNS} FROM staff_users WHERE id = $1`, [id]);
   if (!rows[0]) return false;
-  const current = toMember(rows[0]);
-  const profile = { name: change.name, username: current.username, role: change.role };
+  const current = readProfile(rows[0]);
+  const profile = { ...current, name: change.name, role: change.role };
   await db.query(
     "UPDATE staff_users SET sealed_profile = $2, password_hash = $3, updated_at = now() WHERE id = $1",
     [
@@ -151,7 +164,11 @@ export async function setStaffState(
 }
 
 /** Checks a username and password. Members in the recycle bin cannot sign in. */
-export async function verifyStaff(username: string, password: string): Promise<StaffMember | null> {
+export async function verifyStaff(
+  username: string,
+  password: string,
+  code?: string,
+): Promise<StaffMember | "totp_required" | null> {
   const db = await getDb();
   const rows = await db.query<Row>(
     `SELECT ${COLUMNS} FROM staff_users WHERE username_index = $1 AND deleted_at IS NULL`,
@@ -163,5 +180,79 @@ export async function verifyStaff(username: string, password: string): Promise<S
     scryptSync(password, Buffer.alloc(16), 64);
     return null;
   }
-  return passwordMatches(password, row.password_hash) ? toMember(row) : null;
+  if (!passwordMatches(password, row.password_hash)) return null;
+  const secret = readProfile(row).totp;
+  if (secret && !(code !== undefined && verifyTotp(secret, code, Date.now()))) {
+    return code === undefined ? "totp_required" : null;
+  }
+  return toMember(row);
+}
+
+async function activeRow(id: string): Promise<Row | null> {
+  const db = await getDb();
+  const rows = await db.query<Row>(
+    `SELECT ${COLUMNS} FROM staff_users WHERE id = $1 AND deleted_at IS NULL`,
+    [id],
+  );
+  return rows[0] ?? null;
+}
+
+async function saveProfile(id: string, profile: Profile): Promise<void> {
+  const db = await getDb();
+  await db.query("UPDATE staff_users SET sealed_profile = $2, updated_at = now() WHERE id = $1", [
+    id,
+    seal(id, profile),
+  ]);
+}
+
+/** Starts two-step set-up for a member and returns the secret and its account label. */
+export async function beginStaffTwoStep(
+  id: string,
+): Promise<{ secret: string; account: string } | null> {
+  const row = await activeRow(id);
+  if (!row) return null;
+  const profile = readProfile(row);
+  const secret = newTotpSecret();
+  await saveProfile(id, { ...profile, totpPending: secret });
+  return { secret, account: profile.username };
+}
+
+export async function confirmStaffTwoStep(id: string, code: string): Promise<boolean> {
+  const row = await activeRow(id);
+  if (!row) return false;
+  const { totpPending, ...profile } = readProfile(row);
+  if (!totpPending || !verifyTotp(totpPending, code, Date.now())) return false;
+  await saveProfile(id, { ...profile, totp: totpPending });
+  return true;
+}
+
+export async function disableStaffTwoStep(id: string, code: string): Promise<boolean> {
+  const row = await activeRow(id);
+  if (!row) return false;
+  const { totp, totpPending: _pending, ...profile } = readProfile(row);
+  void _pending;
+  if (!totp) return true;
+  if (!verifyTotp(totp, code, Date.now())) return false;
+  await saveProfile(id, profile);
+  return true;
+}
+
+/** A member changes their own password, proving they know the current one. */
+export async function changeOwnPassword(
+  id: string,
+  current: string,
+  next: string,
+): Promise<boolean> {
+  const db = await getDb();
+  const rows = await db.query<Row>(
+    `SELECT ${COLUMNS} FROM staff_users WHERE id = $1 AND deleted_at IS NULL`,
+    [id],
+  );
+  const row = rows[0];
+  if (!row || !passwordMatches(current, row.password_hash)) return false;
+  await db.query("UPDATE staff_users SET password_hash = $2, updated_at = now() WHERE id = $1", [
+    id,
+    hashPassword(next),
+  ]);
+  return true;
 }

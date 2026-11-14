@@ -115,6 +115,12 @@ export const CloseIcon = (p: IconProps): React.JSX.Element => (
     <path d="M6 6l12 12M18 6L6 18" />
   </Svg>
 );
+/** A solid play triangle with softened corners, drawn rather than typed so it looks the same everywhere. */
+export const PlayIcon = (p: IconProps): React.JSX.Element => (
+  <Svg {...p} filled>
+    <path d="M8.5 5.6v12.8a.6.6 0 0 0 .92.5l9.9-6.4a.6.6 0 0 0 0-1L9.42 5.1a.6.6 0 0 0-.92.5z" />
+  </Svg>
+);
 export const PlusIcon = (p: IconProps): React.JSX.Element => (
   <Svg {...p}>
     <path d="M12 5v14M5 12h14" />

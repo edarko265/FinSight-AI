@@ -7,7 +7,7 @@ import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
 import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { MicIcon, PhoneIcon } from "@/components/ui/icons";
+import { MicIcon, PhoneIcon, PlayIcon } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api-client";
@@ -261,7 +261,7 @@ export function ActionWidgetBody({
     case "story":
       return (
         <Link href="/story" className={primary}>
-          <span aria-hidden="true">▶</span>
+          <PlayIcon className="size-4" />
           {t("widget.story.start")}
         </Link>
       );

@@ -10,9 +10,14 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-check/**",
+    ".next-e2e/**",
+    "playwright-report/**",
+    "test-results/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // A third-party audio helper, served as it was published.
+    "public/voice/**",
   ]),
 ]);
 

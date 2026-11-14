@@ -14,6 +14,9 @@ at `/admin`.
 
 `/admin` → **Sign in as admin**. The first step asks who is signing in:
 
+Staff can turn on **two-step sign-in** for their own account and **change their own
+password** from the menu (the owner's password is set in the environment).
+
 - **The owner** leaves the username empty and enters the installation password
   (`ADMIN_PASSWORD`). The owner can do everything and cannot be removed.
 - **Staff** enter the username and password an administrator gave them.
@@ -31,6 +34,7 @@ sign-in attempts per minute are allowed per address. In production the owner pas
 be at least 12 characters.
 
 The frame around every section has the **language selector**, a **light and dark switch**,
+a **Period** selector (last 7, 30 or 90 days) that every usage figure and chart follows,
 **Refresh** with the time the figures were loaded, who is signed in, and **Sign out**. If
 the figures cannot be loaded it says so and offers **Try again**; it never shows an empty
 page as if there were nothing to see.
@@ -56,7 +60,7 @@ section where something can be done about it.
 
 ### Reading the charts
 
-- **Daily charts** always cover 30 days, so a quiet day is a gap and not a shorter chart.
+- **Daily charts** cover the chosen period, so a quiet day is a gap and not a shorter chart.
   Point at a day, tap it, or use the arrow keys to read its number. With nothing selected
   the line above gives the total, the daily average and the busiest day.
 - **Rings** show the total in the middle; point at or tap a part or its legend row for its
@@ -98,7 +102,8 @@ reply, the split by topic and by free versus paid, and the queue itself.
 - You see what the customer chose to share: the topic, the booked call time, their note and
   the messages they write. Not their transactions.
 - Open a request to read the conversation and **reply as adviser**. The customer sees the
-  reply in their app within a few seconds.
+  reply in their app within a few seconds, with your name on it.
+- **Adviser fees paid** shows the total. Payment is simulated: no money is taken.
 - **Close conversation**, **Reopen**, **Move to recycle bin**.
 
 ### Shared plans
@@ -110,6 +115,8 @@ Plans customers have shared with each other. You see exactly what other customer
   customers aim for); the most copied.
 - **Stop sharing** removes a plan from sharing, for example because of its name. The
   customer keeps their own plan.
+- Plans customers have **reported** carry a badge with the reasons. **Dismiss reports**
+  clears them and leaves the plan shared. Reports are anonymous.
 
 ### AI _(administrators)_
 
@@ -125,7 +132,10 @@ cost. The page does not show euros because prices change and differ per contract
 Short notices shown to every customer at the top of their Insights, and sent to devices
 that have notifications on.
 
-- **New announcement** opens a four-step form: type, title, message, review.
+- **New announcement** opens a step-by-step form: type, title, message, optional Finnish
+  and Swedish wording, when to publish (now or at a chosen time), review.
+- A scheduled announcement appears at its time; devices are told with the next morning's
+  reminders.
 - **Edit**, **Move to recycle bin**.
 - Each shows **how many customers have seen it**, counted once per customer.
 

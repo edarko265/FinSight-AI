@@ -181,6 +181,27 @@ only for the signed-in customer.
 - Each applicant's mortgage history is sealed with their own key. The source's free-text
   notes are not stored.
 
+### Two-step sign-in
+
+- Time-based one-time codes (RFC 6238), checked against the published test values.
+- Customers switch it on in Settings; staff in the admin area. Switching it off needs a
+  current code, so an open session someone else finds cannot remove it.
+- A wrong code counts towards the account's lock-out like a wrong password.
+- It is a second factor on top of a demo password, not bank-grade strong authentication:
+  a deployment would use the bank's own sign-in.
+
+### Payments, rewards and other banks: simulated behind real interfaces
+
+- `PaymentProvider`, `BonusProvider` and `AccountProvider` each have one implementation, a
+  simulated one, and every screen that uses them says so. No card data is ever requested.
+- A real provider would replace the implementation; nothing else in the app changes.
+
+### Friends and reports
+
+- Friend codes are random and looked up with a rate limit. A friend's blind index never
+  reaches the browser.
+- A report about a shared plan records the plan and a reason, not who reported.
+
 ### Device notifications
 
 - A device's subscription is sealed with its customer's key.
@@ -225,6 +246,10 @@ decrypted values, questions or transactions.
 - an amount the calculation did not produce is caught by the grounding check
 - staff names, usernames and passwords are not readable in the database, and a member in
   the recycle bin cannot sign in
+- one-time codes match the RFC's test values; staff two-step is enforced once confirmed
+- a friend sees only shared plans; payments and reports store nothing that identifies who
+- in the browser: staff cannot open a customer's transactions, advisers are refused
+  manager-only routes, and eleven screens pass an automated accessibility audit
 - a shared plan's stored row contains no customer reference, name or goal name, and
   disappears when the plan is unshared or binned
 
@@ -237,7 +262,8 @@ Be straight about these when asked.
   nonce set-up.
 - **Keys are environment variables**, not in a KMS.
 - **No penetration test** has been done.
-- **Staff sign-in is username and password.** There is no second factor or single sign-on.
+- **Two-step sign-in is optional**, for customers and staff. There is no single sign-on.
+- **The accessibility audit is automated** (axe). Nobody has tested with a screen reader.
 - **In demo mode the sign-in page shows the demo password** on purpose.
 
 ## 13. Before real customers

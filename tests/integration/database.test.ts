@@ -377,12 +377,14 @@ describe("staff accounts", () => {
       }),
     ).toBe(false);
 
-    const member = await staff.verifyStaff("aino.virtanen", "correct-horse-1");
+    const found = await staff.verifyStaff("aino.virtanen", "correct-horse-1");
+    if (!found || found === "totp_required") throw new Error("expected a member");
+    const member = found;
     expect(member).toMatchObject({ name: "Aino Virtanen", role: "adviser" });
     expect(await staff.verifyStaff("aino.virtanen", "wrong-password")).toBeNull();
     expect(await staff.verifyStaff("nobody", "correct-horse-1")).toBeNull();
 
-    await staff.updateStaff(member!.id, {
+    await staff.updateStaff(member.id, {
       name: "Aino V.",
       role: "banker",
       password: "new-password-3",
@@ -393,13 +395,13 @@ describe("staff accounts", () => {
       role: "banker",
     });
 
-    await staff.setStaffState(member!.id, "trash");
+    await staff.setStaffState(member.id, "trash");
     expect(await staff.verifyStaff("aino.virtanen", "new-password-3")).toBeNull();
-    expect(await staff.activeStaff(member!.id)).toBeNull();
-    await staff.setStaffState(member!.id, "restore");
-    expect(await staff.activeStaff(member!.id)).not.toBeNull();
-    await staff.setStaffState(member!.id, "trash");
-    await staff.setStaffState(member!.id, "purge");
+    expect(await staff.activeStaff(member.id)).toBeNull();
+    await staff.setStaffState(member.id, "restore");
+    expect(await staff.activeStaff(member.id)).not.toBeNull();
+    await staff.setStaffState(member.id, "trash");
+    await staff.setStaffState(member.id, "purge");
     expect(await staff.listStaff()).toEqual([]);
   });
 
@@ -417,8 +419,8 @@ describe("staff accounts", () => {
       expect(stored).not.toContain(secret);
     }
     const [member] = await staff.listStaff();
-    await staff.setStaffState(member!.id, "trash");
-    await staff.setStaffState(member!.id, "purge");
+    await staff.setStaffState(member.id, "trash");
+    await staff.setStaffState(member.id, "purge");
   });
 });
 
@@ -468,6 +470,7 @@ describe("shared plans", () => {
       asOf: "2026-09-15",
       locale: "en" as const,
       benchmarks: [],
+      consent: (await import("@/lib/coach/consent")).consentFrom(null),
     });
     const alice = await contextFor(refA);
     const bob = await contextFor(refB);
@@ -535,5 +538,156 @@ describe("shared plans", () => {
     expect(await plans.sharedPlan(code)).toBeNull();
     expect(await plans.copyPlan(bob, code)).toBe("not_found");
     expect(await plans.listPlans(alice)).toEqual([]);
+  });
+});
+
+describe("friends, reports and payments", () => {
+  it("lets a customer see a friend's shared plans and nothing else", async () => {
+    const friends = await import("@/lib/coach/friends");
+    const plans = await import("@/lib/coach/plans");
+    const { TEMPLATES } = await import("@/lib/coach/plan-math");
+    const { loadCustomer } = await import("@/lib/data/repository");
+    const contextFor = async (ref: string) => ({
+      customerRef: ref,
+      record: (await loadCustomer(ref))!,
+      asOf: "2026-09-15",
+      locale: "en" as const,
+      benchmarks: [],
+      consent: (await import("@/lib/coach/consent")).consentFrom(null),
+    });
+    const alice = await contextFor(refA);
+
+    const code = await friends.friendCode(refA);
+    expect(await friends.friendCode(refA)).toBe(code);
+    expect(await friends.addFriend(refA, code, "Me", "2026-09-15")).toBe("self");
+    expect(await friends.addFriend(refB, "ZZZZZZZZ", "Nobody", "2026-09-15")).toBe("not_found");
+    const added = await friends.addFriend(refB, code.toLowerCase(), "Flatmate", "2026-09-15");
+    if (typeof added === "string") throw new Error(added);
+    expect(await friends.addFriend(refB, code, "Again", "2026-09-15")).toBe("already");
+
+    // Nothing shared yet: the friend is listed with no plans.
+    expect(await friends.friendsWithPlans(refB)).toEqual([
+      { id: added.id, nickname: "Flatmate", plans: [] },
+    ]);
+    const plan = await plans.createPlan(alice, {
+      name: "Shared with friends",
+      split: TEMPLATES.balanced,
+      origin: "template",
+    });
+    if (typeof plan === "string") throw new Error(plan);
+    await plans.createPlan(alice, { name: "Private", split: TEMPLATES.saver, origin: "template" });
+    await plans.sharePlan(alice, plan.id, { listed: false, showGoalNames: false });
+    const seen = await friends.friendsWithPlans(refB);
+    // Only the shared plan, as percentages: the private one is not there.
+    expect(seen[0]?.plans.map((item) => item.name)).toEqual(["Shared with friends"]);
+    expect(JSON.stringify(seen)).not.toContain(refA);
+
+    // A report is anonymous and can be dismissed; removing the plan clears it too.
+    const shareCode = seen[0]!.plans[0]!.code;
+    expect(await plans.reportPlan(shareCode, "name")).toBe(true);
+    expect(await plans.reportPlan(shareCode, "name")).toBe(true);
+    expect(await plans.planReports()).toEqual({ [shareCode]: { name: 2 } });
+    const stored = JSON.stringify(await db.query("SELECT * FROM plan_reports"));
+    expect(stored).not.toContain(refB);
+    await plans.dismissReports(shareCode);
+    expect(await plans.planReports()).toEqual({});
+
+    await friends.removeFriend(refB, added.id);
+    expect(await friends.listFriends(refB)).toEqual([]);
+  });
+
+  it("records a simulated payment without storing who paid in readable form", async () => {
+    const payments = await import("@/lib/payments/payments");
+    const payment = await payments.pay(refA, "adviser", 1900);
+    expect(payment).toMatchObject({ amountCents: 1900, simulated: true });
+    expect(payment.reference).toMatch(/^SIM-[0-9A-F]{8}$/);
+    expect((await payments.listPayments(refA))[0]?.reference).toBe(payment.reference);
+    expect(await payments.listPayments(refB)).toEqual([]);
+    expect(await payments.paymentTotals()).toEqual({ count: 1, cents: 1900, simulated: true });
+    const stored = JSON.stringify(await db.query("SELECT * FROM payments"));
+    expect(stored).not.toContain(payment.reference);
+    expect(stored).not.toContain("TESTA");
+  });
+
+  it("redeems a reward once a month through the simulated bonus programme", async () => {
+    const bonus = await import("@/lib/coach/bonus");
+    const first = await bonus.redeem(refA, "coffee", "2026-09-15");
+    if (first === "already") throw new Error("unexpected");
+    expect(first).toMatchObject({ couponId: "coffee", month: "2026-09", simulated: true });
+    expect(await bonus.redeem(refA, "coffee", "2026-09-20")).toBe("already");
+    expect(await bonus.redeem(refA, "coffee", "2026-10-01")).not.toBe("already");
+  });
+});
+
+describe("announcements, scheduled and translated", () => {
+  it("hides a scheduled announcement until its time and speaks the customer's language", async () => {
+    const a = await import("@/lib/admin/announcements");
+    const live = await a.createAnnouncement({
+      title: "Now",
+      body: "English body",
+      severity: "info",
+      translations: { fi: { title: "Nyt", body: "Suomeksi" } },
+    });
+    expect(live).toBe(true);
+    const later = await a.createAnnouncement({
+      title: "Later",
+      body: "Tomorrow",
+      severity: "info",
+      publishAt: new Date(Date.now() + 86_400_000).toISOString(),
+    });
+    expect(later).toBe(false);
+    const active = await a.activeAnnouncements();
+    expect(active.map((item) => item.title)).toEqual(["Now"]);
+    expect(a.localise(active[0]!, "fi")).toEqual({ title: "Nyt", body: "Suomeksi" });
+    // No Swedish was written, so the main text is used.
+    expect(a.localise(active[0]!, "sv")).toEqual({ title: "Now", body: "English body" });
+    expect(await a.takeDueAnnouncements()).toEqual([]);
+    for (const item of await a.listAnnouncements()) {
+      await a.setAnnouncementState(item.id, "trash");
+      await a.setAnnouncementState(item.id, "purge");
+    }
+  });
+});
+
+describe("staff two-step sign-in", () => {
+  it("asks for a code once set up, and accepts only the right one", async () => {
+    const staff = await import("@/lib/admin/staff");
+    const { totpCode } = await import("@/lib/security/totp");
+    await staff.createStaff({
+      name: "Two Step",
+      username: "two.step",
+      role: "adviser",
+      password: "long-password-1",
+    });
+    const member = await staff.verifyStaff("two.step", "long-password-1");
+    if (!member || member === "totp_required") throw new Error("expected a member");
+    expect(member.twoStep).toBe(false);
+
+    const setup = await staff.beginStaffTwoStep(member.id);
+    // Not in force until confirmed with a code.
+    expect(await staff.verifyStaff("two.step", "long-password-1")).not.toBe("totp_required");
+    expect(await staff.confirmStaffTwoStep(member.id, "000000")).toBe(false);
+    expect(await staff.confirmStaffTwoStep(member.id, totpCode(setup!.secret, Date.now()))).toBe(
+      true,
+    );
+
+    expect(await staff.verifyStaff("two.step", "long-password-1")).toBe("totp_required");
+    expect(await staff.verifyStaff("two.step", "long-password-1", "000000")).toBeNull();
+    const ok = await staff.verifyStaff(
+      "two.step",
+      "long-password-1",
+      totpCode(setup!.secret, Date.now()),
+    );
+    expect(ok).toMatchObject({ twoStep: true });
+    // The secret is not readable in the database, and a wrong password still fails first.
+    expect(JSON.stringify(await db.query("SELECT * FROM staff_users"))).not.toContain(
+      setup!.secret,
+    );
+    expect(await staff.changeOwnPassword(member.id, "wrong", "another-long-pass")).toBe(false);
+    expect(await staff.changeOwnPassword(member.id, "long-password-1", "another-long-pass")).toBe(
+      true,
+    );
+    await staff.setStaffState(member.id, "trash");
+    await staff.setStaffState(member.id, "purge");
   });
 });

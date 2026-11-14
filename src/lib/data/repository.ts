@@ -64,6 +64,29 @@ export async function readState<T>(ref: string, kind: string): Promise<T | null>
   return JSON.parse(decryptField(sealed, customerKey(ref), `customer_state.${kind}`)) as T;
 }
 
+/**
+ * Reads several pieces of a customer's state in one round trip. Kinds with
+ * nothing stored are simply absent from the result.
+ */
+export async function readStates(ref: string, kinds: readonly string[]): Promise<StateSnapshot> {
+  const db = await getDb();
+  const rows = await db.query<{ kind: string; sealed_value: string }>(
+    "SELECT kind, sealed_value FROM customer_state WHERE customer_ref = $1 AND kind = ANY($2::text[])",
+    [ref, [...kinds]],
+  );
+  const key = customerKey(ref);
+  const snapshot: StateSnapshot = new Map();
+  for (const row of rows) {
+    snapshot.set(
+      row.kind,
+      JSON.parse(decryptField(row.sealed_value, key, `customer_state.${row.kind}`)),
+    );
+  }
+  return snapshot;
+}
+
+export type StateSnapshot = Map<string, unknown>;
+
 export async function writeState(ref: string, kind: string, value: unknown): Promise<void> {
   const db = await getDb();
   const sealed = encryptField(JSON.stringify(value), customerKey(ref), `customer_state.${kind}`);

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { refuse } from "@/lib/admin/auth";
+import { currentStaff, refuse } from "@/lib/admin/auth";
 import { audit } from "@/lib/admin/settings";
 import { advisorReply, advisorThread, setRequestState } from "@/lib/advisor/handoff";
 
@@ -34,7 +34,9 @@ export async function POST(
   if ("action" in parsed.data) {
     await setRequestState(id, parsed.data.action);
     await audit(`adviser_request.${parsed.data.action}`);
-  } else if (!(await advisorReply(id, parsed.data.text))) {
+  } else if (
+    !(await advisorReply(id, parsed.data.text, (await currentStaff())?.name || undefined))
+  ) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
   if ("text" in parsed.data) await audit("adviser_request.reply");

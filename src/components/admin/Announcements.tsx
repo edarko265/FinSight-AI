@@ -27,9 +27,41 @@ interface Announcement {
   severity: Severity;
   deletedAt: string | null;
   views: number;
+  publishAt: string | null;
+  translations: { fi?: Wording; sv?: Wording };
 }
 
-const EMPTY = { title: "", body: "", severity: "info" as Severity };
+interface Wording {
+  title: string;
+  body: string;
+}
+
+const EMPTY = {
+  title: "",
+  body: "",
+  severity: "info" as Severity,
+  when: "now" as "now" | "later",
+  /** Local date and time, as a date-time field gives it. */
+  publishAt: "",
+  fi: { title: "", body: "" },
+  sv: { title: "", body: "" },
+};
+
+/** What the server expects: a moment in time, and only the languages that were filled in. */
+function toPayload(form: typeof EMPTY): Record<string, unknown> {
+  const wording = (value: Wording): Wording | undefined =>
+    value.title.trim() || value.body.trim()
+      ? { title: value.title.trim(), body: value.body.trim() }
+      : undefined;
+  return {
+    title: form.title,
+    body: form.body,
+    severity: form.severity,
+    publishAt:
+      form.when === "later" && form.publishAt ? new Date(form.publishAt).toISOString() : null,
+    translations: { fi: wording(form.fi), sv: wording(form.sv) },
+  };
+}
 const SEVERITIES: Severity[] = ["info", "warning", "good"];
 const EXAMPLES = ["feature", "tip", "break"] as const;
 
@@ -154,6 +186,85 @@ export function Announcements(): React.JSX.Element {
             ),
           },
           {
+            title: t("admin.announcements.step.languages"),
+            hint: t("admin.announcements.step.languagesHint"),
+            valid: true,
+            content: (
+              <div className="flex flex-col gap-4">
+                {(["fi", "sv"] as const).map((language) => (
+                  <fieldset key={language} className="flex flex-col gap-2">
+                    <legend className="text-sm font-semibold">
+                      {t(`admin.announcements.language.${language}` as MessageKey)}
+                    </legend>
+                    <WizardField
+                      label={t("admin.announcements.title")}
+                      value={form[language].title}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          [language]: { ...form[language], title: event.target.value },
+                        })
+                      }
+                      maxLength={120}
+                    />
+                    <label className="flex flex-col gap-1.5 text-sm font-medium">
+                      {t("admin.announcements.body")}
+                      <textarea
+                        value={form[language].body}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            [language]: { ...form[language], body: event.target.value },
+                          })
+                        }
+                        maxLength={600}
+                        rows={2}
+                        className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      />
+                    </label>
+                  </fieldset>
+                ))}
+              </div>
+            ),
+          },
+          {
+            title: t("admin.announcements.step.when"),
+            hint: t("admin.announcements.step.whenHint"),
+            valid: form.when === "now" || (form.publishAt !== "" && Date.parse(form.publishAt) > 0),
+            content: (
+              <>
+                <WizardChoices
+                  name="announcement-when"
+                  value={form.when}
+                  onChange={(when) => setForm({ ...form, when })}
+                  options={[
+                    {
+                      value: "now",
+                      label: t("admin.announcements.when.now"),
+                      note: t("admin.announcements.when.now.note"),
+                    },
+                    {
+                      value: "later",
+                      label: t("admin.announcements.when.later"),
+                      note: t("admin.announcements.when.later.note"),
+                    },
+                  ]}
+                />
+                {form.when === "later" ? (
+                  <label className="flex flex-col gap-1.5 text-sm font-medium">
+                    {t("admin.announcements.when.at")}
+                    <input
+                      type="datetime-local"
+                      value={form.publishAt}
+                      onChange={(event) => setForm({ ...form, publishAt: event.target.value })}
+                      className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal"
+                    />
+                  </label>
+                ) : null}
+              </>
+            ),
+          },
+          {
             title: t("wizard.review"),
             hint: t("wizard.reviewHint"),
             valid: true,
@@ -185,7 +296,7 @@ export function Announcements(): React.JSX.Element {
             onChange={setData}
             onEdit={() => {
               setEditingId(item.id);
-              setForm({ title: item.title, body: item.body, severity: item.severity });
+              setForm({ ...EMPTY, title: item.title, body: item.body, severity: item.severity });
               setOpen(true);
             }}
           />

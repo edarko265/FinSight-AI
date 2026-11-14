@@ -18,7 +18,7 @@ processed today; these are the controls a real deployment would build on.
 | Purpose limitation            | Data is used only to show and explain the customer's own finances                                                                                                            |
 | Data minimisation             | The AI model receives the question and totals. Never the transaction list, customer ID, account number, age or postal code. Admin statistics hold counts, not people or text |
 | Accuracy                      | Every figure is calculated from the source transactions, links to the transactions behind it, and the model's wording is checked against it                                  |
-| Storage limitation            | Sessions end after 8 hours; conversations are not stored; what the customer saves lives until they delete it                                                                 |
+| Storage limitation            | Sessions end after 8 hours; the conversation is kept for the customer only, sealed, capped and clearable; what the customer saves lives until they delete it                 |
 | Integrity and confidentiality | Field-level encryption with per-customer keys, blind-index lookup, TLS, hashed session tokens (see [security.md](security.md))                                               |
 | Accountability                | Consent is versioned and timestamped for acceptance and withdrawal; staff actions are written to an audit log                                                                |
 
@@ -109,6 +109,29 @@ Customers with a mortgage application in the dataset can see their own history a
 outcome; nobody else can. The guide's general figures are medians and counts over all 200
 applications. The app explains outcomes and never produces a score, a prediction or a
 decision about lending.
+
+## The saved conversation
+
+The customer's conversation with the coach is kept so they can pick up where they left off.
+It is sealed with their own key, capped at 60 messages, exported with their data, and
+cleared from the coach screen at any time (it goes to their recycle bin first). Staff
+cannot read it. The anonymous statistics are not built from it: they still record only
+the topic of a question, never its text. The privacy notice says so, and its version was
+raised, so every customer is asked to accept it again.
+
+## Friends
+
+A friend code maps to a customer's blind index, never to their ID. Adding someone by their
+code shows the plans that person chose to share, and nothing else. The link is one-way, the
+other person is not told, and the nickname is the adder's own label.
+
+## Two-step sign-in, payments and rewards
+
+- **Two-step sign-in** is optional. The secret is sealed with the customer's key (or, for
+  staff, inside their sealed profile).
+- **Payments are simulated**: no card is asked for and no money moves. The amount and
+  purpose are kept for totals; the receipt reference is sealed.
+- **Rewards are redeemed through a simulated bonus programme**: the code has no value.
 
 ## Sharing plans
 

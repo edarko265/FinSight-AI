@@ -9,10 +9,13 @@ import {
   rateLimit,
   recordFailure,
 } from "@/lib/security/session";
+import { passesTwoStep } from "@/lib/security/two-step";
 
 const body = z.object({
   customerId: z.string().trim().min(1).max(32),
   password: z.string().min(1).max(200),
+  /** The six-digit code, when the customer has two-step sign-in on. */
+  code: z.string().max(10).optional(),
 });
 
 export async function POST(request: Request): Promise<Response> {
@@ -36,6 +39,15 @@ export async function POST(request: Request): Promise<Response> {
   if (!passwordOk || !customerRef) {
     await recordFailure(accountKey, 15 * 60_000);
     return Response.json({ error: "invalid_credentials" }, { status: 401 });
+  }
+  // Second step, for customers who switched it on. The password was right, so saying that a
+  // code is needed reveals nothing an attacker without the password could learn.
+  if (!(await passesTwoStep(customerRef, parsed.data.code))) {
+    if (parsed.data.code) await recordFailure(accountKey, 15 * 60_000);
+    return Response.json(
+      { error: parsed.data.code ? "totp_invalid" : "totp_required" },
+      { status: 401 },
+    );
   }
   await clearFailures(accountKey);
   await createSession(customerRef);

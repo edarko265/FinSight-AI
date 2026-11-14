@@ -1,7 +1,7 @@
 import { countAnnouncementViews } from "@/lib/admin/announcements";
 import { allInsights } from "@/lib/coach/all-insights";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
-import { readState, writeState } from "@/lib/data/repository";
+import { readStates, writeState } from "@/lib/data/repository";
 
 const PREFIX = "announcement-";
 const UUID_LENGTH = 36;
@@ -11,12 +11,15 @@ export async function GET(request: Request): Promise<Response> {
   if (!ctx) return unauthorized();
   const blocked = await termsRequired(ctx);
   if (blocked) return blocked;
-  const read = new Set((await readState<string[]>(ctx.customerRef, "insights_read")) ?? []);
-  const insights = await allInsights(ctx);
+  const [states, insights] = await Promise.all([
+    readStates(ctx.customerRef, ["insights_read", "announcements_seen"]),
+    allInsights(ctx),
+  ]);
+  const read = new Set((states.get("insights_read") as string[] | undefined) ?? []);
 
   // Reach: each customer counts once per announcement. Which ones a customer has seen stays in
   // their own sealed state; the announcement only gets a number.
-  const seen = new Set((await readState<string[]>(ctx.customerRef, "announcements_seen")) ?? []);
+  const seen = new Set((states.get("announcements_seen") as string[] | undefined) ?? []);
   const fresh = insights
     .filter((insight) => insight.id.startsWith(PREFIX))
     .map((insight) => insight.id.slice(PREFIX.length, PREFIX.length + UUID_LENGTH))

@@ -8,6 +8,7 @@ import { ConsentSheet } from "@/components/chat/ConsentSheet";
 import { EvidenceSheet } from "@/components/evidence/EvidenceSheet";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { MicIcon, PhoneIcon, SendIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/Spinner";
 import { useVoice } from "@/components/voice/useVoice";
@@ -24,6 +25,8 @@ export interface ChatPanelProps {
   placeholder?: string;
   /** A question to ask as soon as the panel opens (used by insights). */
   initialQuestion?: string;
+  /** Keep this conversation between visits. Off for one-off sheets such as the new-widget one. */
+  remember?: boolean;
   /** Begin by listening for a spoken question, or by starting a voice call. */
   start?: "listen" | "call";
   /**
@@ -61,6 +64,7 @@ export function ChatPanel({
   placeholder,
   initialQuestion,
   start,
+  remember = true,
   request,
   cardAction,
   onStatus,
@@ -68,11 +72,13 @@ export function ChatPanel({
 }: ChatPanelProps): React.JSX.Element {
   const { t, locale, voiceReplies } = usePreferences();
   const { me, refresh } = useOverview();
+  const toast = useToast();
   const [declined, setDeclined] = useState(false);
   const [calling, setCalling] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const voice = useVoice(locale);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [restored, setRestored] = useState(!remember);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [evidence, setEvidence] = useState<EvidenceRef | null>(null);
@@ -80,6 +86,18 @@ export function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const asked = useRef(false);
+  useEffect(() => {
+    if (!remember) return;
+    let cancelled = false;
+    api<{ messages: ChatMessage[] }>("/api/chat/history").then((data) => {
+      if (!cancelled) setMessages((current) => current.length ? current : data.messages);
+    }).catch(() => undefined).finally(() => { if (!cancelled) setRestored(true); });
+    return () => { cancelled = true; };
+  }, [remember]);
+  async function clearConversation(): Promise<void> {
+    try { await api("/api/chat/history", { method: "DELETE" }); setMessages([]); toast.notify("toast.movedToBin"); }
+    catch { toast.fail(); }
+  }
 
   useEffect(() => {
     // Only follow the conversation; an empty chat stays at the top so the greeting is visible.
@@ -137,7 +155,7 @@ export function ChatPanel({
     try {
       const reply = await api<AssistantMessage>("/api/chat", {
         method: "POST",
-        json: { message: question, locale, history },
+        json: { message: question, locale, history, remember },
       });
       setMessages((current) => [...current, reply]);
       if (voiceReplies && me?.voiceEnabled) void voice.speak(reply.id, reply.text);
@@ -152,11 +170,11 @@ export function ChatPanel({
   }
 
   useEffect(() => {
-    if (!initialQuestion || asked.current) return;
+    if (!initialQuestion || asked.current || !restored) return;
     asked.current = true;
     void send(initialQuestion);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ask once when the panel opens
-  }, [initialQuestion]);
+  }, [initialQuestion, restored]);
 
   // Once it is known what this customer may use, honour a shortcut from the dashboard, once.
   const started = useRef(false);
@@ -322,6 +340,18 @@ export function ChatPanel({
               </li>
             ),
           )}
+
+          {remember && messages.length > 0 && !pending ? (
+            <li className="self-center">
+              <button
+                type="button"
+                onClick={() => void clearConversation()}
+                className="rounded-full px-3 py-1 text-xs font-medium text-muted underline-offset-2 hover:underline"
+              >
+                {t("chat.clear")}
+              </button>
+            </li>
+          ) : null}
 
           {followUps.length > 0 ? (
             <li>

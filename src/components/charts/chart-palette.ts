@@ -5,6 +5,7 @@ export const CHART_COLORS: readonly string[] = [
   "var(--chart-3)",
   "var(--chart-4)",
   "var(--chart-5)",
+  "var(--chart-6)",
 ];
 
 /** The one item that matters: the largest row, or the latest month. */
@@ -22,8 +23,8 @@ export function chartColor(index: number): string {
 
 /** Text colour that stays readable on top of a series colour, in light and dark. */
 export function chartInk(index: number): string {
-  // The fifth series colour is a light green in both themes, so it always takes dark text.
-  return index % CHART_COLORS.length === 4 ? "#04291a" : "var(--chart-ink)";
+  // The fifth series colour is dark in the light theme and light in the dark one, so it has its own.
+  return index % CHART_COLORS.length === 4 ? "var(--chart-ink-5)" : "var(--chart-ink)";
 }
 
 /**

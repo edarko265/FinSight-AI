@@ -20,7 +20,8 @@ interface SharedPlan {
   copies: number;
 }
 
-type Result = { plans: SharedPlan[] };
+type Reports = Record<string, Record<string, number>>;
+type Result = { plans: SharedPlan[]; reports: Reports };
 
 /**
  * Plans customers have shared. Staff see exactly what other customers can
@@ -83,7 +84,7 @@ export function SharedPlans(): React.JSX.Element {
         ) : null}
         <ul className="flex flex-col gap-2">
           {all.map((plan) => (
-            <PlanRow key={plan.code} plan={plan} onChange={(next) => setData({ plans: next })} />
+            <PlanRow key={plan.code} plan={plan} onChange={(next) => setData({ plans: next, reports: data?.reports ?? {} })} />
           ))}
         </ul>
         <p className="text-xs text-muted">{t("admin.plans.note")}</p>

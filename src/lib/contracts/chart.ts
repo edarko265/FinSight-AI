@@ -67,8 +67,8 @@ export interface WidgetQuery {
   chart?: ChartStyle;
 }
 
-/** How much room a widget takes: one column, or the full width of the grid. */
-export const WIDGET_SIZES = ["small", "wide"] as const;
+/** How much room a widget takes: one column, two, or the full width of the grid. */
+export const WIDGET_SIZES = ["small", "medium", "wide"] as const;
 export type WidgetSize = (typeof WIDGET_SIZES)[number];
 
 /**

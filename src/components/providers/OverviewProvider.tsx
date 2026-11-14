@@ -9,7 +9,7 @@ import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Logo } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
-import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
+import { api, load, SIGNED_OUT_EVENT } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
 import { translate } from "@/lib/i18n/translate";
 
@@ -69,12 +69,19 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   const [meRetried, setMeRetried] = useState(false);
   const [tick, setTick] = useState(0);
 
-  const ready = me?.termsAccepted === true;
+  // Asked for alongside the account state, not after it: if the terms are still to be
+  // accepted the server refuses and nothing is shown, and it is asked again once they are.
+  const accepted = me?.termsAccepted;
+  const ready = accepted === true;
 
   useEffect(() => {
-    if (!ready) return;
+    if (accepted === false) return;
     let cancelled = false;
-    api<Overview>(`/api/overview?locale=${locale}`)
+    // The dashboard is the landing screen: start its data now so it is there when it draws.
+    if (window.location.pathname === "/dashboard") {
+      void load(`/api/dashboard?locale=${locale}`).catch(() => undefined);
+    }
+    load<Overview>(`/api/overview?locale=${locale}`)
       .then((data) => {
         if (cancelled) return;
         setOverview(data);
@@ -87,11 +94,11 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     return () => {
       cancelled = true;
     };
-  }, [locale, tick, ready]);
+  }, [locale, tick, accepted]);
 
   useEffect(() => {
     let cancelled = false;
-    api<Me>("/api/me")
+    load<Me>("/api/me")
       .then((data) => {
         if (cancelled) return;
         setMe(data);

@@ -1,0 +1,4 @@
+name: FinSight-AI
+# A third-party audio helper, served as it was published (see public/voice/README.md).
+paths-ignore:
+  - public/voice/libsamplerate.worklet.js

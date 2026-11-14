@@ -6,6 +6,7 @@ import { readState, writeState } from "@/lib/data/repository";
 import { getDb } from "@/lib/db/client";
 import { getEnv } from "@/lib/env";
 import { decryptField } from "@/lib/security/crypto";
+import { mayNotify, readPrefs } from "@/lib/push/prefs";
 import { customerKey } from "@/lib/security/keys";
 
 /**
@@ -104,6 +105,8 @@ export async function pushToEveryone(payload: PushPayload): Promise<number> {
     } catch {
       continue;
     }
+    // Respect what this customer chose: announcements off, or quiet hours right now.
+    if (!mayNotify(await readPrefs(row.customer_ref), "announcement", new Date())) continue;
     const alive: PushSubscription[] = [];
     for (const subscription of subscriptions) {
       if (await send(subscription, payload)) alive.push(subscription);

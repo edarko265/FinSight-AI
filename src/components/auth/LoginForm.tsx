@@ -13,6 +13,7 @@ import { Suggestions, Wizard, WizardField } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
 import { DEMO_PERSONAS } from "@/lib/demo/personas";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 const NAVIGATION_TIMEOUT_MS = 10_000;
 
@@ -23,9 +24,11 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
   const [open, setOpen] = useState(false);
   const [customerId, setCustomerId] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<"login.error" | "login.tooMany" | "login.unavailable" | null>(
-    null,
-  );
+  // Asked for only when this customer has two-step sign-in on.
+  const [needsCode, setNeedsCode] = useState(false);
+  const [reason, setReason] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<MessageKey | null>(null);
 
   const [navigating, setNavigating] = useState(false);
   // The error shows inside the wizard, so no toast.
@@ -41,7 +44,13 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
       const status = isApiError(result.error) ? result.error.status : 0;
       // A server fault is not the user's mistake: say so instead of blaming the password.
       setError(
-        status === 429 ? "login.tooMany" : status === 401 ? "login.error" : "login.unavailable",
+        reason === "totp_invalid"
+          ? "twoStep.wrongCode"
+          : status === 429
+            ? "login.tooMany"
+            : status === 401
+              ? "login.error"
+              : "login.unavailable",
       );
       return false;
     }
@@ -145,6 +154,27 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
               </>
             ),
           },
+          ...(needsCode
+            ? [
+                {
+                  title: t("twoStep.code"),
+                  hint: t("twoStep.loginHint"),
+                  valid: /^\d{6}$/.test(code.replace(/\s/g, "")),
+                  content: (
+                    <WizardField
+                      label={t("twoStep.code")}
+                      value={code}
+                      onChange={(event) => setCode(event.target.value)}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      maxLength={7}
+                      autoFocus
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </main>

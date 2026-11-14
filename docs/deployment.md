@@ -20,6 +20,9 @@ flowchart LR
 1. Create the project: region **AWS Europe Central 1 (Frankfurt)**, **Postgres database on**,
    every other service off (object storage, functions, AI gateway, realtime, auth are not used).
 2. Copy the **pooled** connection string and append `?sslmode=verify-full` if it is not there.
+   The app's functions are pinned to Vercel's Frankfurt region (`"regions": ["fra1"]` in
+   `vercel.json`) so they sit next to this database. If you move the database, move that too:
+   a function on another continent adds about a tenth of a second to every query.
 3. Load the data from your machine, once:
 
    ```bash
@@ -79,6 +82,15 @@ pnpm data:mortgage --source data/raw
 
 It seals each applicant's own history with their key and stores anonymous figures for the
 guide. Safe to run again.
+
+## Tests
+
+```bash
+pnpm test   # unit and integration, in-memory database
+pnpm e2e    # browser tests and accessibility audit, throw-away database, made-up customers
+```
+
+Neither needs a secret, the bank's data or a network.
 
 ## After a schema change
 

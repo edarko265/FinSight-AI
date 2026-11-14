@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ActionWidgetBody } from "@/components/dashboard/ActionWidgets";
 import { AddWidgetWizard } from "@/components/dashboard/AddWidgetWizard";
@@ -13,11 +13,13 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { FocusedRegion } from "@/components/dashboard/FocusedRegion";
 import { useDashboardSave } from "@/components/dashboard/useDashboardSave";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
+import { EntryWizard, type EntryDraft } from "@/components/entries/EntryWizard";
+import { MORE } from "@/components/layout/BottomNav";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { CountUp } from "@/components/ui/CountUp";
-import { PlusIcon } from "@/components/ui/icons";
+import { PlayIcon, PlusIcon } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api-client";
@@ -25,6 +27,9 @@ import {
   CUSTOM_PERIOD,
   VIEW_PERIODS,
   type DashboardView as SavedView,
+  type DashboardPayload,
+  type DashboardState,
+  type DashboardWidget,
   type SavedWidget,
   type ViewPeriod,
   type WidgetQuery,
@@ -45,6 +50,35 @@ function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+/**
+ * The dashboard as it will look once a change is saved, worked out from what is
+ * already on screen: order, size, minimised state and chart type. Anything that
+ * needs a new calculation (another view, another period, a new widget) waits
+ * for the server.
+ */
+function applyLocally(before: DashboardPayload, next: DashboardState): DashboardPayload {
+  const was = before.views.find((view) => view.id === before.activeId);
+  const now = next.views.find((view) => view.id === next.activeId);
+  if (!was || !now || was.id !== now.id || was.period !== now.period) return before;
+  const drawn = new Map(before.cards.map((card) => [card.id, card]));
+  const cards: DashboardWidget[] = [];
+  for (const widget of now.widgets) {
+    const card = drawn.get(widget.id);
+    if (!card) continue;
+    const style = widget.query.chart;
+    cards.push({
+      ...card,
+      size: widget.size ?? "small",
+      collapsed: widget.collapsed ?? false,
+      card:
+        card.card && style && card.card.chart.kind !== style
+          ? { ...card.card, chart: { kind: style, points: card.card.chart.points } }
+          : card.card,
+    });
+  }
+  return { ...next, cards };
+}
+
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
@@ -55,9 +89,13 @@ export function DashboardView(): React.JSX.Element {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const [affordOpen, setAffordOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
+  const [entryDraft, setEntryDraft] = useState<EntryDraft | null>(null);
+  // Counts recorded income and expenses, so the charts and the banner are fetched again.
+  const [recorded, setRecorded] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +107,7 @@ export function DashboardView(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [locale, recorded]);
 
   const active = dashboard?.views.find((view) => view.id === dashboard.activeId);
   const customMatch = active ? CUSTOM_PERIOD.exec(active.period) : null;
@@ -216,7 +254,7 @@ export function DashboardView(): React.JSX.Element {
             className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-accent"
             aria-hidden="true"
           >
-            ▶
+            <PlayIcon className="size-4" />
           </span>
           {t("story.cta")}
         </span>
@@ -224,6 +262,24 @@ export function DashboardView(): React.JSX.Element {
           →
         </span>
       </Link>
+
+      <nav aria-label={t("dashboard.more")}>
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {MORE.map(({ href, label }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="flex h-full items-center justify-between gap-2 rounded-2xl border border-border bg-surface px-3 py-2.5 text-sm font-medium"
+              >
+                <span className="min-w-0 truncate">{t(label)}</span>
+                <span className="text-accent" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">{t("dashboard.title")}</h1>
@@ -355,12 +411,14 @@ export function DashboardView(): React.JSX.Element {
               widget={widget}
               first={index === 0}
               last={index === all.length - 1}
-              dragging={dragId !== null && dragId !== widget.id}
+              over={overId === widget.id}
+              dragged={dragId === widget.id}
               onDragStart={setDragId}
-              onDragEnd={() => setDragId(null)}
-              onDropOn={(targetId) => {
-                if (dragId) reorder(dragId, targetId);
+              onDragOver={setOverId}
+              onDrop={() => {
+                if (dragId && overId) reorder(dragId, overId);
                 setDragId(null);
+                setOverId(null);
               }}
               onMove={(id, by) => {
                 const neighbour = all[index + by];
@@ -390,6 +448,11 @@ export function DashboardView(): React.JSX.Element {
         </div>
       )}
 
+      <EntryWizard
+        draft={entryDraft}
+        onClose={() => setEntryDraft(null)}
+        onSaved={() => setRecorded((value) => value + 1)}
+      />
       <AffordWizard open={affordOpen} onClose={() => setAffordOpen(false)} />
       {overview ? (
         <PeriodWizard

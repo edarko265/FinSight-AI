@@ -23,7 +23,8 @@
   --chart-2: #006e87;
   --chart-3: #885600;
   --chart-4: #757575;
-  --chart-5: #91fa9b;
+  --chart-5: #6a4c9c;
+  --chart-6: #b3365e;
   --chart-ink: #ffffff;
   --chart-bar-muted: #b7d9c4;
   --chart-rest: #4da07a;
@@ -48,7 +49,9 @@
     --chart-3: #d9a441;
     --chart-4: #9aa3a8;
     --chart-5: #91fa9b;
+    --chart-6: #e58aa5;
     --chart-ink: #04291a;
+    --chart-ink-5: #04291a;
     --chart-bar-muted: #2c5a43;
     --chart-rest: #348259;
   }
@@ -71,7 +74,9 @@
   --chart-3: #d9a441;
   --chart-4: #9aa3a8;
   --chart-5: #91fa9b;
+  --chart-6: #e58aa5;
   --chart-ink: #04291a;
+  --chart-ink-5: #04291a;
   --chart-bar-muted: #2c5a43;
   --chart-rest: #348259;
 }
@@ -111,6 +116,25 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/*
+ * The signed-in app fills the visible part of the screen exactly. The size and
+ * offset come from AppFrame, which reads them from the browser; until it has
+ * run, the dynamic viewport height is the closest CSS can get.
+ */
+html.fs-app,
+html.fs-app body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.fs-app-frame {
+  position: fixed;
+  top: var(--app-top, 0px);
+  left: 0;
+  width: 100%;
+  height: var(--app-height, 100dvh);
 }
 
 /* ---- Motion. Everything here is decoration: with reduced motion it is switched off below. ---- */

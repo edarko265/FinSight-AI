@@ -58,12 +58,26 @@ All notable changes to this project are documented here. The format follows
 - **Subscriptions.** Payments that repeat monthly at one merchant, with the yearly cost.
 - **Mortgage guide.** The application process taught from the dataset, and the customer's
   own application where one exists. No prediction of outcomes.
+- **Working shown.** Every answer can show the steps that produced it.
+- **Saved conversation.** Kept between visits, sealed, clearable.
+- **Limits and plan following.** Monthly limits per kind of spending; follow a plan and be
+  told when the month drifts from it.
+- **Friends and reports.** Add a friend by code and see the plans they share; report a
+  shared plan to staff.
+- **Notification preferences** per kind, and quiet hours.
+- **Two-step sign-in** with authenticator codes, for customers and staff.
+- **Provider interfaces** for payment, the bonus programme and other banks' accounts, each
+  with a clearly labelled simulated implementation.
+- **Admin.** Period selector, scheduled and translated announcements, staff change their
+  own password, adviser replies carry a name, reports on shared plans.
+- **Widgets** drag by touch and come in three widths; goals show a progress curve.
+- **Browser tests** with an automated accessibility audit, run in CI.
 - **Charts and widgets.** Fifteen chart types any widget can switch between, by selector
   or by asking; a step-by-step add-widget form with a chart gallery and live preview;
   widgets can be dragged, moved, made wide or small, minimised and removed; shortcut and
   live widgets for asking by voice, calling the coach, checking a purchase, goals and
   insights.
-- **Demo video.** A 55-second narrated product film made with HyperFrames, voiced with ElevenLabs; source in `video/`.
+- **Demo video.** An 83-second narrated product film, with music, made with HyperFrames, voiced with ElevenLabs; source in `video/`.
 - **Documentation.** `docs/how-it-works.md`: the logic step by step with flowcharts, and
   how the statistical data is used.
 - **Privacy.** Terms of use and privacy notice accepted at first sign-in; optional AI
@@ -77,7 +91,38 @@ All notable changes to this project are documented here. The format follows
 - **Project.** CI (validation, branch policy, CodeQL, dependency review), Dependabot,
   templates, MIT licence, documentation.
 
+- **Income and expenses you record.** Add income and Add expense on the balance card and
+  on a new My entries screen: a four-step form with suggestions, edit, recycle bin and
+  restore. An entry counts in the balance, the baskets, the monthly limits and the plan at
+  once, and saving one says straight away if it took a limit or the plan off course.
+  Stored sealed with the customer's key. English, Finnish and Swedish.
+
+### Changed
+
+- **Speed.** The server functions now run in Frankfurt, next to the database (they had been
+  running in the United States, so every query crossed the Atlantic). Each request reads the
+  customer's state in one query instead of six, and independent reads run side by side.
+- **Loading.** The app asks for the account, the summary and the dashboard at the same time
+  rather than one after another, shows a screen it has shown before at once while it
+  refreshes, and applies dashboard changes (chart type, size, order, minimise, remove)
+  immediately instead of waiting for the save.
+- **Charts.** Six series colours instead of five, so a sixth category no longer repeats the
+  first; the light theme's fifth colour is now readable on white; the bar chart highlights
+  the largest row; menus, scroll bars and date pickers follow the chosen theme.
+- **Node.** The engine is pinned to 24.x, which clears the Vercel build warning.
+
+- The play button for "My month in 30 seconds" is a drawn icon, not a text character, so
+  it looks the same on every device.
+
 ### Fixed
+
+- **Voice call on iPhone.** Safari needs an audio helper the voice library fetched from a
+  public CDN, which the content security policy refused, so calls failed there and nowhere
+  else. The helper is now served from the app itself (`public/voice/`).
+- **Phone layout.** The app frame follows the visible part of the screen, so the header is no
+  longer pushed under the top edge with a gap under the bottom bar after the keyboard, a
+  rotation or a home-screen launch. The header logo has an outline so it no longer blends
+  into the header.
 
 - Safe-to-spend returned no usable estimate when the model called it with empty optional
   inputs.
@@ -86,5 +131,9 @@ All notable changes to this project are documented here. The format follows
 - The model could save a goal in answer to a purchase question.
 
 ### Security
+
+- **Benchmark download.** The script that fetches Statistics Finland's figures now writes only
+  numbers it has range-checked, under names and labels fixed in the script, so nothing the
+  service sends can reach the saved file as text.
 
 - `minimatch` overridden to a patched version.

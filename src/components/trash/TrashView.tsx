@@ -15,7 +15,17 @@ import { InfoTip } from "@/components/ui/InfoTip";
 
 interface TrashEntry {
   id: string;
-  kind: "goal" | "plan" | "account" | "setaside" | "view" | "widget";
+  kind:
+    | "goal"
+    | "plan"
+    | "account"
+    | "setaside"
+    | "budget"
+    | "entry"
+    | "chat"
+    | "friend"
+    | "view"
+    | "widget";
   label: string;
   deletedAt: string;
 }
@@ -68,6 +78,16 @@ export function TrashView(): React.JSX.Element {
   const label = (item: TrashEntry): string => {
     const key = item.kind === "view" ? `views.preset.${item.label}` : `admin.topic.${item.label}`;
     if (item.kind === "setaside") return formatMoney(Number(item.label), locale);
+    if (item.kind === "budget") {
+      return hasMessage(`cat.${item.label}`) ? t(`cat.${item.label}` as MessageKey) : item.label;
+    }
+    if (item.kind === "entry") {
+      // Stored as "kind|cents|category", so it reads in the language in use now.
+      const [kind = "", cents = "0", category = ""] = item.label.split("|");
+      const name = kind === "income" ? `entries.source.${category}` : `cat.${category}`;
+      return `${hasMessage(name) ? t(name) : category} · ${formatMoney(Number(cents), locale)}`;
+    }
+    if (item.kind === "chat") return t("trash.chat", { count: Number(item.label) });
     return item.kind === "view" || item.kind === "widget"
       ? hasMessage(key)
         ? t(key)

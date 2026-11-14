@@ -47,13 +47,13 @@ terms change, the sheet appears again.
 
 Every widget has the same controls in its title bar:
 
-| Control                  | What it does                                                                                       |
-| ------------------------ | -------------------------------------------------------------------------------------------------- |
-| **Drag** (grip)          | On a tablet or desktop, drag a widget onto another to move it there                                |
-| **Move earlier / later** | The same with arrows, on a phone or from the keyboard                                              |
-| **Make wide / small**    | Wide takes the full width; small takes one column. Small shortcuts sit two side by side on a phone |
-| **Minimise**             | Folds the widget to its title bar; the plus opens it again                                         |
-| **Remove** (×)           | Moves it to the recycle bin, from where it can be restored                                         |
+| Control                  | What it does                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Drag** (grip)          | Drag a widget onto another to move it there, with a mouse or a finger; the page scrolls as you near its edge                 |
+| **Move earlier / later** | The same with arrows, on a phone or from the keyboard                                                                        |
+| **Change size**          | Small, medium or wide: by the button, or by pulling the widget's right edge. Small shortcuts sit two side by side on a phone |
+| **Minimise**             | Folds the widget to its title bar; the plus opens it again                                                                   |
+| **Remove** (×)           | Moves it to the recycle bin, from where it can be restored                                                                   |
 
 The order, size and minimised state are saved with the view.
 
@@ -97,6 +97,8 @@ Ask in your own words, by typing, by holding the microphone, or in a voice call.
 ### With every answer
 
 - **A chart** and the values behind it.
+- **How this was worked out** — the steps the calculation took, in order, with the same
+  figures as the answer.
 - **See transactions** — the actual transactions the figure was calculated from.
 - **A short lesson**, for example what an irregular essential cost is.
 - **Add to dashboard** — pins the chart to the view you have open.
@@ -108,6 +110,9 @@ Ask in your own words, by typing, by holding the microphone, or in a voice call.
 
 Suggested questions sit in a tidy grid under the conversation, so there is nothing to
 scroll sideways.
+
+The conversation is kept between visits, so the coach opens where you left off. **Clear
+this conversation** sends it to the recycle bin.
 
 ### Voice
 
@@ -123,7 +128,8 @@ Voice needs the AI choice to be on, because speech is processed by a speech prov
 
 From the coach, **Talk to a person** opens a four-step request: what you need help with
 (everyday finances or investment advice), when to be called, a note for the adviser, and a
-summary with the price. The first conversation is free. The adviser then replies in the same
+summary with the price. The first conversation is free; later ones have a fee, paid on a
+final step. **Payment is simulated: no card is asked for and no money is taken.** The adviser then replies in the same
 place, and the conversation continues there.
 
 ## 5. Goals and rewards
@@ -157,6 +163,16 @@ add up to 100.
 | **Add a friend's plan**                       | Enter the code, or open the link. You see their percentages worked out on **your** income before adding it            |
 | **Plans others have shared**                  | Listed plans, most copied first                                                                                       |
 | **Edit / Stop sharing / Move to recycle bin** | On each plan                                                                                                          |
+
+More on the Plans page:
+
+- **Follow this plan.** One plan can be followed; the app then says when a slice of your
+  month has drifted five points or more from it.
+- **Monthly limits.** Set a limit for a kind of spending. Nothing is blocked: a bar shows
+  how the month is going and you are told at 80 % and when it is passed.
+- **Friends.** Give your friend code to someone, or add theirs. You then see the plans
+  they have chosen to share, as percentages. They are not told you added them.
+- **Report.** Any shared plan can be reported to staff, anonymously.
 
 **What others can see:** the plan's name and the percentages. Goal names are shown as #1,
 #2 unless you choose to show them. **Never:** your income, any amount, your balance, your
@@ -208,6 +224,18 @@ them together.
 | **Count in calculations**      | A switch per account. Savings start switched off, so they are shown but not counted as spendable           |
 | **Edit / Move to recycle bin** | Rename; unlinking removes its figures at once and can be undone from the bin                               |
 
+### Income and expenses you record
+
+**Add income** and **Add expense** on the balance card, or **My entries** in the menu. For
+money the account history does not show yet, such as cash.
+
+| Part                           | What it does                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Four steps**                 | Amount, what it was for (or where it came from), the day and an optional note, then a check that shows the balance afterwards                          |
+| **Counts everywhere**          | The entry becomes a transaction on the customer's own account: balance, safe to spend, the three baskets, charts, monthly limits and the plan all move |
+| **Says what it tipped over**   | If the entry takes a monthly limit to nearly or fully used, or moves the month away from the plan being followed, that is shown as soon as it is saved |
+| **Edit / Move to recycle bin** | Every entry can be changed, removed, restored or deleted for good. In the transactions behind an answer it is marked _recorded by you_                 |
+
 ## 9. My corrections
 
 Settings → **My corrections**, or **Change basket** on any transaction behind an answer.
@@ -234,20 +262,24 @@ It explains. It never predicts or decides whether anyone would get a loan.
 
 ## 11. Settings
 
-| Setting           | Options                                                                         |
-| ----------------- | ------------------------------------------------------------------------------- |
-| **Language**      | A selector: English, Suomi, Svenska                                             |
-| **Notifications** | Device notifications and the app-icon badge, on or off                          |
-| **Theme**         | System, Light, Dark                                                             |
-| **Text size**     | Small, Medium, Large, Extra large                                               |
-| **Voice replies** | Read answers aloud automatically                                                |
-| **AI coach**      | On or off. Off withdraws consent: nothing more goes to an AI service            |
-| **Your data**     | Privacy notice, terms of use, recycle bin, download my data, delete my app data |
-| **Account**       | Sign out                                                                        |
+| Setting                     | Options                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------- |
+| **Language**                | A selector: English, Suomi, Svenska                                                         |
+| **Notifications**           | Device notifications and the app-icon badge, on or off                                      |
+| **What to notify me about** | A switch per kind: shortfall, habits, bills, goals, plan, limits, tips, announcements       |
+| **Quiet hours**             | No notifications between two hours you choose; they wait in the app                         |
+| **Two-step sign-in**        | A six-digit code from an authenticator app after the password. Set up by scanning a QR code |
+| **Theme**                   | System, Light, Dark                                                                         |
+| **Text size**               | Small, Medium, Large, Extra large                                                           |
+| **Voice replies**           | Read answers aloud automatically                                                            |
+| **AI coach**                | On or off. Off withdraws consent: nothing more goes to an AI service                        |
+| **Your data**               | Privacy notice, terms of use, recycle bin, download my data, delete my app data             |
+| **Account**                 | Sign out                                                                                    |
 
 ## 12. Recycle bin
 
-Deleting a goal, a plan, a view, a widget, a linked account or a set-aside moves it here. Each item can be **restored** or
+Deleting a goal, a plan, a view, a widget, a linked account, a set-aside, a monthly limit,
+a recorded income or expense, a friend or a cleared conversation moves it here. Each item can be **restored** or
 **deleted permanently**, and the bin can be emptied.
 
 ---
