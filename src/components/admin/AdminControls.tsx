@@ -120,7 +120,6 @@ export function AdminControls({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted">{t("admin.controls.note")}</p>
 
       <ul className="grid gap-2 md:grid-cols-2">
         {FLAGS.map((flag) => (

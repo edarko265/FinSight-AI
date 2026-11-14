@@ -599,8 +599,6 @@ export const fi: Record<MessageKey, string> = {
   "goals.edit.months": "Kuukaudet",
   "views.rename": "Nimeä uudelleen",
   "admin.announcements": "Tiedotteet asiakkaille",
-  "admin.announcements.note":
-    "Näytetään jokaiselle asiakkaalle havaintojen joukossa. Kirjoita kielellä, jota asiakkaasi lukevat.",
   "admin.announcements.title": "Otsikko",
   "admin.announcements.body": "Viesti",
   "admin.announcements.severity": "Tyyppi",
@@ -717,8 +715,6 @@ export const fi: Record<MessageKey, string> = {
   "voice.call.end": "Lopeta puhelu",
   "voice.call.failed": "Puhelua ei voitu aloittaa.",
   "admin.controls": "Hallinta",
-  "admin.controls.note":
-    "Muutokset tulevat voimaan muutamassa sekunnissa ilman käyttöönottoa. Jokainen muutos kirjataan lokiin.",
   "admin.flag.ai": "Tekoälyvalmentaja",
   "admin.flag.ai.note":
     "Pois: kaikki asiakkaat saavat perustilan, eikä mitään lähetetä tekoälypalveluun.",
@@ -761,8 +757,6 @@ export const fi: Record<MessageKey, string> = {
   "admin.aiUsage.month": "Viimeiset 30 päivää",
   "admin.aiUsage.input": "Lähetetyt tokenit",
   "admin.aiUsage.output": "Vastaanotetut tokenit",
-  "admin.aiUsage.note":
-    "Tokenit ovat se, mistä tekoälypalvelu laskuttaa. Kerro palveluntarjoajasi nykyisillä hinnoilla saadaksesi kustannuksen.",
   "admin.aiUsage.empty": "Ei vielä tallennettuja tekoälyvastauksia.",
   "admin.workload": "Neuvojien työkuorma",
   "admin.workload.open": "Avoinna",
@@ -977,16 +971,12 @@ export const fi: Record<MessageKey, string> = {
   "admin.chart.consent": "Suostumusvalinnat",
   "admin.chart.tokens": "Tokenit malleittain",
   "admin.chart.empty": "Ei vielä kaavioitavaa.",
-  "admin.overview.intro":
-    "Mihin asiakkaat käyttävät valmentajaa ja mitä se maksaa. Avaa ruutu nähdäksesi lisää ja toimiaksesi.",
   "admin.notifications.devices": "{count} asiakkaalla on ilmoitukset päällä",
   "admin.notifications.note":
     "Muistutukset lähtevät joka aamu: tavoite, johon laittaa rahaa, pian erääntyvä lasku, väärään suuntaan menevä tottumus tai mahdollinen vaje. Kukin asiakas saa yhden ilmoituksen tärkeimmästä asiasta, josta hänelle ei ole vielä kerrottu. Ilmoituksessa on vain otsikko; summat pysyvät sovelluksessa.",
   "admin.notifications.send": "Lähetä muistutukset nyt",
   "admin.notifications.sending": "Lähetetään…",
   "admin.notifications.result": "{sent} muistutusta lähetetty {customers} asiakkaalle",
-  "admin.notifications.announce":
-    "Tiedotteet lähetetään myös jokaiseen laitteeseen, kun ne julkaistaan.",
   "admin.menu": "Hallinnan osiot",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
@@ -1056,8 +1046,6 @@ export const fi: Record<MessageKey, string> = {
   "admin.role.banker": "Henkilökohtainen pankkineuvoja",
   "admin.role.banker.note":
     "Sama kuin neuvoja; asiakkaiden arjen pankkiasioita hoitavalle henkilökunnalle.",
-  "admin.team.intro":
-    "Henkilöt, jotka voivat kirjautua tänne omistajan lisäksi. Jokaisella on oma käyttäjätunnus, salasana ja rooli.",
   "admin.team.add": "Lisää tiimin jäsen",
   "admin.team.edit": "Muokkaa tiimin jäsentä",
   "admin.team.count": "Tiimin jäseniä",
@@ -1083,8 +1071,6 @@ export const fi: Record<MessageKey, string> = {
     "Kirjoita salasana nyt muistiin: se tallennetaan vain tiivisteenä eikä sitä voi näyttää uudelleen.",
   "admin.team.note":
     "Roskakoriin siirtäminen päättää käyttöoikeuden heti. Nimet ja käyttäjätunnukset tallennetaan salattuina, salasanat vain suolattuna tiivisteenä.",
-  "admin.training.intro":
-    "Kun valmentajalla ei ole vastausta, kirjoita vastaus, joka sen olisi pitänyt antaa. Sen jälkeen se antaa sinun vastauksesi sanasta sanaan kaikille kysyjille.",
   "admin.training.gaps": "Mihin valmentaja ei osannut vastata",
   "admin.training.gaps.note":
     "Teemoittain viimeisten 30 päivän ajalta. Kysymykset lajitellaan teemaan saapuessaan ja vain teema lasketaan: kenenkään kysymystä ei tallenneta.",
@@ -1113,8 +1099,6 @@ export const fi: Record<MessageKey, string> = {
   "admin.training.useExample": "Aloita esimerkistä",
   "admin.training.note":
     "Opetetut vastaukset näytetään täsmälleen kirjoitettuina ja merkitään pankin tiimiltä tuleviksi. Niitä käytetään vain, kun mikään laskelma ei sovi kysymykseen.",
-  "admin.trash.intro":
-    "Kaikki henkilökunnan poistama odottaa täällä. Palauta se tai poista pysyvästi.",
   "admin.trash.note": "Pysyvää poistoa ei voi perua.",
   "admin.trash.confirm": "Poistetaanko kaikki {count} kohdetta pysyvästi?",
   "admin.trash.kind.announcement": "Tiedote",
@@ -1282,14 +1266,10 @@ export const fi: Record<MessageKey, string> = {
   "admin.flag.sharing.note":
     "Antaa asiakkaiden jakaa suunnitelmia prosentteina ja kopioida toistensa suunnitelmia.",
   "admin.nav.plans": "Jaetut suunnitelmat",
-  "admin.plans.intro":
-    "Mitä asiakkaat ovat jakaneet keskenään: nimi ja prosentit. Ei jakajaa eikä koskaan summaa.",
   "admin.plans.shared": "Jaettuja suunnitelmia",
   "admin.plans.listed": "Julkaistu kaikille",
   "admin.plans.copies": "Kopiointikertoja",
   "admin.plans.average": "Keskimääräinen jaettu suunnitelma",
-  "admin.plans.average.note":
-    "Osuuksien keskiarvo kaikissa jaetuissa suunnitelmissa: mihin asiakkaat tähtäävät.",
   "admin.plans.top": "Kopioiduimmat",
   "admin.plans.empty": "Ei vielä jaettuja suunnitelmia.",
   "admin.plans.isListed": "julkaistu",

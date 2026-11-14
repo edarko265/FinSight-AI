@@ -63,7 +63,6 @@ export function SharedPlans(): React.JSX.Element {
                   note: `${average(key)} %`,
                 }))}
               />
-              <p className="text-xs text-muted">{t("admin.plans.average.note")}</p>
             </Panel>
             <Panel title={t("admin.plans.top")}>
               <Bars

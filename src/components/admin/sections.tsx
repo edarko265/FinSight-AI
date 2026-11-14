@@ -110,7 +110,6 @@ export function OverviewSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.overview")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.overview.intro")}</p>
       </div>
       <Panel title={t("admin.attention")}>
         {attention.length === 0 ? (
@@ -405,7 +404,6 @@ export function AiSection(): React.JSX.Element {
               </table>
             </div>
           )}
-          <p className="text-xs text-muted">{t("admin.aiUsage.note")}</p>
         </Panel>
         <Panel title={t("admin.chart.mode")}>
           <Ring unit={t("admin.questions.unit")} parts={modeParts(data, t)} />
@@ -577,7 +575,6 @@ export function NotificationsSection(): React.JSX.Element {
           <p className="text-sm">{t("admin.notifications.devices", { count: customers })}</p>
         )}
         <p className="text-sm text-muted">{t("admin.notifications.note")}</p>
-        <p className="text-sm text-muted">{t("admin.notifications.announce")}</p>
         <button
           type="button"
           aria-disabled={busy}
@@ -712,7 +709,6 @@ export function TrainingSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.training")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.training.intro")}</p>
       </div>
       <Training gaps={data.usage.unansweredThemes} />
     </>
@@ -726,7 +722,6 @@ export function TeamSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.team")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.team.intro")}</p>
       </div>
       <Team myId={data.me.id} />
     </>
@@ -740,7 +735,6 @@ export function TrashSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.trash")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.trash.intro")}</p>
       </div>
       <AdminTrash manager={isManager(data.me.role)} />
     </>
@@ -753,7 +747,6 @@ export function PlansSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.plans")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.plans.intro")}</p>
       </div>
       <SharedPlans />
     </>

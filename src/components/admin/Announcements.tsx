@@ -70,7 +70,6 @@ export function Announcements(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-muted">{t("admin.announcements.note")}</p>
 
       <button
         type="button"
