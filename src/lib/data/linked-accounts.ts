@@ -195,7 +195,8 @@ export function mergeAccounts(
   const balances = new Map<string, number>([["main", opening(main)]]);
   for (const { account, transactions } of included) balances.set(account.id, opening(transactions));
 
-  const all = [...main, ...included.flatMap(({ transactions }) => transactions)].sort(
+  const reconciled = reconcileTransfers(main, included);
+  const all = [...reconciled.main, ...reconciled.linked].sort(
     (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time) || a.row - b.row,
   );
   const transactions = all.map((tx) => {
@@ -205,6 +206,64 @@ export function mergeAccounts(
     return { ...tx, balanceCents: combined };
   });
   return { transactions, accounts };
+}
+
+const MATCH_DAYS = 3;
+const MATCH_TOLERANCE = 0.02;
+const DAY_MS = 86_400_000;
+
+/**
+ * Works out which inflows to linked accounts are the customer's own money
+ * moving, and which are income from outside.
+ *
+ * - Money into a savings account or onto a credit card is the customer's own:
+ *   a deposit or a card payment, never income.
+ * - Money into an everyday account is matched against transfers out of the
+ *   customer's other accounts: the same amount (within 2 %) within three
+ *   days is the same money, counted once. Each outflow is matched at most once.
+ * - What is left unmatched arrived from outside, and counts as income.
+ */
+export function reconcileTransfers(
+  main: readonly Transaction[],
+  included: { account: LinkedAccount; transactions: Transaction[] }[],
+): { main: Transaction[]; linked: Transaction[] } {
+  const outflows = main
+    .map((tx, index) => ({ tx, index, used: false }))
+    .filter(({ tx }) => tx.type === "salary_sweep" || tx.type === "transfer_out");
+  const internalMain = new Set<number>();
+  const linked: Transaction[] = [];
+  for (const { account, transactions } of included) {
+    for (const tx of transactions) {
+      if (tx.type !== "transfer_in") {
+        linked.push(tx);
+        continue;
+      }
+      if (account.kind !== "everyday") {
+        linked.push({ ...tx, transfer: "internal" });
+        continue;
+      }
+      const day = Date.parse(tx.date);
+      const match = outflows.find(
+        (candidate) =>
+          !candidate.used &&
+          Math.abs(Date.parse(candidate.tx.date) - day) <= MATCH_DAYS * DAY_MS &&
+          Math.abs(-candidate.tx.amountCents - tx.amountCents) <= tx.amountCents * MATCH_TOLERANCE,
+      );
+      if (match) {
+        match.used = true;
+        internalMain.add(match.index);
+        linked.push({ ...tx, transfer: "internal" });
+      } else {
+        linked.push({ ...tx, transfer: "external" });
+      }
+    }
+  }
+  return {
+    main: main.map((tx, index) =>
+      internalMain.has(index) ? { ...tx, transfer: "internal" as const } : tx,
+    ),
+    linked,
+  };
 }
 
 /** The key that identifies one transaction across accounts, for corrections and evidence. */

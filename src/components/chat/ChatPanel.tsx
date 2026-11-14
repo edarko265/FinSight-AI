@@ -8,6 +8,7 @@ import { ConsentSheet } from "@/components/chat/ConsentSheet";
 import { EvidenceSheet } from "@/components/evidence/EvidenceSheet";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
 import { MicIcon, PhoneIcon, SendIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
 import { useVoice } from "@/components/voice/useVoice";
 import { VoiceCall } from "@/components/voice/VoiceCall";
@@ -22,6 +23,8 @@ interface ChatPanelProps {
   placeholder?: string;
   /** A question to ask as soon as the panel opens (used by insights). */
   initialQuestion?: string;
+  /** Keep this conversation between visits. Off for one-off sheets such as the new-widget one. */
+  remember?: boolean;
   /** Begin by listening for a spoken question, or by starting a voice call. */
   start?: "listen" | "call";
   /** Rendered under each chart the assistant returns, e.g. an "Add to dashboard" button. */
@@ -50,10 +53,12 @@ export function ChatPanel({
   placeholder,
   initialQuestion,
   start,
+  remember = true,
   cardAction,
 }: ChatPanelProps): React.JSX.Element {
   const { t, locale, voiceReplies } = usePreferences();
   const { me, refresh } = useOverview();
+  const toast = useToast();
   const [declined, setDeclined] = useState(false);
   const [calling, setCalling] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -70,6 +75,34 @@ export function ChatPanel({
     if (messages.length > 0 || pending) endRef.current?.scrollIntoView({ block: "end" });
   }, [messages, pending]);
 
+  // The saved conversation is loaded first; a question passed in is asked after it.
+  const [restored, setRestored] = useState(!remember);
+  useEffect(() => {
+    if (!remember) return;
+    let cancelled = false;
+    api<{ messages: ChatMessage[] }>("/api/chat/history")
+      .then((data) => {
+        if (!cancelled) setMessages((current) => (current.length > 0 ? current : data.messages));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setRestored(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [remember]);
+
+  async function clearConversation(): Promise<void> {
+    try {
+      await api("/api/chat/history", { method: "DELETE" });
+      setMessages([]);
+      toast.notify("toast.movedToBin");
+    } catch {
+      toast.fail();
+    }
+  }
+
   async function send(text: string): Promise<void> {
     const question = text.trim();
     if (!question || pending) return;
@@ -85,7 +118,7 @@ export function ChatPanel({
     try {
       const reply = await api<AssistantMessage>("/api/chat", {
         method: "POST",
-        json: { message: question, locale, history },
+        json: { message: question, locale, history, remember },
       });
       setMessages((current) => [...current, reply]);
       if (voiceReplies && me?.voiceEnabled) void voice.speak(reply.id, reply.text);
@@ -100,11 +133,11 @@ export function ChatPanel({
   }
 
   useEffect(() => {
-    if (!initialQuestion || asked.current) return;
+    if (!initialQuestion || asked.current || !restored) return;
     asked.current = true;
     void send(initialQuestion);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ask once when the panel opens
-  }, [initialQuestion]);
+  }, [initialQuestion, restored]);
 
   // Once it is known what this customer may use, honour a shortcut from the dashboard, once.
   const started = useRef(false);
@@ -181,6 +214,18 @@ export function ChatPanel({
               <li key={message.id} className="flex w-full flex-col gap-2 self-start fs-rise">
                 <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm shadow-sm">
                   <p>{message.text}</p>
+                  {message.steps && message.steps.length > 0 ? (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs font-semibold text-accent">
+                        {t("chat.howWorkedOut")}
+                      </summary>
+                      <ol className="mt-2 flex list-decimal flex-col gap-1 pl-5 text-xs text-muted">
+                        {message.steps.map((step) => (
+                          <li key={step}>{step}</li>
+                        ))}
+                      </ol>
+                    </details>
+                  ) : null}
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                     {message.mode ? (
                       <span>
@@ -251,6 +296,18 @@ export function ChatPanel({
               </li>
             ),
           )}
+
+          {remember && messages.length > 0 && !pending ? (
+            <li className="self-center">
+              <button
+                type="button"
+                onClick={() => void clearConversation()}
+                className="rounded-full px-3 py-1 text-xs font-medium text-muted underline-offset-2 hover:underline"
+              >
+                {t("chat.clear")}
+              </button>
+            </li>
+          ) : null}
 
           {followUps.length > 0 ? (
             <li>

@@ -28,6 +28,8 @@ export type AssistantMessage = {
   /** A short teaching note that goes with the answer. */
   lesson?: string;
   followUps?: string[];
+  /** How the figures were worked out, step by step. */
+  steps?: string[];
   /** Who wrote the text: a language model, the built-in templates, or the bank's staff. */
   mode?: "ai" | "basic" | "team";
 };

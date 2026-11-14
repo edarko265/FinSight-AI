@@ -10,6 +10,7 @@ import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
+import { MORE } from "@/components/layout/BottomNav";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -206,6 +207,24 @@ export function DashboardView(): React.JSX.Element {
           →
         </span>
       </Link>
+
+      <nav aria-label={t("dashboard.more")}>
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {MORE.map(({ href, label }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="flex h-full items-center justify-between gap-2 rounded-2xl border border-border bg-surface px-3 py-2.5 text-sm font-medium"
+              >
+                <span className="min-w-0 truncate">{t(label)}</span>
+                <span className="text-accent" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">{t("dashboard.title")}</h1>

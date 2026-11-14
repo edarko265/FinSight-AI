@@ -1,7 +1,9 @@
 import "server-only";
 
 import type { Goal } from "@/lib/coach/advice";
+import type { Budget } from "@/lib/coach/budgets";
 import type { SetAside } from "@/lib/coach/personal";
+import type { ChatMessage } from "@/lib/contracts/chat";
 import type { Plan } from "@/lib/coach/plans";
 import type { LinkedAccount } from "@/lib/data/linked-accounts";
 import type { DashboardState, DashboardView } from "@/lib/contracts/chart";
@@ -16,6 +18,8 @@ export type TrashItem =
   | { id: string; kind: "goal"; deletedAt: string; label: string; item: Goal }
   | { id: string; kind: "plan"; deletedAt: string; label: string; item: Plan }
   | { id: string; kind: "account"; deletedAt: string; label: string; item: LinkedAccount }
+  | { id: string; kind: "budget"; deletedAt: string; label: string; item: Budget }
+  | { id: string; kind: "chat"; deletedAt: string; label: string; item: ChatMessage[] }
   | { id: string; kind: "setaside"; deletedAt: string; label: string; item: SetAside }
   | { id: string; kind: "view"; deletedAt: string; label: string; item: DashboardView }
   | {

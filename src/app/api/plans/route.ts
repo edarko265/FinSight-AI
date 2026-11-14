@@ -14,6 +14,7 @@ import {
   reconcileShares,
   sharedPlan,
   sharePlan,
+  trackPlan,
   unsharePlan,
   updatePlan,
 } from "@/lib/coach/plans";
@@ -93,6 +94,7 @@ const body = z.discriminatedUnion("action", [
     showGoalNames: z.boolean(),
   }),
   z.object({ action: z.literal("unshare"), id }),
+  z.object({ action: z.literal("track"), id: id.nullable() }),
   z.object({ action: z.literal("copy"), code: z.string().min(4).max(20) }),
 ]);
 
@@ -122,6 +124,9 @@ export async function POST(request: Request): Promise<Response> {
       break;
     case "share":
       result = await sharePlan(ctx, input.id, input);
+      break;
+    case "track":
+      result = (await trackPlan(ctx, input.id)) || "not_found";
       break;
     case "unshare":
       result = (await unsharePlan(ctx, input.id)) || "not_found";

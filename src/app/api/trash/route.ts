@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
+import { restoreBudget } from "@/lib/coach/budgets";
+import { restoreHistory } from "@/lib/coach/chat-history";
 import { restoreGoal, restoreSetAside } from "@/lib/coach/goals";
 import { restoreLinked } from "@/lib/coach/personal";
 import { restorePlan } from "@/lib/coach/plans";
@@ -44,6 +46,8 @@ export async function POST(request: Request): Promise<Response> {
     else if (item.kind === "plan") await restorePlan(ctx, item.item);
     else if (item.kind === "account") await restoreLinked(ctx.customerRef, item.item);
     else if (item.kind === "setaside") await restoreSetAside(ctx, item.item);
+    else if (item.kind === "budget") await restoreBudget(ctx.customerRef, item.item);
+    else if (item.kind === "chat") await restoreHistory(ctx.customerRef, item.item);
     else await restoreToDashboard(ctx, item);
   }
   return Response.json({ ok: true });

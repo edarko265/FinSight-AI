@@ -1567,4 +1567,124 @@ export const fi: Record<MessageKey, string> = {
   "widget.chart.safe_to_save": "Mitä voisit laittaa nyt sivuun, kun seuraava kuukausi on katettu.",
   "trash.kind.account": "Liitetty tili",
   "trash.kind.setaside": "Sivuun laitettu raha",
+  "chat.howWorkedOut": "Miten tämä laskettiin",
+  "chat.clear": "Tyhjennä tämä keskustelu",
+  "dashboard.more": "Lisää rahoistasi",
+  "trash.chat": "Keskustelu, {count} viestiä",
+  "trash.kind.budget": "Kuukausiraja",
+  "trash.kind.chat": "Keskustelu",
+  "toast.planFollowed": "Seuraat tätä suunnitelmaa",
+  "plans.follow": "Seuraa tätä suunnitelmaa",
+  "plans.unfollow": "Lopeta seuraaminen",
+  "plans.following": "Seurannassa",
+  "insight.plan.over.title": "{slice} ylittää suunnitelmasi",
+  "insight.plan.under.title": "{slice} on jäljessä suunnitelmastasi",
+  "insight.plan.body":
+    "{actual} % tuloistasi kolmen viime kuukauden aikana; suunnitelmasi ”{plan}” sanoo {planned} %.",
+  "insight.budget.close.title": "{category}: lähellä kuukausirajaasi",
+  "insight.budget.over.title": "{category}: yli kuukausirajasi",
+  "insight.budget.body": "{spent} / {limit} tässä kuussa tähän mennessä ({percent} %).",
+  "budgets.title": "Kuukausirajat",
+  "budgets.note":
+    "Raja on itse asettamasi mittapuu. Mitään ei estetä: sovellus kertoo, kun raja on lähes tai kokonaan käytetty.",
+  "budgets.empty": "Ei vielä rajoja.",
+  "budgets.add": "Aseta kuukausiraja",
+  "budgets.amount": "Raja kuukaudessa, €",
+  "budgets.tooMany": "Sinulla on enimmäismäärä rajoja. Poista ensin yksi.",
+  "budgets.step.what": "Mitkä menot?",
+  "budgets.step.whatHint": "Yksi raja menolajia kohden. Uusi asetus korvaa vanhan.",
+  "budgets.step.amount": "Paljonko kuukaudessa?",
+  "budgets.step.amountHint": "Käytät tähän yleensä noin {usual} kuukaudessa.",
+  "budgets.step.amountHintNone": "Valitse summa, joka tuntuu sinusta sopivalta.",
+  "budgets.reviewHint": "Voit muuttaa tai poistaa rajan milloin tahansa.",
+  "budgets.level.ok": "{percent} % käytetty tässä kuussa",
+  "budgets.level.close": "{percent} % käytetty: lähellä rajaa",
+  "budgets.level.over": "{percent} % käytetty: yli rajan",
+  "notify.prefs.title": "Mistä minulle ilmoitetaan",
+  "notify.prefs.note":
+    "Nämä koskevat laitteidesi ilmoituksia. Kaikki näkyy silti Havainnot-sivulla.",
+  "notify.type.shortfall": "Mahdollinen vaje tai ohut puskuri",
+  "notify.type.habit": "Kulutustottumus menossa väärään suuntaan",
+  "notify.type.bill": "Pian erääntyvä lasku",
+  "notify.type.goal": "Tavoitemuistutukset",
+  "notify.type.plan": "Kuukauteni poikkeaa suunnitelmastani",
+  "notify.type.budget": "Kuukausiraja lähes tai kokonaan käytetty",
+  "notify.type.tips": "Muut vinkit ja havainnot",
+  "notify.type.announcement": "Pankin tiedotteet",
+  "notify.quiet.title": "Hiljaiset tunnit",
+  "notify.quiet.value": "Ei ilmoituksia klo {from}–{to}",
+  "notify.quiet.none": "Ilmoituksia milloin tahansa",
+  "notify.quiet.step": "Hiljaiset tunnit",
+  "notify.quiet.stepHint":
+    "Hiljaisina tunteina laitteillesi ei lähetetä mitään. Se odottaa sovelluksessa.",
+  "notify.quiet.on": "Hiljaa öisin",
+  "notify.quiet.on.note": "Valitse tunnit seuraavaksi.",
+  "notify.quiet.off": "Ilmoita milloin tahansa",
+  "notify.quiet.off.note": "Ei hiljaisia tunteja.",
+  "notify.quiet.hours": "Mitkä tunnit?",
+  "notify.quiet.hoursHint": "Suomen aikaa. Jakso voi ylittää keskiyön.",
+  "notify.quiet.from": "Alkaen",
+  "notify.quiet.to": "Asti",
+  "steps.period": "Ajanjakso: {period}.",
+  "steps.filter.all":
+    "Otettiin mukaan {count} ostosta ja maksua. Palkka, sijoitukset ja siirrot eivät ole kulutusta.",
+  "steps.filter.target": "Pidettiin {count} tämän lajin ostosta luokan ja kauppiaskoodin mukaan.",
+  "steps.sum": "Laskettiin yhteen kokonaisina sentteinä: {total}.",
+  "steps.group": "Ryhmiteltiin luokittain, pidettiin viisi suurinta ja loput kohtaan Muut.",
+  "steps.trend.months":
+    "Otettiin {months} viimeistä täyttä kuukautta, jottei keskeneräinen kuukausi näytä pieneltä.",
+  "steps.trend.sum": "Laskettiin jokainen kuukausi erikseen yhteen.",
+  "steps.baskets.place":
+    "Sijoitettiin jokainen koriin luokan ja kauppiaskoodin mukaan (säännöt {version}); omat korjauksesi ensin.",
+  "steps.baskets.sum":
+    "Laskettiin jokainen kori yhteen, ja sen sisällä välttämätön ja valinnainen.",
+  "steps.flow.income": "Laskettiin yhteen saapuneet rahat: palkka ja muut tulot.",
+  "steps.flow.left": "Saapunut miinus lähtenyt on se, mitä jäi.",
+  "steps.safe.start": "Aloitettiin kirjatusta saldostasi: {balance}.",
+  "steps.safe.upfront":
+    "Vähennettiin heti {amount}: tavoitteisiin varattu raha, varaus epäsäännöllisiin välttämättömiin ja mahdollinen suunniteltu ostos.",
+  "steps.safe.walk":
+    "Edettiin {days} päivää vähentäen {daily} päivässä arjen välttämättömiin ja jaettuihin laskuihin sekä {bills} laskuja eräpäivinään.",
+  "steps.safe.lowest": "Matkan alin kohta oli {amount}. Se on turvallinen käyttövara.",
+  "steps.safe.short": "Matkalla saldo meni {amount} alle nollan. Se on vaje.",
+  "steps.safe.income": "Odotettuja tuloja ei laskettu: niitä ei ole ennen kuin ne saapuvat.",
+  "steps.whatif.saving": "Säästö = tuo summa × {percent} %.",
+  "steps.whatif.year":
+    "Vuodessa = säästö × 12. Se kertoo, minkä arvoinen leikkaus olisi ollut, ei ennustetta.",
+  "steps.peers.own": "Laskettiin keskimääräinen kuukautesi 12 viime täydeltä kuukaudelta.",
+  "steps.peers.group":
+    "Haettiin ikäryhmäsi 25., keskimmäinen ja 75. arvo aineistosta. Alle {min} hengen ryhmiä ei käytetä.",
+  "steps.peers.position":
+    "Alle 25. on useimpia pienempi, yli 75. useimpia suurempi, siltä väliltä tyypillinen.",
+  "steps.recurring.look": "Katsottiin säännöllisen korin maksuja 6 viime täydeltä kuukaudelta.",
+  "steps.recurring.keep":
+    "Pidettiin lajit, jotka näkyivät vähintään 3 kuukautena; summa on keskimmäinen kuukausi, jottei yksi poikkeava kuukausi vaikuta.",
+  "steps.recurring.day":
+    "Kerran kuussa maksettava lasku saa tavallisen päivän; omat korjauksesi korvaavat ehdotuksen.",
+  "steps.subs.group": "Ryhmiteltiin ostokset kauppiaan mukaan 6 viime täydeltä kuukaudelta.",
+  "steps.subs.keep":
+    "Pidettiin kauppiaat, joille maksettiin tasan kerran kuussa vähintään 3 kuukautena ja summat 10 %:n sisällä.",
+  "steps.subs.year": "Vuosikustannus = tavallinen summa × 12.",
+  "steps.plan.average":
+    "Laskettiin tulojesi ja jokaisen korin keskiarvo 3 viime täydeltä kuukaudelta.",
+  "steps.plan.saving": "Säästö = tulot − kolme koria − sijoitukset, ei koskaan alle nollan.",
+  "steps.plan.percent":
+    "Muutettiin viisi summaa kokonaisiksi prosenteiksi, joiden summa on tasan 100.",
+  "steps.save.walk":
+    "Tehtiin turvallisen käyttövaran laskenta 30 päivälle: {available} on vapaana laskujen, välttämättömien, varauksen ja jo sivuun laitetun jälkeen.",
+  "steps.save.keep": "Jätettiin tavallinen kuukausi valinnaista kulutustasi paikalleen: {keep}.",
+  "steps.save.result": "Jäljelle jäävä on turvallista laittaa sivuun: {safe}.",
+  "steps.recommend.rules":
+    "Ajettiin kuusi sääntöä tiedoillesi: ikäryhmää korkeampi, suurin valinnainen, pienet ostokset, varaus, puskuri, käyttämätön raha.",
+  "steps.recommend.rank":
+    "Järjestettiin soveltuvat kuukausiarvon mukaan ja pidettiin viisi parasta.",
+  "steps.goal.monthly": "Kuukausisumma = tavoite ÷ kuukaudet, pyöristettynä ylöspäin.",
+  "steps.goal.room":
+    "Verrattiin siihen, mitä sinulle yleensä jää: keskitulot − keskimenot 6 täydeltä kuukaudelta.",
+  "steps.goal.trims":
+    "Kun se ei riittänyt, kokeiltiin 10, 20 tai 30 %:n leikkauksia valinnaiseen kulutukseen, suurin ensin. Välttämättömiä ei leikata.",
+  "steps.balance":
+    "Luettiin jokaisen mukaan lasketun tilin viimeisimmän tapahtuman saldo ja laskettiin ne yhteen.",
+  "steps.linked": "Liitetyt tilit ovat mukana ({count}); ne ovat tässä demossa simuloituja.",
+  "steps.source": "Jokainen luku tulee omista tapahtumistasi: avaa ne kohdasta Näytä tapahtumat.",
 };

@@ -10,7 +10,7 @@ import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
 interface TrashEntry {
   id: string;
-  kind: "goal" | "plan" | "account" | "setaside" | "view" | "widget";
+  kind: "goal" | "plan" | "account" | "setaside" | "budget" | "chat" | "view" | "widget";
   label: string;
   deletedAt: string;
 }
@@ -52,6 +52,10 @@ export function TrashView(): React.JSX.Element {
   const label = (item: TrashEntry): string => {
     const key = item.kind === "view" ? `views.preset.${item.label}` : `admin.topic.${item.label}`;
     if (item.kind === "setaside") return formatMoney(Number(item.label), locale);
+    if (item.kind === "budget") {
+      return hasMessage(`cat.${item.label}`) ? t(`cat.${item.label}` as MessageKey) : item.label;
+    }
+    if (item.kind === "chat") return t("trash.chat", { count: Number(item.label) });
     return item.kind === "view" || item.kind === "widget"
       ? hasMessage(key)
         ? t(key)

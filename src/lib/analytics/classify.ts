@@ -14,6 +14,8 @@ export type Flow =
   | "investment_out"
   | "investment_in"
   | "salary_sweep"
+  /** Money moved between the customer's own accounts: neither income nor spending. */
+  | "internal"
   | "unknown";
 
 export type Basket = "regular" | "irregular" | "everyday" | "unclassified";
@@ -37,6 +39,8 @@ const FLOW_BY_TYPE: Record<string, Flow> = {
 };
 
 export function flowOf(tx: Transaction): Flow {
+  // An inflow to a linked account is income only when it came from outside the customer's accounts.
+  if (tx.type === "transfer_in") return tx.transfer === "external" ? "other_income" : "internal";
   return FLOW_BY_TYPE[tx.type] ?? "unknown";
 }
 

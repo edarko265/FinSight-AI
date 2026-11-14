@@ -1570,6 +1570,126 @@ export const en = {
   "widget.chart.safe_to_save": "What you could set aside now with the next month covered.",
   "trash.kind.account": "Linked account",
   "trash.kind.setaside": "Money set aside",
+  "chat.howWorkedOut": "How this was worked out",
+  "chat.clear": "Clear this conversation",
+  "dashboard.more": "More about your money",
+  "trash.chat": "Conversation, {count} messages",
+  "trash.kind.budget": "Monthly limit",
+  "trash.kind.chat": "Conversation",
+  "toast.planFollowed": "Following this plan",
+  "plans.follow": "Follow this plan",
+  "plans.unfollow": "Stop following",
+  "plans.following": "Following",
+  "insight.plan.over.title": "{slice} is running over your plan",
+  "insight.plan.under.title": "{slice} is behind your plan",
+  "insight.plan.body":
+    "{actual} % of your income over the last three months; your plan “{plan}” says {planned} %.",
+  "insight.budget.close.title": "{category}: close to your monthly limit",
+  "insight.budget.over.title": "{category}: over your monthly limit",
+  "insight.budget.body": "{spent} of {limit} so far this month ({percent} %).",
+  "budgets.title": "Monthly limits",
+  "budgets.note":
+    "A limit is a yardstick you set yourself. Nothing is blocked: the app tells you when a limit is nearly or fully used.",
+  "budgets.empty": "No limits yet.",
+  "budgets.add": "Set a monthly limit",
+  "budgets.amount": "Limit per month, €",
+  "budgets.tooMany": "You have the most limits you can keep. Remove one first.",
+  "budgets.step.what": "Which spending?",
+  "budgets.step.whatHint": "One limit per kind of spending. Setting it again replaces it.",
+  "budgets.step.amount": "How much a month?",
+  "budgets.step.amountHint": "You usually spend about {usual} a month on this.",
+  "budgets.step.amountHintNone": "Choose an amount you would be comfortable with.",
+  "budgets.reviewHint": "You can change or remove the limit at any time.",
+  "budgets.level.ok": "{percent} % used this month",
+  "budgets.level.close": "{percent} % used: close to the limit",
+  "budgets.level.over": "{percent} % used: over the limit",
+  "notify.prefs.title": "What to notify me about",
+  "notify.prefs.note":
+    "These apply to notifications on this and your other devices. Everything still appears under Insights.",
+  "notify.type.shortfall": "A possible shortfall or thin buffer",
+  "notify.type.habit": "A spending habit going the wrong way",
+  "notify.type.bill": "A bill due soon",
+  "notify.type.goal": "Goal reminders",
+  "notify.type.plan": "My month drifting from my plan",
+  "notify.type.budget": "A monthly limit nearly or fully used",
+  "notify.type.tips": "Other tips and observations",
+  "notify.type.announcement": "Announcements from the bank",
+  "notify.quiet.title": "Quiet hours",
+  "notify.quiet.value": "No notifications from {from} to {to}",
+  "notify.quiet.none": "Notifications at any time",
+  "notify.quiet.step": "Quiet hours",
+  "notify.quiet.stepHint":
+    "During quiet hours nothing is sent to your devices. It waits in the app.",
+  "notify.quiet.on": "Keep quiet at night",
+  "notify.quiet.on.note": "Choose the hours next.",
+  "notify.quiet.off": "Notify me at any time",
+  "notify.quiet.off.note": "No quiet hours.",
+  "notify.quiet.hours": "Which hours?",
+  "notify.quiet.hoursHint": "Finnish time. The period may run past midnight.",
+  "notify.quiet.from": "From",
+  "notify.quiet.to": "Until",
+  "steps.period": "Period: {period}.",
+  "steps.filter.all":
+    "Took your {count} purchases and payments in it. Salary, investing and transfers are not spending.",
+  "steps.filter.target": "Kept the {count} purchases of this kind, by category and merchant code.",
+  "steps.sum": "Added them up in whole cents: {total}.",
+  "steps.group": "Grouped them by category, kept the five largest and put the rest under Other.",
+  "steps.trend.months":
+    "Took the last {months} full months, so an unfinished month does not look small.",
+  "steps.trend.sum": "Added up each month separately.",
+  "steps.baskets.place":
+    "Placed each one in a basket by its category and merchant code (rules {version}); your own corrections come first.",
+  "steps.baskets.sum":
+    "Added up each basket, and within it what was essential and what was a free choice.",
+  "steps.flow.income": "Added up the money that came in: salary and other income.",
+  "steps.flow.left": "What came in minus what went out is what was left.",
+  "steps.safe.start": "Started from your recorded balance: {balance}.",
+  "steps.safe.upfront":
+    "Took off up front {amount}: money set aside for goals, a reserve for irregular essentials and any planned purchase.",
+  "steps.safe.walk":
+    "Walked forward {days} days, taking off {daily} a day for everyday essentials and spread bills, and {bills} of bills on their due dates.",
+  "steps.safe.lowest":
+    "The lowest point reached on the way was {amount}. That is what is safe to spend.",
+  "steps.safe.short": "On the way the balance went {amount} below zero. That is the shortfall.",
+  "steps.safe.income": "Expected income was not counted: it is not there until it arrives.",
+  "steps.whatif.saving": "Saving = that total × {percent} %.",
+  "steps.whatif.year":
+    "Over a year = the saving × 12. It is what a cut would have been worth, not a forecast.",
+  "steps.peers.own": "Worked out your average month over the last 12 full months.",
+  "steps.peers.group":
+    "Looked up your age group's 25th, middle and 75th value from the dataset. Groups under {min} people are never used.",
+  "steps.peers.position":
+    "Below the 25th is lower than most, above the 75th is higher than most, in between is typical.",
+  "steps.recurring.look": "Looked at payments in the regular basket over the last 6 full months.",
+  "steps.recurring.keep":
+    "Kept the kinds seen in 3 or more of those months; the amount is the middle month, so one odd month does not shift it.",
+  "steps.recurring.day":
+    "A bill paid once a month gets a usual day; your own corrections replace the suggestion.",
+  "steps.subs.group": "Grouped purchases by merchant over the last 6 full months.",
+  "steps.subs.keep":
+    "Kept merchants paid exactly once a month, in 3 or more months, with amounts within 10 % of each other.",
+  "steps.subs.year": "Yearly cost = the usual amount × 12.",
+  "steps.plan.average": "Averaged your income and each basket over the last 3 full months.",
+  "steps.plan.saving": "Saving = income − the three baskets − investing, never below zero.",
+  "steps.plan.percent":
+    "Turned the five amounts into whole percentages that add up to exactly 100.",
+  "steps.save.walk":
+    "Ran the safe-to-spend walk over 30 days: {available} is free after bills, essentials, a reserve and money already set aside.",
+  "steps.save.keep": "Left a usual month of your free-choice spending in place: {keep}.",
+  "steps.save.result": "What remains is safe to set aside: {safe}.",
+  "steps.recommend.rules":
+    "Ran six rules over your data: above your age group, largest free choice, small purchases, a reserve, a buffer, idle money.",
+  "steps.recommend.rank":
+    "Ranked the ones that apply by their monthly value and kept the top five.",
+  "steps.goal.monthly": "Monthly amount = the target ÷ the months, rounded up.",
+  "steps.goal.room":
+    "Compared it with what you usually have left: average income − average spending over 6 full months.",
+  "steps.goal.trims":
+    "Where that was not enough, tried trims of 10, 20 or 30 % to free-choice spending, largest first. Essentials are never trimmed.",
+  "steps.balance":
+    "Read the balance recorded on the latest transaction of each counted account, and added them together.",
+  "steps.linked": "Linked accounts are included ({count}); they are simulated in this demo.",
+  "steps.source": "Every figure comes from your own transactions: open them with See transactions.",
 } as const;
 
 export type MessageKey = keyof typeof en;

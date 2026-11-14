@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { NotifyPrefs } from "@/components/settings/NotifyPrefs";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import {
@@ -164,6 +165,7 @@ export function SettingsView(): React.JSX.Element {
             className="size-5 shrink-0 accent-(--accent)"
           />
         </label>
+        <NotifyPrefs />
       </Section>
 
       {me?.aiEnabled ? (

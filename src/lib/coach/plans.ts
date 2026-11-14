@@ -31,6 +31,8 @@ export interface Plan {
   goals: { label: string; percent: number }[];
   origin: "own" | "template" | "copied";
   createdOn: string;
+  /** The one plan the customer follows: the app says when their month drifts from it. */
+  tracked?: boolean;
   /** Set while the plan is shared. */
   shareCode?: string;
   shareListed?: boolean;
@@ -136,6 +138,17 @@ export async function deletePlan(ctx: SessionContext, id: string): Promise<boole
 export async function restorePlan(ctx: SessionContext, plan: Plan): Promise<void> {
   const plans = await listPlans(ctx);
   if (!plans.some((candidate) => candidate.id === plan.id)) await save(ctx, [plan, ...plans]);
+}
+
+/** Follows one plan (or none): only one plan is followed at a time. */
+export async function trackPlan(ctx: SessionContext, id: string | null): Promise<boolean> {
+  const plans = await listPlans(ctx);
+  if (id && !plans.some((plan) => plan.id === id)) return false;
+  await save(
+    ctx,
+    plans.map((plan) => ({ ...plan, tracked: plan.id === id ? true : undefined })),
+  );
+  return true;
 }
 
 // ---- Sharing ----

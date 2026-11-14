@@ -1557,4 +1557,125 @@ export const sv: Record<MessageKey, string> = {
   "widget.chart.safe_to_save": "Vad du kan lägga undan nu med nästa månad täckt.",
   "trash.kind.account": "Kopplat konto",
   "trash.kind.setaside": "Undanlagda pengar",
+  "chat.howWorkedOut": "Så räknades detta ut",
+  "chat.clear": "Rensa det här samtalet",
+  "dashboard.more": "Mer om dina pengar",
+  "trash.chat": "Samtal, {count} meddelanden",
+  "trash.kind.budget": "Månadsgräns",
+  "trash.kind.chat": "Samtal",
+  "toast.planFollowed": "Du följer den här planen",
+  "plans.follow": "Följ den här planen",
+  "plans.unfollow": "Sluta följa",
+  "plans.following": "Följs",
+  "insight.plan.over.title": "{slice} går över din plan",
+  "insight.plan.under.title": "{slice} ligger efter din plan",
+  "insight.plan.body":
+    "{actual} % av inkomsten de senaste tre månaderna; din plan ”{plan}” säger {planned} %.",
+  "insight.budget.close.title": "{category}: nära din månadsgräns",
+  "insight.budget.over.title": "{category}: över din månadsgräns",
+  "insight.budget.body": "{spent} av {limit} hittills den här månaden ({percent} %).",
+  "budgets.title": "Månadsgränser",
+  "budgets.note":
+    "En gräns är en måttstock du själv sätter. Inget spärras: appen säger till när en gräns nästan eller helt är använd.",
+  "budgets.empty": "Inga gränser ännu.",
+  "budgets.add": "Sätt en månadsgräns",
+  "budgets.amount": "Gräns per månad, €",
+  "budgets.tooMany": "Du har så många gränser som går. Ta bort en först.",
+  "budgets.step.what": "Vilka utgifter?",
+  "budgets.step.whatHint": "En gräns per sorts utgift. Sätter du den igen ersätts den.",
+  "budgets.step.amount": "Hur mycket per månad?",
+  "budgets.step.amountHint": "Du lägger vanligtvis cirka {usual} per månad på detta.",
+  "budgets.step.amountHintNone": "Välj ett belopp du är bekväm med.",
+  "budgets.reviewHint": "Du kan ändra eller ta bort gränsen när som helst.",
+  "budgets.level.ok": "{percent} % använt den här månaden",
+  "budgets.level.close": "{percent} % använt: nära gränsen",
+  "budgets.level.over": "{percent} % använt: över gränsen",
+  "notify.prefs.title": "Vad jag ska aviseras om",
+  "notify.prefs.note": "Detta gäller aviseringar på dina enheter. Allt visas ändå under Insikter.",
+  "notify.type.shortfall": "Ett möjligt underskott eller tunn buffert",
+  "notify.type.habit": "En utgiftsvana som går åt fel håll",
+  "notify.type.bill": "En räkning som snart förfaller",
+  "notify.type.goal": "Påminnelser om mål",
+  "notify.type.plan": "Min månad avviker från min plan",
+  "notify.type.budget": "En månadsgräns nästan eller helt använd",
+  "notify.type.tips": "Andra tips och iakttagelser",
+  "notify.type.announcement": "Meddelanden från banken",
+  "notify.quiet.title": "Tysta timmar",
+  "notify.quiet.value": "Inga aviseringar {from}–{to}",
+  "notify.quiet.none": "Aviseringar när som helst",
+  "notify.quiet.step": "Tysta timmar",
+  "notify.quiet.stepHint":
+    "Under tysta timmar skickas inget till dina enheter. Det väntar i appen.",
+  "notify.quiet.on": "Tyst på natten",
+  "notify.quiet.on.note": "Välj timmarna härnäst.",
+  "notify.quiet.off": "Avisera mig när som helst",
+  "notify.quiet.off.note": "Inga tysta timmar.",
+  "notify.quiet.hours": "Vilka timmar?",
+  "notify.quiet.hoursHint": "Finsk tid. Perioden kan gå över midnatt.",
+  "notify.quiet.from": "Från",
+  "notify.quiet.to": "Till",
+  "steps.period": "Period: {period}.",
+  "steps.filter.all":
+    "Tog med dina {count} köp och betalningar. Lön, investeringar och överföringar är inte utgifter.",
+  "steps.filter.target":
+    "Behöll de {count} köpen av det här slaget, efter kategori och handlarkod.",
+  "steps.sum": "Summerade dem i hela cent: {total}.",
+  "steps.group": "Grupperade efter kategori, behöll de fem största och lade resten under Övrigt.",
+  "steps.trend.months":
+    "Tog de senaste {months} hela månaderna, så att en oavslutad månad inte ser liten ut.",
+  "steps.trend.sum": "Summerade varje månad för sig.",
+  "steps.baskets.place":
+    "Placerade varje i en korg efter kategori och handlarkod (regler {version}); dina egna rättelser först.",
+  "steps.baskets.sum":
+    "Summerade varje korg, och inom den vad som var nödvändigt och vad som var valfritt.",
+  "steps.flow.income": "Summerade pengarna som kom in: lön och övrig inkomst.",
+  "steps.flow.left": "Det som kom in minus det som gick ut är det som blev kvar.",
+  "steps.safe.start": "Började från ditt registrerade saldo: {balance}.",
+  "steps.safe.upfront":
+    "Drog av direkt {amount}: pengar undanlagda för mål, en reserv för oregelbundet nödvändigt och eventuellt planerat köp.",
+  "steps.safe.walk":
+    "Gick framåt {days} dagar och drog av {daily} per dag för vardagens nödvändiga och utspridda räkningar, samt {bills} i räkningar på förfallodagarna.",
+  "steps.safe.lowest":
+    "Den lägsta punkten på vägen var {amount}. Det är vad som är tryggt att använda.",
+  "steps.safe.short": "På vägen gick saldot {amount} under noll. Det är underskottet.",
+  "steps.safe.income": "Förväntad inkomst räknades inte: den finns inte förrän den kommer.",
+  "steps.whatif.saving": "Besparing = den summan × {percent} %.",
+  "steps.whatif.year":
+    "Per år = besparingen × 12. Det är vad en minskning hade varit värd, inte en prognos.",
+  "steps.peers.own": "Räknade ut din genomsnittliga månad över de senaste 12 hela månaderna.",
+  "steps.peers.group":
+    "Slog upp din åldersgrupps 25:e, mittersta och 75:e värde i datamängden. Grupper under {min} personer används aldrig.",
+  "steps.peers.position":
+    "Under den 25:e är lägre än de flesta, över den 75:e högre än de flesta, däremellan typiskt.",
+  "steps.recurring.look":
+    "Tittade på betalningar i den regelbundna korgen de senaste 6 hela månaderna.",
+  "steps.recurring.keep":
+    "Behöll de slag som setts i minst 3 av månaderna; beloppet är mittenmånaden, så en udda månad påverkar inte.",
+  "steps.recurring.day":
+    "En räkning som betalas en gång i månaden får en vanlig dag; dina egna rättelser ersätter förslaget.",
+  "steps.subs.group": "Grupperade köp per handlare de senaste 6 hela månaderna.",
+  "steps.subs.keep":
+    "Behöll handlare som betalats exakt en gång i månaden, i minst 3 månader, med belopp inom 10 % av varandra.",
+  "steps.subs.year": "Årskostnad = det vanliga beloppet × 12.",
+  "steps.plan.average":
+    "Tog snittet av din inkomst och varje korg över de senaste 3 hela månaderna.",
+  "steps.plan.saving": "Sparande = inkomst − de tre korgarna − investering, aldrig under noll.",
+  "steps.plan.percent": "Gjorde om de fem beloppen till hela procent som blir exakt 100.",
+  "steps.save.walk":
+    "Körde beräkningen över 30 dagar: {available} är fritt efter räkningar, nödvändigt, en reserv och redan undanlagt.",
+  "steps.save.keep": "Lät en vanlig månad av din valfria konsumtion vara kvar: {keep}.",
+  "steps.save.result": "Det som återstår är tryggt att lägga undan: {safe}.",
+  "steps.recommend.rules":
+    "Körde sex regler över dina uppgifter: över din åldersgrupp, största valfria, småköp, en reserv, en buffert, oanvända pengar.",
+  "steps.recommend.rank": "Rangordnade de som gäller efter månadsvärde och behöll de fem främsta.",
+  "steps.goal.monthly": "Månadsbelopp = målet ÷ månaderna, avrundat uppåt.",
+  "steps.goal.room":
+    "Jämförde med vad du brukar ha kvar: snittinkomst − snittutgifter över 6 hela månader.",
+  "steps.goal.trims":
+    "Där det inte räckte prövades minskningar på 10, 20 eller 30 % av valfria utgifter, störst först. Nödvändigt minskas aldrig.",
+  "steps.balance":
+    "Läste saldot på den senaste transaktionen för varje medräknat konto och lade ihop dem.",
+  "steps.linked": "Kopplade konton ingår ({count}); de är simulerade i den här demon.",
+  "steps.source":
+    "Varje siffra kommer från dina egna transaktioner: öppna dem med Visa transaktioner.",
 };

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { BudgetsSection } from "@/components/plans/BudgetsSection";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import {
@@ -35,6 +36,7 @@ interface Plan {
   origin: "own" | "template" | "copied";
   shareCode?: string;
   shareListed?: boolean;
+  tracked?: boolean;
   forMe: Split;
 }
 
@@ -386,6 +388,7 @@ export function PlansView(): React.JSX.Element {
                   <div>
                     <h3 className="text-base font-semibold">{plan.name}</h3>
                     <p className="text-xs text-muted">
+                      {plan.tracked ? `${t("plans.following")} · ` : ""}
                       {t(`plans.origin.${plan.origin}`)}
                       {plan.shareCode
                         ? ` · ${t(plan.shareListed ? "plans.shared.listed" : "plans.shared.code")}`
@@ -425,6 +428,19 @@ export function PlansView(): React.JSX.Element {
                     <button type="button" className="text-accent" onClick={() => openEdit(plan)}>
                       {t("common.edit")}
                     </button>
+                    <button
+                      type="button"
+                      aria-pressed={Boolean(plan.tracked)}
+                      className={plan.tracked ? "text-muted" : "text-accent"}
+                      onClick={() =>
+                        void act(
+                          { action: "track", id: plan.tracked ? null : plan.id },
+                          plan.tracked ? "toast.updated" : "toast.planFollowed",
+                        )
+                      }
+                    >
+                      {t(plan.tracked ? "plans.unfollow" : "plans.follow")}
+                    </button>
                     {data.sharing && !plan.shareCode ? (
                       <button
                         type="button"
@@ -463,6 +479,8 @@ export function PlansView(): React.JSX.Element {
               ))}
             </div>
           </section>
+
+          <BudgetsSection />
 
           {data.sharing ? (
             <section className="flex flex-col gap-3">

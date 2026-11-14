@@ -6,6 +6,7 @@ import { loadBenchmarks, loadCustomer } from "@/lib/data/repository";
 import { getEnv } from "@/lib/env";
 import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n/config";
 import { translate } from "@/lib/i18n/translate";
+import { mayNotify, readPrefs, typeOfInsight } from "@/lib/push/prefs";
 import {
   alreadySent,
   customersWithDevices,
@@ -42,12 +43,16 @@ export async function runReminders(): Promise<ReminderRun> {
     const locale = isLocale(stored) ? stored : DEFAULT_LOCALE;
     const ctx: SessionContext = { customerRef, record, asOf, locale, benchmarks };
 
+    const prefs = await readPrefs(customerRef);
+    const now = new Date();
     const done = await alreadySent(customerRef);
     const next = (await allInsights(ctx)).find(
       (insight) =>
         !insight.id.startsWith("announcement-") &&
         insight.severity !== "good" &&
-        !done.has(insight.id),
+        !done.has(insight.id) &&
+        // Only the kinds this customer asked for, and never during their quiet hours.
+        mayNotify(prefs, typeOfInsight(insight.id), now),
     );
     if (!next) continue;
 
