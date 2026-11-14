@@ -14,6 +14,7 @@ interface QueueItem {
   slot: string;
   feeCents: number;
   waitingForAdvisor: boolean;
+  deleted: boolean;
 }
 
 interface Thread extends QueueItem {
@@ -55,7 +56,19 @@ export function AdvisorQueue(): React.JSX.Element {
     };
   }, [openId]);
 
-  async function post(payload: { text: string } | { action: "close" }): Promise<void> {
+  type Action = "close" | "reopen" | "trash" | "restore" | "purge";
+
+  async function act(id: string, action: Action): Promise<void> {
+    await getJson(`/api/admin/advisor/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    const data = await getJson<{ queue: QueueItem[] }>("/api/admin/advisor");
+    if (data) setQueue(data.queue);
+  }
+
+  async function post(payload: { text: string } | { action: Action }): Promise<void> {
     if (!openId) return;
     const data = await getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`, {
       method: "POST",
@@ -103,7 +116,16 @@ export function AdvisorQueue(): React.JSX.Element {
           ))}
         </ol>
         {thread.status === "closed" ? (
-          <p className="text-sm text-muted">{t("advisor.status.closed")}</p>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-muted">{t("advisor.status.closed")}</span>
+            <button
+              type="button"
+              onClick={() => void post({ action: "reopen" })}
+              className="font-semibold text-accent"
+            >
+              {t("admin.advisor.reopen")}
+            </button>
+          </div>
         ) : (
           <form
             className="flex flex-wrap items-center gap-2"
@@ -145,19 +167,22 @@ export function AdvisorQueue(): React.JSX.Element {
     );
   }
 
+  const live = queue?.filter((item) => !item.deleted) ?? [];
+  const binned = queue?.filter((item) => item.deleted) ?? [];
+
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted">{t("admin.advisor.note")}</p>
-      {queue && queue.length === 0 ? (
+      {queue && live.length === 0 ? (
         <p className="text-sm text-muted">{t("admin.advisor.empty")}</p>
       ) : null}
       <ul className="flex flex-col gap-2">
-        {queue?.map((item) => (
-          <li key={item.id}>
+        {live.map((item) => (
+          <li key={item.id} className="rounded-xl border border-border px-4 py-3 text-sm">
             <button
               type="button"
               onClick={() => setOpenId(item.id)}
-              className="flex w-full flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-4 py-3 text-left text-sm"
+              className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
             >
               <span className="flex flex-col">
                 <span className="font-semibold">
@@ -179,9 +204,61 @@ export function AdvisorQueue(): React.JSX.Element {
                   : t(`advisor.status.${item.status}` as MessageKey)}
               </span>
             </button>
+            <div className="mt-2 flex gap-4 text-xs font-semibold">
+              {item.status === "closed" ? (
+                <button
+                  type="button"
+                  onClick={() => void act(item.id, "reopen")}
+                  className="text-accent"
+                >
+                  {t("admin.advisor.reopen")}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void act(item.id, "trash")}
+                className="text-muted"
+              >
+                {t("common.moveToBin")}
+              </button>
+            </div>
           </li>
         ))}
       </ul>
+
+      {binned.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold">{t("admin.bin")}</h3>
+          <ul className="flex flex-col gap-2">
+            {binned.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm"
+              >
+                <span className="text-muted">
+                  {item.alias} · {t(`advisor.topic.${item.topic}` as MessageKey)}
+                </span>
+                <span className="flex gap-4 font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => void act(item.id, "restore")}
+                    className="text-accent"
+                  >
+                    {t("common.restore")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void act(item.id, "purge")}
+                    className="text-warning"
+                  >
+                    {t("common.deleteForever")}
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

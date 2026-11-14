@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { CloseIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -41,6 +41,7 @@ export function GoalsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const [data, setData] = useState<GoalsPayload | null>(null);
   const [tick, setTick] = useState(0);
+  const [editing, setEditing] = useState<GoalDraft | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,20 +77,8 @@ export function GoalsView(): React.JSX.Element {
         ) : null}
         {data?.goals.map(({ goal, fit, roomCents }) => (
           <article key={goal.id} className="rounded-2xl border border-border bg-surface p-4">
-            <header className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-base font-semibold">{goal.name}</h3>
-                <p className="text-2xl font-semibold tabular-nums">{money(goal.targetCents)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void remove(goal.id)}
-                aria-label={`${t("goals.delete")}: ${goal.name}`}
-                className="-m-2 rounded-full p-2 text-muted"
-              >
-                <CloseIcon className="size-5" />
-              </button>
-            </header>
+            <h3 className="text-base font-semibold">{goal.name}</h3>
+            <p className="text-2xl font-semibold tabular-nums">{money(goal.targetCents)}</p>
             <p className="mt-1 text-sm text-muted">
               {t("goals.perMonth", { monthly: money(goal.monthlyCents), months: goal.months })}
             </p>
@@ -109,6 +98,25 @@ export function GoalsView(): React.JSX.Element {
                 {t(`goals.fit.${fit}` as MessageKey)}
               </span>
             </p>
+            <div className="mt-3 flex gap-4 text-sm font-semibold">
+              <button
+                type="button"
+                onClick={() =>
+                  setEditing({
+                    id: goal.id,
+                    name: goal.name,
+                    euros: String(goal.targetCents / 100),
+                    months: String(goal.months),
+                  })
+                }
+                className="text-accent"
+              >
+                {t("common.edit")}
+              </button>
+              <button type="button" onClick={() => void remove(goal.id)} className="text-muted">
+                {t("common.moveToBin")}
+              </button>
+            </div>
           </article>
         ))}
         <Link
@@ -117,7 +125,26 @@ export function GoalsView(): React.JSX.Element {
         >
           {t("goals.tell")}
         </Link>
+        <button
+          type="button"
+          onClick={() => setEditing({ name: "", euros: "", months: "" })}
+          className="rounded-full border border-border px-5 py-3 text-center text-sm font-semibold"
+        >
+          {t("goals.add")}
+        </button>
+        <Link href="/trash" className="text-center text-sm font-medium text-accent">
+          {t("trash.open")}
+        </Link>
       </section>
+
+      <GoalWizard
+        draft={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          setTick((value) => value + 1);
+        }}
+      />
 
       {data && data.recommendations.length > 0 ? (
         <section className="flex flex-col gap-3">

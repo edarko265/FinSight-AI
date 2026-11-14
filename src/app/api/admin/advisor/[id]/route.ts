@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { isAdmin } from "@/lib/admin/auth";
-import { advisorReply, advisorThread, closeRequest } from "@/lib/advisor/handoff";
+import { advisorReply, advisorThread, setRequestState } from "@/lib/advisor/handoff";
 
 const unauthorized = (): Response => Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -19,7 +19,7 @@ export async function GET(
 
 const body = z.union([
   z.object({ text: z.string().trim().min(1).max(2000) }),
-  z.object({ action: z.literal("close") }),
+  z.object({ action: z.enum(["close", "reopen", "trash", "restore", "purge"]) }),
 ]);
 
 export async function POST(
@@ -31,7 +31,7 @@ export async function POST(
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const { id } = await context.params;
   if ("action" in parsed.data) {
-    await closeRequest(id);
+    await setRequestState(id, parsed.data.action);
   } else if (!(await advisorReply(id, parsed.data.text))) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }

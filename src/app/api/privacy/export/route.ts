@@ -18,6 +18,7 @@ export async function GET(): Promise<Response> {
     consent: await readConsent(ctx.customerRef),
     dashboard: await readState(ctx.customerRef, "views"),
     goals: await readState(ctx.customerRef, "goals"),
+    recycleBin: await readState(ctx.customerRef, "trash"),
     readInsights: await readState(ctx.customerRef, "insights_read"),
     transactions: ctx.record.transactions.map((tx) => ({ ...tx, classification: classify(tx) })),
   };

@@ -50,6 +50,7 @@ type RequestRow = {
   status: AdvisorRequest["status"];
   sealed_details: string;
   created_at: string | Date;
+  deleted_at?: string | Date | null;
 };
 
 const iso = (value: string | Date): string => new Date(value).toISOString();
@@ -117,6 +118,7 @@ export async function currentRequest(customerRef: string): Promise<AdvisorReques
   const db = await getDb();
   const rows = await db.query<RequestRow>(
     `SELECT ${COLUMNS} FROM advisor_requests WHERE customer_ref = $1 AND status <> 'closed'
+       AND deleted_at IS NULL
      ORDER BY created_at DESC LIMIT 1`,
     [customerRef],
   );
@@ -179,6 +181,8 @@ export interface QueueItem extends Omit<AdvisorRequest, "messages"> {
   /** A stable pseudonym, so the adviser can tell requests apart without seeing the customer ID. */
   alias: string;
   waitingForAdvisor: boolean;
+  /** Set when the request is in the recycle bin. */
+  deleted: boolean;
 }
 
 function alias(ref: string): string {
@@ -188,9 +192,9 @@ function alias(ref: string): string {
 export async function advisorQueue(): Promise<QueueItem[]> {
   const db = await getDb();
   const rows = await db.query<RequestRow & { last_sender: string | null }>(
-    `SELECT r.id, r.customer_ref, r.topic, r.status, r.sealed_details, r.created_at,
+    `SELECT r.id, r.customer_ref, r.topic, r.status, r.sealed_details, r.created_at, r.deleted_at,
             (SELECT m.sender FROM advisor_messages m WHERE m.request_id = r.id ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_sender
-     FROM advisor_requests r ORDER BY (r.status = 'closed'), r.created_at DESC LIMIT 50`,
+     FROM advisor_requests r ORDER BY (r.status = 'closed'), r.created_at DESC LIMIT 80`,
   );
   const items: QueueItem[] = [];
   for (const row of rows) {
@@ -199,7 +203,9 @@ export async function advisorQueue(): Promise<QueueItem[]> {
     items.push({
       ...request,
       alias: alias(row.customer_ref),
-      waitingForAdvisor: row.status !== "closed" && row.last_sender !== "advisor",
+      waitingForAdvisor:
+        !row.deleted_at && row.status !== "closed" && row.last_sender !== "advisor",
+      deleted: Boolean(row.deleted_at),
     });
   }
   return items;
@@ -229,10 +235,40 @@ export async function advisorReply(id: string, text: string): Promise<boolean> {
   return true;
 }
 
-export async function closeRequest(id: string): Promise<void> {
+/** Staff actions on a request: close, reopen, move to the recycle bin, restore, or delete for good. */
+export async function setRequestState(
+  id: string,
+  action: "close" | "reopen" | "trash" | "restore" | "purge",
+): Promise<void> {
   const db = await getDb();
-  await db.query(
-    "UPDATE advisor_requests SET status = 'closed', updated_at = now() WHERE id = $1",
-    [id],
-  );
+  switch (action) {
+    case "close":
+      await db.query(
+        "UPDATE advisor_requests SET status = 'closed', updated_at = now() WHERE id = $1",
+        [id],
+      );
+      break;
+    case "reopen":
+      await db.query(
+        "UPDATE advisor_requests SET status = 'active', updated_at = now() WHERE id = $1",
+        [id],
+      );
+      break;
+    case "trash":
+      await db.query(
+        "UPDATE advisor_requests SET deleted_at = now(), updated_at = now() WHERE id = $1",
+        [id],
+      );
+      break;
+    case "restore":
+      await db.query(
+        "UPDATE advisor_requests SET deleted_at = NULL, updated_at = now() WHERE id = $1",
+        [id],
+      );
+      break;
+    case "purge":
+      // Only from the recycle bin; messages go with it.
+      await db.query("DELETE FROM advisor_requests WHERE id = $1 AND deleted_at IS NOT NULL", [id]);
+      break;
+  }
 }

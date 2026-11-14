@@ -82,12 +82,14 @@ export function InsightsView(): React.JSX.Element {
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-semibold">{insight.title}</h2>
                 <p className="mt-1 text-sm text-muted">{insight.body}</p>
-                <Link
-                  href={`/chat?q=${encodeURIComponent(insight.ask)}`}
-                  className="mt-2 inline-block text-sm font-medium text-accent"
-                >
-                  {t("insights.ask")} →
-                </Link>
+                {insight.ask ? (
+                  <Link
+                    href={`/chat?q=${encodeURIComponent(insight.ask)}`}
+                    className="mt-2 inline-block text-sm font-medium text-accent"
+                  >
+                    {t("insights.ask")} →
+                  </Link>
+                ) : null}
               </div>
             </div>
           </li>

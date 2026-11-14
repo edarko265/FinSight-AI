@@ -4,6 +4,7 @@ import { recordUsage } from "@/lib/admin/usage";
 import { goalResult, planGoal, type Goal, type GoalPlan } from "@/lib/coach/advice";
 import type { SessionContext } from "@/lib/coach/context";
 import type { ToolResult } from "@/lib/coach/tools";
+import { addToTrash, goalToTrash } from "@/lib/coach/trash";
 import { readState, writeState } from "@/lib/data/repository";
 import { translate } from "@/lib/i18n/translate";
 
@@ -38,12 +39,50 @@ export async function setGoal(
   return { ...goalResult(ctx, planGoal(ctx, goal), true), query: undefined };
 }
 
-export async function deleteGoal(ctx: SessionContext, id: string): Promise<void> {
+/** Edits a goal's name, amount or time span and recalculates the monthly amount. */
+export async function updateGoal(
+  ctx: SessionContext,
+  id: string,
+  patch: { name?: string; targetCents?: number; months?: number },
+): Promise<boolean> {
+  const goals = await listGoals(ctx);
+  const current = goals.find((goal) => goal.id === id);
+  if (!current) return false;
+  const targetCents = Math.min(
+    100_000_000,
+    Math.max(100, Math.round(patch.targetCents ?? current.targetCents)),
+  );
+  const months = Math.min(120, Math.max(1, Math.round(patch.months ?? current.months)));
+  const next: Goal = {
+    ...current,
+    name: (patch.name?.trim() || current.name).slice(0, 60),
+    targetCents,
+    months,
+    monthlyCents: Math.ceil(targetCents / months),
+  };
   await writeState(
     ctx.customerRef,
     "goals",
-    (await listGoals(ctx)).filter((goal) => goal.id !== id),
+    goals.map((goal) => (goal.id === id ? next : goal)),
   );
+  return true;
+}
+
+/** Moves a goal to the recycle bin. */
+export async function deleteGoal(ctx: SessionContext, id: string): Promise<void> {
+  const goals = await listGoals(ctx);
+  const removed = goals.find((goal) => goal.id === id);
+  if (!removed) return;
+  await writeState(
+    ctx.customerRef,
+    "goals",
+    goals.filter((goal) => goal.id !== id),
+  );
+  await addToTrash(ctx.customerRef, [goalToTrash(removed)]);
+}
+
+export async function restoreGoal(ctx: SessionContext, goal: Goal): Promise<void> {
+  await writeState(ctx.customerRef, "goals", [goal, ...(await listGoals(ctx))].slice(0, MAX_GOALS));
 }
 
 /** The current goals as a coach answer. */

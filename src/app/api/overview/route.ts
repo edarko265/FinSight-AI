@@ -1,6 +1,6 @@
 import { recordedBalance } from "@/lib/analytics/spending";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
-import { buildInsights } from "@/lib/coach/insights";
+import { allInsights } from "@/lib/coach/all-insights";
 import { forecastFor } from "@/lib/coach/tools";
 import { readState } from "@/lib/data/repository";
 
@@ -19,6 +19,6 @@ export async function GET(request: Request): Promise<Response> {
       shortfallCents: forecast.shortfallCents,
       horizonDays: forecast.assumptions.horizonDays,
     },
-    unreadInsights: buildInsights(ctx).filter((insight) => !read.has(insight.id)).length,
+    unreadInsights: (await allInsights(ctx)).filter((insight) => !read.has(insight.id)).length,
   });
 }

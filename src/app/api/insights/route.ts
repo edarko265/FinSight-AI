@@ -1,5 +1,5 @@
+import { allInsights } from "@/lib/coach/all-insights";
 import { getSessionContext, unauthorized } from "@/lib/coach/context";
-import { buildInsights } from "@/lib/coach/insights";
 import { readState, writeState } from "@/lib/data/repository";
 
 export async function GET(request: Request): Promise<Response> {
@@ -7,7 +7,10 @@ export async function GET(request: Request): Promise<Response> {
   if (!ctx) return unauthorized();
   const read = new Set((await readState<string[]>(ctx.customerRef, "insights_read")) ?? []);
   return Response.json({
-    insights: buildInsights(ctx).map((insight) => ({ ...insight, read: read.has(insight.id) })),
+    insights: (await allInsights(ctx)).map((insight) => ({
+      ...insight,
+      read: read.has(insight.id),
+    })),
   });
 }
 
@@ -18,7 +21,7 @@ export async function POST(): Promise<Response> {
   await writeState(
     ctx.customerRef,
     "insights_read",
-    buildInsights(ctx).map((insight) => insight.id),
+    (await allInsights(ctx)).map((insight) => insight.id),
   );
   return Response.json({ ok: true });
 }

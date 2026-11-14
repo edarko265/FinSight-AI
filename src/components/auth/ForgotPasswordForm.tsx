@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Logo } from "@/components/ui/icons";
+import { Wizard, WizardField } from "@/components/ui/Wizard";
 
 /**
  * Password reset for the demo. Accounts are the bank's synthetic customers
@@ -13,6 +14,7 @@ import { Logo } from "@/components/ui/icons";
  */
 export function ForgotPasswordForm(): React.JSX.Element {
   const { t } = usePreferences();
+  const [open, setOpen] = useState(false);
   const [customerId, setCustomerId] = useState("");
   const [sent, setSent] = useState(false);
 
@@ -34,39 +36,46 @@ export function ForgotPasswordForm(): React.JSX.Element {
           {t("forgot.sent")}
         </p>
       ) : (
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            setSent(true);
-          }}
-          className="flex flex-col gap-4"
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-full bg-primary px-5 py-3.5 text-base font-semibold text-on-primary"
         >
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="reset-customer-id" className="text-sm font-medium">
-              {t("login.customerId")}
-            </label>
-            <input
-              id="reset-customer-id"
-              value={customerId}
-              onChange={(event) => setCustomerId(event.target.value)}
-              placeholder={t("login.customerIdHint")}
-              autoComplete="username"
-              required
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-full bg-primary px-5 py-3.5 text-base font-semibold text-on-primary"
-          >
-            {t("forgot.submit")}
-          </button>
-        </form>
+          {t("forgot.start")}
+        </button>
       )}
 
       <Link href="/login" className="text-center text-sm font-medium text-accent">
         {t("forgot.back")}
       </Link>
+
+      <Wizard
+        open={open}
+        title={t("forgot.title")}
+        finishLabel={t("forgot.submit")}
+        onClose={() => setOpen(false)}
+        onFinish={() => {
+          setSent(true);
+          setOpen(false);
+        }}
+        steps={[
+          {
+            title: t("forgot.step"),
+            hint: t("forgot.stepHint"),
+            valid: customerId.trim().length > 0,
+            content: (
+              <WizardField
+                label={t("login.customerId")}
+                value={customerId}
+                onChange={(event) => setCustomerId(event.target.value)}
+                placeholder={t("login.customerIdHint")}
+                autoComplete="username"
+                autoFocus
+              />
+            ),
+          },
+        ]}
+      />
     </main>
   );
 }

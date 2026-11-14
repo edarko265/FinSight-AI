@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { SendIcon } from "@/components/ui/icons";
+import { Suggestions, Wizard, WizardChoices, WizardReview } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
 import { formatMoney, formatSlot } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -40,7 +41,7 @@ export function AdvisorView(): React.JSX.Element {
   const [slot, setSlot] = useState("");
   const [note, setNote] = useState("");
   const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,19 +66,14 @@ export function AdvisorView(): React.JSX.Element {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messageCount]);
 
-  async function submit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
+  async function submit(): Promise<void> {
     if (!data) return;
-    setBusy(true);
-    try {
-      const { request } = await api<{ request: AdvisorRequest }>("/api/advisor", {
-        method: "POST",
-        json: { topic, slot: slot || data.slots[0], note },
-      });
-      setData({ ...data, request });
-    } finally {
-      setBusy(false);
-    }
+    const { request: created } = await api<{ request: AdvisorRequest }>("/api/advisor", {
+      method: "POST",
+      json: { topic, slot: slot || data.slots[0], note },
+    });
+    setOpen(false);
+    setData({ ...data, request: created });
   }
 
   async function send(event: React.FormEvent): Promise<void> {
@@ -159,83 +155,132 @@ export function AdvisorView(): React.JSX.Element {
     );
   }
 
+  const chosenSlot = slot || data?.slots[0] || "";
+  const fee = data?.nextFeeCents ?? 0;
+  const notes: MessageKey[] = [
+    "advisor.suggest.start",
+    "advisor.suggest.tight",
+    "advisor.suggest.goal",
+    "advisor.suggest.pension",
+  ];
+
   return (
-    <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-5 px-4 py-4">
+    <div className="flex flex-col gap-5 px-4 py-4">
       <div>
         <h1 className="text-xl font-semibold">{t("advisor.title")}</h1>
         <p className="mt-1 text-sm text-muted">{t("advisor.intro")}</p>
       </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-semibold">{t("advisor.topic")}</legend>
-        {(["general", "investment"] as const).map((option) => (
-          <label
-            key={option}
-            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
-              topic === option ? "border-accent bg-accent-soft" : "border-border bg-surface"
-            }`}
-          >
-            <input
-              type="radio"
-              name="topic"
-              checked={topic === option}
-              onChange={() => setTopic(option)}
-              className="size-4 accent-(--accent)"
-            />
-            {t(`advisor.topic.${option}` as MessageKey)}
-          </label>
-        ))}
-      </fieldset>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="advisor-slot" className="text-sm font-semibold">
-          {t("advisor.slot")}
-        </label>
-        <select
-          id="advisor-slot"
-          value={slot || data?.slots[0] || ""}
-          onChange={(event) => setSlot(event.target.value)}
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-base"
-        >
-          {data?.slots.map((option) => (
-            <option key={option} value={option}>
-              {formatSlot(option, locale)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="advisor-note" className="text-sm font-semibold">
-          {t("advisor.note")}
-        </label>
-        <textarea
-          id="advisor-note"
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          placeholder={t("advisor.notePlaceholder")}
-          maxLength={1000}
-          rows={3}
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        />
-      </div>
-
       {data ? (
         <p className="rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm font-medium">
-          {data.nextFeeCents === 0
+          {fee === 0
             ? t("advisor.feeFree")
-            : t("advisor.feePaid", { fee: formatMoney(data.nextFeeCents, locale) })}
+            : t("advisor.feePaid", { fee: formatMoney(fee, locale) })}
         </p>
       ) : null}
-      <p className="text-xs text-muted">{t("advisor.share")}</p>
 
       <button
-        type="submit"
-        disabled={busy || !data}
+        type="button"
+        disabled={!data}
+        onClick={() => setOpen(true)}
         className="rounded-full bg-primary px-5 py-3.5 text-base font-semibold text-on-primary disabled:opacity-60"
       >
         {t("advisor.submit")}
       </button>
-    </form>
+      <Link href="/chat" className="text-center text-sm font-medium text-accent">
+        {t("advisor.backToCoach")}
+      </Link>
+
+      <Wizard
+        open={open}
+        title={t("advisor.title")}
+        finishLabel={t("advisor.submit")}
+        onClose={() => setOpen(false)}
+        onFinish={submit}
+        steps={[
+          {
+            title: t("advisor.topic"),
+            hint: t("advisor.step.topicHint"),
+            valid: true,
+            content: (
+              <WizardChoices
+                name="advisor-topic"
+                value={topic}
+                onChange={setTopic}
+                options={(["general", "investment"] as const).map((option) => ({
+                  value: option,
+                  label: t(`advisor.topic.${option}` as MessageKey),
+                }))}
+              />
+            ),
+          },
+          {
+            title: t("advisor.slot"),
+            hint: t("advisor.step.slotHint"),
+            valid: chosenSlot !== "",
+            content: (
+              <WizardChoices
+                name="advisor-slot"
+                value={chosenSlot}
+                onChange={setSlot}
+                options={(data?.slots ?? []).map((option) => ({
+                  value: option,
+                  label: formatSlot(option, locale),
+                }))}
+              />
+            ),
+          },
+          {
+            title: t("advisor.note"),
+            hint: t("advisor.step.noteHint"),
+            valid: note.trim().length > 0,
+            content: (
+              <>
+                <label className="flex flex-col gap-1.5 text-sm font-medium">
+                  {t("advisor.note")}
+                  <textarea
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    placeholder={t("advisor.notePlaceholder")}
+                    maxLength={1000}
+                    rows={3}
+                    autoFocus
+                    className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  />
+                </label>
+                <Suggestions
+                  label={t("wizard.suggestions")}
+                  options={notes.map((key) => ({ label: t(key), value: t(key) }))}
+                  onPick={setNote}
+                />
+              </>
+            ),
+          },
+          {
+            title: t("wizard.review"),
+            hint: t("advisor.share"),
+            valid: true,
+            content: (
+              <WizardReview
+                rows={[
+                  {
+                    label: t("advisor.review.topic"),
+                    value: t(`advisor.topic.${topic}` as MessageKey),
+                  },
+                  {
+                    label: t("advisor.review.slot"),
+                    value: chosenSlot ? formatSlot(chosenSlot, locale) : "—",
+                  },
+                  {
+                    label: t("advisor.review.fee"),
+                    value: fee === 0 ? t("advisor.review.free") : formatMoney(fee, locale),
+                  },
+                ]}
+              />
+            ),
+          },
+        ]}
+      />
+    </div>
   );
 }

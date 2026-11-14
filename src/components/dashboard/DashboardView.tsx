@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
+import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { CloseIcon, PlusIcon } from "@/components/ui/icons";
+import { PlusIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import {
   VIEW_PERIODS,
@@ -34,8 +35,7 @@ export function DashboardView(): React.JSX.Element {
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [naming, setNaming] = useState(false);
-  const [newName, setNewName] = useState("");
+  const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,23 +76,18 @@ export function DashboardView(): React.JSX.Element {
       views: state.views.map((view) => (view.id === state.activeId ? change(view) : view)),
     }));
 
-  function saveAsNew(): void {
-    if (!active) return;
-    const id = `view-${Date.now()}`;
-    update((state) => ({
-      activeId: id,
-      views: [
-        ...state.views,
-        {
-          id,
-          name: newName.trim() || t("views.unnamed"),
-          period: active.period,
-          widgets: active.widgets,
-        },
-      ],
-    }));
-    setNaming(false);
-    setNewName("");
+  function saveView(name: string, period: ViewPeriod): void {
+    if (!active || !viewDraft) return;
+    if (viewDraft.mode === "rename") {
+      updateActive((view) => ({ ...view, name, period, preset: undefined }));
+    } else {
+      const id = `view-${Date.now()}`;
+      update((state) => ({
+        activeId: id,
+        views: [...state.views, { id, name, period, widgets: active.widgets }],
+      }));
+    }
+    setViewDraft(null);
   }
 
   const forecast = overview?.forecast;
@@ -193,66 +188,44 @@ export function DashboardView(): React.JSX.Element {
             </select>
           </div>
 
-          {naming ? (
-            <form
-              className="flex items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                saveAsNew();
-              }}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+            <button
+              type="button"
+              onClick={() =>
+                setViewDraft({ mode: "new", name: "", period: active?.period ?? "last_month" })
+              }
+              className="font-medium text-accent"
             >
-              <label htmlFor="view-name" className="sr-only">
-                {t("views.namePlaceholder")}
-              </label>
-              <input
-                id="view-name"
-                value={newName}
-                onChange={(event) => setNewName(event.target.value)}
-                placeholder={t("views.namePlaceholder")}
-                maxLength={40}
-                autoFocus
-                className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-on-brand"
-              >
-                {t("views.save")}
-              </button>
+              {t("views.saveAs")}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setViewDraft({
+                  mode: "rename",
+                  name: active ? viewName(active) : "",
+                  period: active?.period ?? "last_month",
+                })
+              }
+              className="font-medium text-accent"
+            >
+              {t("views.rename")}
+            </button>
+            {dashboard.views.length > 1 ? (
               <button
                 type="button"
-                onClick={() => setNaming(false)}
-                aria-label={t("dashboard.cancel")}
-                className="rounded-full p-1.5 text-muted"
+                onClick={() =>
+                  update((state) => ({
+                    ...state,
+                    views: state.views.filter((view) => view.id !== state.activeId),
+                  }))
+                }
+                className="text-muted"
               >
-                <CloseIcon className="size-5" />
+                {t("common.moveToBin")}
               </button>
-            </form>
-          ) : (
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <button
-                type="button"
-                onClick={() => setNaming(true)}
-                className="font-medium text-accent"
-              >
-                {t("views.saveAs")}
-              </button>
-              {dashboard.views.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    update((state) => ({
-                      ...state,
-                      views: state.views.filter((view) => view.id !== state.activeId),
-                    }))
-                  }
-                  className="text-muted"
-                >
-                  {t("views.delete")}
-                </button>
-              ) : null}
-            </div>
-          )}
+            ) : null}
+          </div>
         </section>
       ) : null}
 
@@ -284,6 +257,8 @@ export function DashboardView(): React.JSX.Element {
           ))}
         </div>
       )}
+
+      <ViewWizard draft={viewDraft} onClose={() => setViewDraft(null)} onSave={saveView} />
 
       <NewWidgetSheet
         open={sheetOpen}

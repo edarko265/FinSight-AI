@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AdvisorQueue } from "@/components/admin/AdvisorQueue";
+import { Announcements } from "@/components/admin/Announcements";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
@@ -183,6 +184,10 @@ export function AdminDashboard(): React.JSX.Element {
 
           <Panel title={t("admin.advisor")}>
             <AdvisorQueue />
+          </Panel>
+
+          <Panel title={t("admin.announcements")}>
+            <Announcements />
           </Panel>
 
           <div className="grid gap-5 md:grid-cols-2">

@@ -12,6 +12,7 @@ import {
   type DashboardView,
   type DashboardWidget,
 } from "@/lib/contracts/chart";
+import { addToTrash, removedFromDashboard, type TrashItem } from "@/lib/coach/trash";
 import { readState, writeState } from "@/lib/data/repository";
 
 /** Saved dashboard setups. Widgets are stored as questions and recalculated every time they are shown. */
@@ -87,6 +88,12 @@ export async function loadDashboard(ctx: SessionContext): Promise<DashboardPaylo
   return render(ctx, saved.success ? saved.data : defaultState());
 }
 
+async function currentState(ctx: SessionContext): Promise<DashboardState> {
+  const saved = dashboardStateSchema.safeParse(await readState(ctx.customerRef, STATE_KIND));
+  return saved.success ? saved.data : defaultState();
+}
+
+/** Saves the views. Any view or widget that the save removes goes to the recycle bin. */
 export async function saveDashboard(
   ctx: SessionContext,
   state: DashboardState,
@@ -95,8 +102,36 @@ export async function saveDashboard(
     ? state.activeId
     : (state.views[0]?.id ?? "");
   const next = { ...state, activeId };
+  await addToTrash(ctx.customerRef, removedFromDashboard(await currentState(ctx), next));
   await writeState(ctx.customerRef, STATE_KIND, next);
   return render(ctx, next);
+}
+
+/** Puts a deleted view or widget back. A widget returns to its view, or to the open view if that is gone. */
+export async function restoreToDashboard(
+  ctx: SessionContext,
+  item: Extract<TrashItem, { kind: "view" | "widget" }>,
+): Promise<void> {
+  const state = await currentState(ctx);
+  if (item.kind === "view") {
+    const id = state.views.some((view) => view.id === item.item.id)
+      ? `view-${crypto.randomUUID()}`
+      : item.item.id;
+    await writeState(ctx.customerRef, STATE_KIND, {
+      ...state,
+      views: [...state.views, { ...item.item, id }].slice(0, 12),
+    });
+    return;
+  }
+  const targetId = state.views.some((view) => view.id === item.viewId)
+    ? item.viewId
+    : state.activeId;
+  await writeState(ctx.customerRef, STATE_KIND, {
+    ...state,
+    views: state.views.map((view) =>
+      view.id === targetId ? { ...view, widgets: [item.item, ...view.widgets].slice(0, 16) } : view,
+    ),
+  });
 }
 
 function render(ctx: SessionContext, state: DashboardState): DashboardPayload {
