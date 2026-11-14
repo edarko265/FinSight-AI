@@ -10,6 +10,7 @@ import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/
 import { api, ApiError } from "@/lib/api-client";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface GoalPlan {
   goal: { id: string; name: string; targetCents: number; months: number; monthlyCents: number };
@@ -168,7 +169,7 @@ export function GoalsView(): React.JSX.Element {
                   }}
                 />
               </div>
-              <p className="mt-2 flex items-center justify-between gap-2 text-xs text-muted">
+              <p className="mt-2 flex items-center justify-between gap-2 text-sm text-muted">
                 <span>
                   {t("goal.row.room")}: {money(roomCents)}
                 </span>
@@ -196,7 +197,7 @@ export function GoalsView(): React.JSX.Element {
                     style={{ width: `${percent}%` }}
                   />
                 </div>
-                <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
                   <span
                     className={`rounded-full px-2.5 py-1 font-medium ${
                       pace === "behind"
@@ -343,7 +344,7 @@ export function GoalsView(): React.JSX.Element {
                     }}
                   />
                 </div>
-                <p className="mt-2 text-xs opacity-80">
+                <p className="mt-2 text-sm opacity-80">
                   {t("rewards.next", { points: rewards.nextLevelAt - rewards.points })}
                 </p>
               </>
@@ -399,7 +400,7 @@ export function GoalsView(): React.JSX.Element {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted">{t("rewards.note")}</p>
+          <InfoTip>{t("rewards.note")}</InfoTip>
         </section>
       ) : null}
       <Wizard

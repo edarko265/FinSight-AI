@@ -66,6 +66,12 @@ export const fi: Record<MessageKey, string> = {
   "chat.error": "Jokin meni vikaan. Yritä uudelleen.",
   "chat.addToDashboard": "Lisää koontinäyttöön",
   "chat.added": "Lisätty",
+  "dock.open": "Avaa valmentaja",
+  "dock.close": "Sulje",
+  "dock.expand": "Koko näyttö",
+  "dock.collapse": "Puolikas näyttö",
+  "dock.listen": "Kysy äänellä",
+  "dock.call": "Soita valmentajalle",
   "chat.seeTransactions": "Näytä tapahtumat",
   "chat.why": "Miksi tämä vastaus?",
   "chat.modeAi": "Tekoälyvalmentaja",
@@ -501,6 +507,38 @@ export const fi: Record<MessageKey, string> = {
   "common.restore": "Palauta",
   "common.deleteForever": "Poista pysyvästi",
   "common.moveToBin": "Siirrä roskakoriin",
+  "info.show": "Lisätietoa",
+  "info.hide": "Piilota lisätiedot",
+  "chart.help.bar":
+    "Jokainen palkki on yksi jakso. Korkeampi palkki tarkoittaa enemmän rahaa, ja tumma palkki on viimeisin. Summat on lueteltu kaavion alla.",
+  "chart.help.hbar":
+    "Jokainen rivi on yksi kohde, ja pidempi palkki tarkoittaa enemmän rahaa. Värit vastaavat kaavion alla olevaa luetteloa.",
+  "chart.help.line":
+    "Viiva seuraa summaa jaksosta toiseen. Ylempänä oleva piste tarkoittaa enemmän rahaa, ja iso piste on viimeisin. Summat on lueteltu kaavion alla.",
+  "chart.help.area":
+    "Viiva seuraa summaa ajan yli, ja sen alla oleva väritys helpottaa tason hahmottamista. Ylempänä tarkoittaa enemmän rahaa.",
+  "chart.help.donut":
+    "Rengas on kokonaisuus ja jokainen värillinen osa on yksi sen osista. Suurempi osa on suurempi osuus. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.pie":
+    "Ympyrä on kokonaisuus ja jokainen värillinen siivu on yksi sen osista. Suurempi siivu on suurempi osuus. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.stack":
+    "Palkki on kokonaisuus, joka on jaettu värillisiin osiin. Leveämpi osa on suurempi osuus. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.treemap":
+    "Jokainen lohko on yksi kohde, ja sen pinta-ala kertoo koon: isompi lohko on suurempi summa. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.radial":
+    "Jokainen rengas on yksi kohde, ja pidempi värillinen kaari tarkoittaa suurempaa summaa suurimpaan kohteeseen verrattuna. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.radar":
+    "Jokainen säde on yksi kohde, ja mitä kauempana keskipisteestä sen piste on, sitä suurempi summa. Muoto näyttää, mitkä kohteet erottuvat.",
+  "chart.help.waterfall": "Jokainen palkki lisätään edellisen päälle, ja yhteensä näkyy oikealla.",
+  "chart.help.lollipop":
+    "Jokainen varsi on yksi kohde, ja korkeammalla oleva pallo tarkoittaa enemmän rahaa. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.funnel":
+    "Kohteet on järjestetty suurimmasta pienimpään, joten palkit kapenevat ylhäältä alas. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.table":
+    "Kohteet ja niiden summat tavallisena luettelona, ja pieni palkki näyttää kunkin osuuden.",
+  "chart.help.stat": "Summat suurina lukuina, yksi kutakin kohdetta kohden.",
+  "chart.help.flow":
+    "Tulosi vasemmalla jakautuvat oikealla niihin kohteisiin, joihin raha meni. Paksumpi kaista tarkoittaa enemmän rahaa. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
   "trash.title": "Roskakori",
   "trash.intro": "Poistamasi asiat säilyvät täällä, kunnes palautat ne tai poistat ne pysyvästi.",
   "trash.empty": "Roskakori on tyhjä.",

@@ -32,7 +32,7 @@ function Badge({
   if (count <= 0) return null;
   return (
     <span
-      className={`flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-surface ${className}`}
+      className={`flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-xs font-bold text-surface ${className}`}
     >
       {count > 99 ? "99+" : count}
     </span>
@@ -59,7 +59,7 @@ export function BottomNav(): React.JSX.Element {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-medium ${
+                className={`flex min-h-14 flex-col items-center justify-center gap-1 px-0 py-2 text-xs font-medium tracking-tight ${
                   active ? "text-accent" : "text-muted"
                 }`}
               >
@@ -105,7 +105,7 @@ export function SideNav(): React.JSX.Element {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2.5 text-[11px] font-medium lg:flex-row lg:gap-3 lg:text-sm ${
+                className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2.5 text-xs font-medium lg:flex-row lg:gap-3 lg:text-sm ${
                   active ? "bg-accent-soft text-accent" : "text-muted hover:bg-background"
                 }`}
               >

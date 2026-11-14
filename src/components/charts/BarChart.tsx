@@ -1,19 +1,22 @@
+import { CHART_LABEL_SIZE } from "@/components/charts/chart-palette";
+import { useChartLabels } from "@/components/charts/chart-labels";
 import type { ChartPoint } from "@/lib/contracts/chart";
 
 const WIDTH = 300;
 const HEIGHT = 150;
-const LABEL_SPACE = 20;
+const LABEL_SPACE = 26;
 const GAP = 10;
 const SHORT_LABEL = 5;
 
 /** Bars with longer names are drawn as rows, so the labels stay readable on a phone. */
 function Rows({ points }: { points: ChartPoint[] }): React.JSX.Element {
+  const labels = useChartLabels();
   const max = Math.max(...points.map((point) => point.valueCents), 1);
   return (
     <ul className="flex flex-col gap-2" aria-hidden="true">
       {points.map((point, index) => (
         <li key={point.label} className="flex flex-col gap-1">
-          <span className="text-xs text-muted">{point.label}</span>
+          {labels ? <span className="text-xs text-muted">{point.label}</span> : null}
           <span className="h-3 w-full overflow-hidden rounded-full bg-border">
             <span
               className="block h-full rounded-full fs-grow-x"
@@ -31,10 +34,11 @@ function Rows({ points }: { points: ChartPoint[] }): React.JSX.Element {
 }
 
 export function BarChart({ points }: { points: ChartPoint[] }): React.JSX.Element {
+  const labels = useChartLabels();
   if (points.some((point) => point.label.length > SHORT_LABEL)) return <Rows points={points} />;
 
   const max = Math.max(...points.map((point) => point.valueCents), 1);
-  const plotHeight = HEIGHT - LABEL_SPACE;
+  const plotHeight = HEIGHT - (labels ? LABEL_SPACE : 4);
   const barWidth = (WIDTH - GAP * (points.length - 1)) / points.length;
 
   return (
@@ -55,15 +59,17 @@ export function BarChart({ points }: { points: ChartPoint[] }): React.JSX.Elemen
               className="fs-grow-y"
               style={{ animationDelay: `${index * 0.05}s` }}
             />
-            <text
-              x={x + barWidth / 2}
-              y={HEIGHT - 5}
-              textAnchor="middle"
-              fontSize={11}
-              fill="var(--muted)"
-            >
-              {point.label}
-            </text>
+            {labels ? (
+              <text
+                x={x + barWidth / 2}
+                y={HEIGHT - 5}
+                textAnchor="middle"
+                fontSize={CHART_LABEL_SIZE}
+                fill="var(--muted)"
+              >
+                {point.label}
+              </text>
+            ) : null}
           </g>
         );
       })}

@@ -15,6 +15,7 @@ import {
 import { api, ApiError } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 const SLICES = ["bills", "essentials", "everyday", "saving", "investing"] as const;
 type SliceKey = (typeof SLICES)[number];
@@ -332,8 +333,9 @@ export function PlansView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("plans.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("plans.intro")}</p>
+        <InfoTip lead={<h1 className="text-xl font-semibold">{t("plans.title")}</h1>}>
+          {t("plans.intro")}
+        </InfoTip>
       </div>
 
       {failed ? (
@@ -353,7 +355,7 @@ export function PlansView(): React.JSX.Element {
           <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
             <h2 className="text-base font-semibold">{t("plans.today")}</h2>
             <SplitView split={data.actual.percent} amounts={data.actual.cents} />
-            <p className="text-xs text-muted">{t("plans.today.note")}</p>
+            <InfoTip>{t("plans.today.note")}</InfoTip>
           </section>
 
           <div className="flex flex-wrap gap-3">
@@ -385,7 +387,7 @@ export function PlansView(): React.JSX.Element {
                 >
                   <div>
                     <h3 className="text-base font-semibold">{plan.name}</h3>
-                    <p className="text-xs text-muted">
+                    <p className="text-sm text-muted">
                       {t(`plans.origin.${plan.origin}`)}
                       {plan.shareCode
                         ? ` · ${t(plan.shareListed ? "plans.shared.listed" : "plans.shared.code")}`
@@ -397,9 +399,9 @@ export function PlansView(): React.JSX.Element {
                     amounts={plan.forMe}
                     compare={data.actual.percent}
                   />
-                  <p className="text-xs text-muted">{t("plans.forYou.note")}</p>
+                  <InfoTip>{t("plans.forYou.note")}</InfoTip>
                   {plan.goals.length > 0 ? (
-                    <p className="text-xs text-muted">
+                    <p className="text-sm text-muted">
                       {t("plans.goals")}:{" "}
                       {plan.goals.map((goal) => `${goal.label} ${goal.percent} %`).join(" · ")}
                     </p>
@@ -467,7 +469,7 @@ export function PlansView(): React.JSX.Element {
           {data.sharing ? (
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold">{t("plans.popular")}</h2>
-              <p className="text-xs text-muted">{t("plans.popular.note")}</p>
+              <InfoTip>{t("plans.popular.note")}</InfoTip>
               {data.listed.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
                   {t("plans.popular.empty")}
@@ -481,7 +483,7 @@ export function PlansView(): React.JSX.Element {
                   >
                     <div>
                       <h3 className="text-base font-semibold">{plan.name}</h3>
-                      <p className="text-xs text-muted">
+                      <p className="text-sm text-muted">
                         {t("plans.copies", { count: plan.copies })}
                         {plan.mine ? ` · ${t("plans.mine")}` : ""}
                       </p>
@@ -504,7 +506,7 @@ export function PlansView(): React.JSX.Element {
               </div>
             </section>
           ) : (
-            <p className="text-xs text-muted">{t("plans.sharingOff")}</p>
+            <p className="text-sm text-muted">{t("plans.sharingOff")}</p>
           )}
         </>
       ) : failed ? null : (
@@ -621,7 +623,7 @@ export function PlansView(): React.JSX.Element {
                       className="w-full accent-[var(--accent)]"
                     />
                     {data ? (
-                      <p className="text-xs text-muted">
+                      <p className="text-sm text-muted">
                         {t("plans.forYou", {
                           amount: money(Math.round((data.actual.incomeCents * split[key]) / 100)),
                         })}
@@ -731,7 +733,7 @@ export function PlansView(): React.JSX.Element {
                   <p className="mb-3 text-base font-semibold">{sharing.name}</p>
                   <SplitView split={sharing.split} />
                   {sharing.goals.length > 0 ? (
-                    <p className="mt-3 text-xs text-muted">
+                    <p className="mt-3 text-sm text-muted">
                       {t("plans.goals")}:{" "}
                       {sharing.goals
                         .map(
@@ -793,7 +795,7 @@ export function PlansView(): React.JSX.Element {
                     amounts={preview.forMe}
                     compare={data.actual.percent}
                   />
-                  <p className="text-xs text-muted">{t("plans.forYou.note")}</p>
+                  <InfoTip>{t("plans.forYou.note")}</InfoTip>
                 </div>
               ) : null,
           },

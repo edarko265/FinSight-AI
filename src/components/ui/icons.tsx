@@ -21,6 +21,12 @@ function Svg({
   );
 }
 
+export const InfoIcon = (p: IconProps): React.JSX.Element => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5M12 8h.01" />
+  </Svg>
+);
 export const DashboardIcon = (p: IconProps): React.JSX.Element => (
   <Svg {...p}>
     <path d="M4 13h6V4H4v9zm0 7h6v-5H4v5zm10 0h6V11h-6v9zm0-16v5h6V4h-6z" />
@@ -81,6 +87,16 @@ export const StopIcon = (p: IconProps): React.JSX.Element => (
 export const PhoneIcon = (p: IconProps): React.JSX.Element => (
   <Svg {...p}>
     <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" />
+  </Svg>
+);
+export const ExpandIcon = (p: IconProps): React.JSX.Element => (
+  <Svg {...p}>
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+  </Svg>
+);
+export const CollapseIcon = (p: IconProps): React.JSX.Element => (
+  <Svg {...p}>
+    <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
   </Svg>
 );
 export const SendIcon = (p: IconProps): React.JSX.Element => (

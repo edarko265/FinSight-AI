@@ -15,6 +15,7 @@ import {
 import { api, ApiError } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 type Bank = "aurora" | "kaski" | "nordlys";
 type Kind = "everyday" | "savings" | "credit";
@@ -111,8 +112,9 @@ export function AccountsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("accounts.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("accounts.intro")}</p>
+        <InfoTip lead={<h1 className="text-xl font-semibold">{t("accounts.title")}</h1>}>
+          {t("accounts.intro")}
+        </InfoTip>
       </div>
       <p className="rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm">
         {t("accounts.simulation")}
@@ -134,7 +136,7 @@ export function AccountsView(): React.JSX.Element {
           <section className="rounded-2xl bg-brand p-5 text-on-brand">
             <p className="text-sm opacity-80">{t("accounts.total")}</p>
             <p className="mt-1 text-3xl font-semibold tabular-nums">{money(total)}</p>
-            <p className="mt-1 text-xs opacity-80">
+            <p className="mt-1 text-sm opacity-80">
               {t("accounts.total.note", {
                 count: data.accounts.filter((account) => account.included).length,
               })}
@@ -152,7 +154,7 @@ export function AccountsView(): React.JSX.Element {
                     <h2 className="truncate text-base font-semibold">
                       {account.simulated ? account.nickname : t("accounts.main")}
                     </h2>
-                    <p className="text-xs text-muted">
+                    <p className="text-sm text-muted">
                       {account.simulated && account.bank
                         ? `${t(`accounts.bank.${account.bank}`)} · ${t(`accounts.kind.${account.kind}` as MessageKey)}`
                         : t("accounts.main.note")}
@@ -216,7 +218,7 @@ export function AccountsView(): React.JSX.Element {
           >
             {t("accounts.link")}
           </button>
-          <p className="text-xs text-muted">{t("accounts.note")}</p>
+          <InfoTip>{t("accounts.note")}</InfoTip>
         </>
       ) : failed ? null : (
         <p className="py-10 text-center text-sm text-muted" role="status">

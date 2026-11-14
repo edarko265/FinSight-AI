@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { MicIcon, PhoneIcon } from "@/components/ui/icons";
@@ -18,14 +18,16 @@ const primary =
 function AskWidget(): React.JSX.Element {
   const { t } = usePreferences();
   const { me } = useOverview();
-  const router = useRouter();
+  const dock = useChatDock();
   const [question, setQuestion] = useState("");
   return (
     <form
       className="flex items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        if (question.trim()) router.push(`/chat?q=${encodeURIComponent(question.trim())}`);
+        if (!question.trim()) return;
+        dock.open({ question: question.trim() });
+        setQuestion("");
       }}
     >
       <input
@@ -37,14 +39,15 @@ function AskWidget(): React.JSX.Element {
         className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
       />
       {me?.voiceEnabled ? (
-        <Link
-          href="/chat?listen=1"
+        <button
+          type="button"
+          onClick={() => dock.open({ start: "listen" })}
           aria-label={t("widget.ask.speak")}
           title={t("widget.ask.speak")}
           className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border text-accent"
         >
           <MicIcon className="size-5" />
-        </Link>
+        </button>
       ) : null}
       <button
         type="submit"
@@ -60,10 +63,11 @@ function AskWidget(): React.JSX.Element {
 /** One tap to a live voice call with the coach. Says why when a call is not possible. */
 function CallWidget(): React.JSX.Element {
   const { t } = usePreferences();
+  const dock = useChatDock();
   const { me } = useOverview();
   if (me && !(me.voiceAgentEnabled && me.aiConsent)) {
     return (
-      <p className="text-xs text-muted">
+      <p className="text-sm text-muted">
         {t(me.voiceAgentEnabled ? "widget.call.needsConsent" : "widget.call.off")}{" "}
         {me.voiceAgentEnabled ? (
           <Link href="/settings" className="font-semibold text-accent">
@@ -74,10 +78,10 @@ function CallWidget(): React.JSX.Element {
     );
   }
   return (
-    <Link href="/chat?call=1" className={primary}>
+    <button type="button" onClick={() => dock.open({ start: "call" })} className={primary}>
       <PhoneIcon className="size-4" />
       {t("widget.call.start")}
-    </Link>
+    </button>
   );
 }
 

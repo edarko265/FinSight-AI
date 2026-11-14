@@ -14,6 +14,7 @@ import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { CountUp } from "@/components/ui/CountUp";
+import { DASHBOARD_CHANGED } from "@/components/chat/PinnableChat";
 import { PlusIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import {
@@ -70,6 +71,17 @@ export function DashboardView(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
+  }, [locale]);
+
+  // A chart pinned from the floating coach changes the dashboard open behind it.
+  useEffect(() => {
+    const reload = (): void => {
+      api<DashboardPayload>(`/api/dashboard?locale=${locale}`)
+        .then(setDashboard)
+        .catch(() => undefined);
+    };
+    window.addEventListener(DASHBOARD_CHANGED, reload);
+    return () => window.removeEventListener(DASHBOARD_CHANGED, reload);
   }, [locale]);
 
   const active = dashboard?.views.find((view) => view.id === dashboard.activeId);
@@ -168,7 +180,7 @@ export function DashboardView(): React.JSX.Element {
         {forecast && forecast.status !== "insufficient_data" ? (
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/15 pt-3">
             <div>
-              <p className="text-xs opacity-80">
+              <p className="text-sm opacity-80">
                 {t(shortfall ? "dashboard.shortfall" : "dashboard.safeToSpend")}
               </p>
               <p className="text-xl font-semibold tabular-nums">
@@ -181,7 +193,7 @@ export function DashboardView(): React.JSX.Element {
             <button
               type="button"
               onClick={() => setAffordOpen(true)}
-              className="rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary"
+              className="rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-on-primary"
             >
               {t("afford.cta")}
             </button>
@@ -241,7 +253,7 @@ export function DashboardView(): React.JSX.Element {
           </div>
 
           <div className="flex items-center gap-2">
-            <label htmlFor="view-period" className="text-xs font-medium text-muted">
+            <label htmlFor="view-period" className="text-sm font-medium text-muted">
               {t("views.period")}
             </label>
             <select

@@ -67,6 +67,12 @@ export const en = {
   "chat.error": "Something went wrong on my side. Please try again.",
   "chat.addToDashboard": "Add to dashboard",
   "chat.added": "Added",
+  "dock.open": "Open the coach",
+  "dock.close": "Close",
+  "dock.expand": "Full screen",
+  "dock.collapse": "Half screen",
+  "dock.listen": "Ask by voice",
+  "dock.call": "Call the coach",
   "chat.seeTransactions": "See transactions",
   "chat.why": "Why this answer?",
   "chat.modeAi": "AI coach",
@@ -510,6 +516,39 @@ export const en = {
   "common.restore": "Restore",
   "common.deleteForever": "Delete permanently",
   "common.moveToBin": "Move to recycle bin",
+  "info.show": "More information",
+  "info.hide": "Hide information",
+  "chart.help.bar":
+    "Each bar is one period. A taller bar means more money, and the dark bar is the latest. The amounts are listed under the chart.",
+  "chart.help.hbar":
+    "Each row is one item, and a longer bar means more money. The colours match the list under the chart.",
+  "chart.help.line":
+    "The line follows the amount from one period to the next. Higher means more money, and the large dot is the latest. The amounts are listed under the chart.",
+  "chart.help.area":
+    "The line follows the amount over time, and the shading under it makes the level easier to see. Higher means more money.",
+  "chart.help.donut":
+    "The ring is the whole, and each coloured slice is one part of it. A bigger slice is a bigger share. The list under the chart shows which colour is which.",
+  "chart.help.pie":
+    "The circle is the whole, and each coloured slice is one part of it. A bigger slice is a bigger share. The list under the chart shows which colour is which.",
+  "chart.help.stack":
+    "The bar is the whole, split into coloured parts. A wider part is a bigger share. The list under the chart shows which colour is which.",
+  "chart.help.treemap":
+    "Each block is one item, and its area shows its size: a bigger block is a bigger amount. The list under the chart shows which colour is which.",
+  "chart.help.radial":
+    "Each ring is one item, and a longer coloured arc means a larger amount compared with the biggest item. The list under the chart shows which colour is which.",
+  "chart.help.radar":
+    "Each spoke is one item, and the further its point is from the centre, the larger the amount. The shape shows which items stand out.",
+  "chart.help.waterfall":
+    "Each bar is added on top of the one before it, building up to the total on the right.",
+  "chart.help.lollipop":
+    "Each stick is one item, and a higher dot means more money. The list under the chart shows which colour is which.",
+  "chart.help.funnel":
+    "Items are sorted from largest to smallest, so the bars narrow from top to bottom. The list under the chart shows which colour is which.",
+  "chart.help.table":
+    "The items and their amounts as a plain list, with a small bar showing each one’s share.",
+  "chart.help.stat": "The amounts written out as big numbers, one for each item.",
+  "chart.help.flow":
+    "Your income on the left splits into where it went on the right. A thicker band means more money. The list under the chart shows which colour is which.",
   "trash.title": "Recycle bin",
   "trash.intro": "Things you delete stay here until you restore them or delete them permanently.",
   "trash.empty": "The recycle bin is empty.",

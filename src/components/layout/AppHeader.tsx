@@ -19,7 +19,7 @@ export function AppHeader(): React.JSX.Element {
           <Logo className="size-8 md:hidden" />
           <span className="flex flex-col leading-tight">
             <span className="text-base font-semibold tracking-tight">{t("app.name")}</span>
-            <span className="text-[11px] opacity-75">
+            <span className="text-xs">
               {overview
                 ? t("app.asOf", { date: formatDay(overview.asOf, locale) })
                 : t("app.synthetic")}
@@ -27,7 +27,7 @@ export function AppHeader(): React.JSX.Element {
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-primary px-2.5 py-1 text-center text-[11px] leading-tight font-semibold text-on-primary">
+          <span className="rounded-full bg-primary px-2.5 py-1 text-center text-xs leading-tight font-semibold text-on-primary">
             {t("app.synthetic")}
           </span>
           <Link
@@ -37,7 +37,7 @@ export function AppHeader(): React.JSX.Element {
           >
             <BellIcon className="size-6" />
             {unread > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">
+              <span className="absolute -top-0.5 -right-0.5 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-on-primary">
                 {unread}
               </span>
             ) : null}

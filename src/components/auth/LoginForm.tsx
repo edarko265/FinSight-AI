@@ -60,7 +60,7 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
         <Link href="/forgot-password" className="text-center text-sm font-medium text-accent">
           {t("login.forgot")}
         </Link>
-        <p className="text-center text-xs text-muted">{t("login.notBank")}</p>
+        <p className="text-center text-sm text-muted">{t("login.notBank")}</p>
       </div>
 
       <Wizard

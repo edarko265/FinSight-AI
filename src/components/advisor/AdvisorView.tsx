@@ -10,6 +10,7 @@ import { Suggestions, Wizard, WizardChoices, WizardReview } from "@/components/u
 import { api } from "@/lib/api-client";
 import { formatMoney, formatSlot } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface Message {
   id: string;
@@ -100,14 +101,14 @@ export function AdvisorView(): React.JSX.Element {
           <p className="text-sm font-semibold">
             {t(`advisor.status.${request.status}` as MessageKey)}
           </p>
-          <p className="text-xs text-muted">
+          <p className="text-sm text-muted">
             {t(`advisor.topic.${request.topic}` as MessageKey)} ·{" "}
             {t("advisor.booked", { slot: formatSlot(request.slot, locale) })}
           </p>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <ol className="flex flex-col gap-3" aria-live="polite">
-            <li className="self-center rounded-full bg-accent-soft px-3 py-1.5 text-center text-xs">
+            <li className="self-center rounded-full bg-accent-soft px-3 py-1.5 text-center text-sm">
               {t("advisor.waiting")}
             </li>
             {request.messages.map((message) => (
@@ -119,7 +120,7 @@ export function AdvisorView(): React.JSX.Element {
                     : "self-start rounded-bl-md bg-surface shadow-sm"
                 }`}
               >
-                <span className="mb-0.5 block text-[11px] font-semibold opacity-70">
+                <span className="mb-0.5 block text-xs font-semibold opacity-80">
                   {t(message.sender === "customer" ? "advisor.you" : "advisor.adviser")}
                 </span>
                 {message.text}
@@ -170,8 +171,9 @@ export function AdvisorView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("advisor.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("advisor.intro")}</p>
+        <InfoTip lead={<h1 className="text-xl font-semibold">{t("advisor.title")}</h1>}>
+          {t("advisor.intro")}
+        </InfoTip>
       </div>
 
       {data ? (

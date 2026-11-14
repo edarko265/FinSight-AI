@@ -202,7 +202,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
               key={caption.id}
               className={`fs-rise ${caption.role === "user" ? "text-right opacity-80" : ""}`}
             >
-              <span className="text-[11px] font-semibold opacity-60">
+              <span className="text-xs font-semibold opacity-80">
                 {t(caption.role === "user" ? "voice.call.you" : "voice.call.coach")}
               </span>
               <span className="block">{caption.text}</span>

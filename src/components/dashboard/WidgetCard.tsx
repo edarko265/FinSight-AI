@@ -2,11 +2,13 @@
 
 import { useRef, useState } from "react";
 
+import { ChartLabelsProvider } from "@/components/charts/chart-labels";
 import { ChartView } from "@/components/charts/ChartView";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon } from "@/components/ui/icons";
 import { CHART_STYLES, type ChartStyle, type DashboardWidget } from "@/lib/contracts/chart";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 export interface WidgetHandlers {
   onRemove: (id: string) => void;
@@ -195,9 +197,11 @@ export function WidgetCard({
       {widget.collapsed ? null : card ? (
         <div className="mt-1">
           <p className="mb-3 text-sm text-muted">{card.summary}</p>
-          <ChartView card={card} />
+          <ChartLabelsProvider value={false}>
+            <ChartView card={card} />
+          </ChartLabelsProvider>
           {card.chart.kind === "flow" ? null : (
-            <label className="mt-3 flex items-center gap-2 text-xs text-muted">
+            <label className="mt-3 flex items-center gap-2 text-sm text-muted">
               {t("chart.type")}
               <select
                 value={card.chart.kind}
@@ -212,7 +216,10 @@ export function WidgetCard({
               </select>
             </label>
           )}
-          <p className="mt-3 text-xs text-muted">{card.basis}</p>
+          <InfoTip className="mt-1">
+            <span className="block">{t(`chart.help.${card.chart.kind}` as MessageKey)}</span>
+            <span className="mt-2 block">{card.basis}</span>
+          </InfoTip>
         </div>
       ) : (
         <div className={compact ? "mt-2" : "mt-3"}>{children}</div>

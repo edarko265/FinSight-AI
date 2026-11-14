@@ -15,6 +15,7 @@ import {
 import { api } from "@/lib/api-client";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface Pair {
   basket: string;
@@ -106,8 +107,9 @@ export function CorrectionsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("corrections.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("corrections.intro")}</p>
+        <InfoTip lead={<h1 className="text-xl font-semibold">{t("corrections.title")}</h1>}>
+          {t("corrections.intro")}
+        </InfoTip>
       </div>
       {failed ? (
         <div
@@ -177,7 +179,7 @@ export function CorrectionsView(): React.JSX.Element {
             </button>
           </article>
         ))}
-        <p className="text-xs text-muted">{t("corrections.how")}</p>
+        <InfoTip>{t("corrections.how")}</InfoTip>
         <Link
           href={`/chat?q=${encodeURIComponent(t("chat.suggest.where"))}`}
           className="self-start rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-semibold"
@@ -188,7 +190,7 @@ export function CorrectionsView(): React.JSX.Element {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">{t("corrections.bills")}</h2>
-        <p className="text-xs text-muted">{t("corrections.bills.note")}</p>
+        <InfoTip>{t("corrections.bills.note")}</InfoTip>
         {data && data.bills.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
             {t("corrections.bills.empty")}

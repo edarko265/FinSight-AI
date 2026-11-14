@@ -1,7 +1,13 @@
 "use client";
 
-import { chartColor, chartInk } from "@/components/charts/chart-palette";
+import {
+  CHART_LABEL_SIZE,
+  chartColor,
+  chartInk,
+  fitLabel,
+} from "@/components/charts/chart-palette";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useChartLabels } from "@/components/charts/chart-labels";
 import type { ChartPoint } from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
 
@@ -28,6 +34,7 @@ function useTip(): (point: ChartPoint, total?: number) => string {
 
 /** Rows: the readable choice when names are long. */
 export function HBarChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const data = positive(points);
   const max = Math.max(1, ...data.map((point) => point.valueCents));
@@ -35,7 +42,7 @@ export function HBarChart({ points }: Props): React.JSX.Element {
     <ul className="flex flex-col gap-2" aria-hidden="true">
       {data.map((point, index) => (
         <li key={point.label} title={tip(point)} className="flex flex-col gap-1">
-          <span className="truncate text-xs text-muted">{point.label}</span>
+          {labels ? <span className="truncate text-xs text-muted">{point.label}</span> : null}
           <span className="h-3 w-full overflow-hidden rounded-full bg-border">
             <span
               className="fs-grow-x block h-full rounded-full"
@@ -65,7 +72,8 @@ function coordinates(points: ChartPoint[], pad = 12): { x: number; y: number }[]
   }));
 }
 
-function AxisLabels({ points }: Props): React.JSX.Element {
+function AxisLabels({ points }: Props): React.JSX.Element | null {
+  if (!useChartLabels()) return null;
   const shown = points.length <= 6 ? points.map((_, index) => index) : [0, points.length - 1];
   const at = coordinates(points);
   return (
@@ -75,11 +83,11 @@ function AxisLabels({ points }: Props): React.JSX.Element {
           key={index}
           x={at[index]?.x ?? 0}
           y={H - 3}
-          fontSize={10}
+          fontSize={CHART_LABEL_SIZE}
           fill="var(--muted)"
           textAnchor={index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}
         >
-          {(points[index]?.label ?? "").slice(0, 10)}
+          {fitLabel(points[index]?.label ?? "", W / Math.max(points.length, 1))}
         </text>
       ))}
     </>
@@ -88,12 +96,13 @@ function AxisLabels({ points }: Props): React.JSX.Element {
 
 /** A line with the area under it filled: good for a level over time. */
 export function AreaChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const at = coordinates(points);
   const line = at.map((p, index) => `${index === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
   const first = at[0];
   const last = at.at(-1);
-  const base = H - 28;
+  const base = labels ? H - 28 : H - 10;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" aria-hidden="true">
       {first && last ? (
@@ -116,11 +125,12 @@ export function AreaChart({ points }: Props): React.JSX.Element {
 
 /** A stick with a dot on top: bars with less ink. */
 export function LollipopChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const data = positive(points);
   const max = Math.max(1, ...data.map((point) => point.valueCents));
   const step = W / Math.max(1, data.length);
-  const base = H - 22;
+  const base = labels ? H - 22 : H - 8;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" aria-hidden="true">
       <line x1={0} x2={W} y1={base} y2={base} stroke="var(--border)" />
@@ -132,9 +142,17 @@ export function LollipopChart({ points }: Props): React.JSX.Element {
             <title>{tip(point)}</title>
             <line x1={x} x2={x} y1={base} y2={y} stroke={chartColor(index)} strokeWidth={3} />
             <circle cx={x} cy={y} r={6} fill={chartColor(index)} />
-            <text x={x} y={H - 6} fontSize={10} textAnchor="middle" fill="var(--muted)">
-              {point.label.slice(0, Math.max(3, Math.floor(step / 6)))}
-            </text>
+            {labels ? (
+              <text
+                x={x}
+                y={H - 6}
+                fontSize={CHART_LABEL_SIZE}
+                textAnchor="middle"
+                fill="var(--muted)"
+              >
+                {fitLabel(point.label, step)}
+              </text>
+            ) : null}
           </g>
         );
       })}
@@ -183,6 +201,7 @@ export function PieChart({ points }: Props): React.JSX.Element {
 
 /** One bar split into parts: the quickest read of shares of a whole. */
 export function StackChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const data = positive(points).filter((point) => point.valueCents > 0);
   const total = Math.max(1, sum(data));
@@ -192,14 +211,14 @@ export function StackChart({ points }: Props): React.JSX.Element {
         <span
           key={point.label}
           title={tip(point, total)}
-          className="fs-grow-x flex items-center justify-center overflow-hidden text-[10px] font-semibold"
+          className="fs-grow-x flex items-center justify-center overflow-hidden text-xs font-semibold"
           style={{
             width: `${(point.valueCents / total) * 100}%`,
             background: chartColor(index),
             color: chartInk(index),
           }}
         >
-          {point.valueCents / total >= 0.12
+          {labels && point.valueCents / total >= 0.12
             ? `${Math.round((point.valueCents / total) * 100)}%`
             : ""}
         </span>
@@ -237,6 +256,7 @@ function layout(
 
 /** Boxes sized by amount: shows at a glance what dominates. */
 export function TreemapChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const data = positive(points)
     .map((point, index) => ({ point, index }))
@@ -259,21 +279,21 @@ export function TreemapChart({ points }: Props): React.JSX.Element {
             rx={6}
             fill={chartColor(box.index)}
           />
-          {box.w > 62 && box.h > 30 ? (
+          {labels && box.w > 62 && box.h > 30 ? (
             <>
               <text
                 x={box.x + 9}
                 y={box.y + 19}
-                fontSize={11}
+                fontSize={CHART_LABEL_SIZE}
                 fontWeight={600}
                 fill={chartInk(box.index)}
               >
-                {box.point.label.slice(0, Math.floor(box.w / 7))}
+                {fitLabel(box.point.label, box.w - 8)}
               </text>
               <text
                 x={box.x + 9}
                 y={box.y + 33}
-                fontSize={10}
+                fontSize={CHART_LABEL_SIZE}
                 fill={chartInk(box.index)}
                 opacity={0.85}
               >
@@ -331,6 +351,7 @@ export function RadialChart({ points }: Props): React.JSX.Element {
 
 /** A web with one spoke per item: the shape of the spending. Needs three or more items. */
 export function RadarChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const data = positive(points).slice(0, 8);
   if (data.length < 3) return <HBarChart points={points} />;
@@ -352,15 +373,17 @@ export function RadarChart({ points }: Props): React.JSX.Element {
         return (
           <g key={point.label}>
             <line x1={150} y1={92} x2={x} y2={y} stroke="var(--border)" />
-            <text
-              x={lx}
-              y={ly + 3}
-              fontSize={9}
-              fill="var(--muted)"
-              textAnchor={lx < 140 ? "end" : lx > 160 ? "start" : "middle"}
-            >
-              {point.label.slice(0, 14)}
-            </text>
+            {labels ? (
+              <text
+                x={lx}
+                y={ly + 3}
+                fontSize={CHART_LABEL_SIZE}
+                fill="var(--muted)"
+                textAnchor={lx < 140 ? "end" : lx > 160 ? "start" : "middle"}
+              >
+                {fitLabel(point.label, lx < 140 ? lx : lx > 160 ? 300 - lx : 100)}
+              </text>
+            ) : null}
           </g>
         );
       })}
@@ -386,13 +409,14 @@ export function RadarChart({ points }: Props): React.JSX.Element {
 
 /** Each item starts where the last one ended, so the columns climb to the total. */
 export function WaterfallChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const { t } = usePreferences();
   const data = positive(points).slice(0, 8);
   const total = Math.max(1, sum(data));
   const columns = [...data, { label: t("chart.total"), valueCents: total }];
   const step = W / columns.length;
-  const base = H - 22;
+  const base = labels ? H - 22 : H - 8;
   const scale = (base - 10) / total;
   let running = 0;
   return (
@@ -416,15 +440,17 @@ export function WaterfallChart({ points }: Props): React.JSX.Element {
               opacity={isTotal ? 1 : 0.55 + (0.45 * index) / columns.length}
               className="fs-grow-y"
             />
-            <text
-              x={index * step + step / 2}
-              y={H - 6}
-              fontSize={9}
-              textAnchor="middle"
-              fill="var(--muted)"
-            >
-              {point.label.slice(0, Math.max(3, Math.floor(step / 5.5)))}
-            </text>
+            {labels ? (
+              <text
+                x={index * step + step / 2}
+                y={H - 6}
+                fontSize={CHART_LABEL_SIZE}
+                textAnchor="middle"
+                fill="var(--muted)"
+              >
+                {fitLabel(point.label, step)}
+              </text>
+            ) : null}
           </g>
         );
       })}
@@ -434,6 +460,7 @@ export function WaterfallChart({ points }: Props): React.JSX.Element {
 
 /** Centred bars, largest first: what narrows to what. */
 export function FunnelChart({ points }: Props): React.JSX.Element {
+  const labels = useChartLabels();
   const tip = useTip();
   const data = positive(points)
     .map((point, index) => ({ point, index }))
@@ -446,14 +473,14 @@ export function FunnelChart({ points }: Props): React.JSX.Element {
         <li
           key={point.label}
           title={tip(point)}
-          className="fs-grow-x flex h-7 items-center justify-center overflow-hidden rounded-lg px-2 text-[11px] font-semibold whitespace-nowrap"
+          className="fs-grow-x flex h-7 items-center justify-center overflow-hidden rounded-lg px-2 text-xs font-semibold whitespace-nowrap"
           style={{
             width: `${Math.max(18, (point.valueCents / max) * 100)}%`,
             background: chartColor(index),
             color: chartInk(index),
           }}
         >
-          {point.label}
+          {labels ? point.label : null}
         </li>
       ))}
     </ul>

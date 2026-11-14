@@ -7,6 +7,7 @@ import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { api } from "@/lib/api-client";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface Event {
   date: string;
@@ -122,8 +123,9 @@ export function MortgageView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("mortgage.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("mortgage.intro")}</p>
+        <InfoTip lead={<h1 className="text-xl font-semibold">{t("mortgage.title")}</h1>}>
+          {t("mortgage.intro")}
+        </InfoTip>
       </div>
       <p className="rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm">
         {t("mortgage.disclaimer")}
@@ -156,12 +158,12 @@ export function MortgageView(): React.JSX.Element {
               ] as [MessageKey, number][]
             ).map(([key, cents]) => (
               <div key={key} className="rounded-xl border border-border p-3">
-                <dt className="text-xs text-muted">{t(key)}</dt>
+                <dt className="text-sm text-muted">{t(key)}</dt>
                 <dd className="mt-0.5 font-semibold tabular-nums">{money(cents)}</dd>
               </div>
             ))}
             <div className="rounded-xl border border-border p-3">
-              <dt className="text-xs text-muted">{t("mortgage.figure.ltv")}</dt>
+              <dt className="text-sm text-muted">{t("mortgage.figure.ltv")}</dt>
               <dd className="mt-0.5 font-semibold tabular-nums">
                 {story.outcome.loanToValuePercent} %
               </dd>
@@ -179,7 +181,7 @@ export function MortgageView(): React.JSX.Element {
             <ol className="mt-3 flex flex-col gap-2 border-l-2 border-border pl-4 text-sm">
               {story.events.map((event, index) => (
                 <li key={`${event.date}-${index}`}>
-                  <span className="text-xs text-muted">{formatDay(event.date, locale)}</span>
+                  <span className="text-sm text-muted">{formatDay(event.date, locale)}</span>
                   <span className="block font-medium">{text("mortgage.event", event.type)}</span>
                   {detail(event) ? <span className="block text-muted">{detail(event)}</span> : null}
                 </li>
@@ -203,12 +205,12 @@ export function MortgageView(): React.JSX.Element {
               ] as [MessageKey, string][]
             ).map(([key, value]) => (
               <div key={key} className={card}>
-                <p className="text-xs text-muted">{t(key)}</p>
+                <p className="text-sm text-muted">{t(key)}</p>
                 <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
               </div>
             ))}
           </section>
-          <p className="text-xs text-muted">
+          <p className="text-sm text-muted">
             {t("mortgage.stat.note", { count: stats.applications })}
           </p>
 
@@ -223,7 +225,7 @@ export function MortgageView(): React.JSX.Element {
                   <span>
                     <span className="block font-semibold">{text("mortgage.event", step)}</span>
                     <span className="block text-muted">{text("mortgage.step", step)}</span>
-                    <span className="block text-xs text-muted">
+                    <span className="block text-sm text-muted">
                       {t("mortgage.step.when", {
                         day: stats.stageDay[step] ?? 0,
                         share: stats.stageShare[step] ?? 0,
@@ -237,7 +239,7 @@ export function MortgageView(): React.JSX.Element {
 
           <section className={`${card} flex flex-col gap-3`}>
             <h2 className="text-base font-semibold">{t("mortgage.costs")}</h2>
-            <p className="text-sm text-muted">{t("mortgage.costs.note")}</p>
+            <InfoTip>{t("mortgage.costs.note")}</InfoTip>
             <ul className="flex flex-col divide-y divide-border text-sm">
               {Object.entries(stats.expenses)
                 .sort((a, b) => b[1].medianCents - a[1].medianCents)
@@ -245,7 +247,7 @@ export function MortgageView(): React.JSX.Element {
                   <li key={type} className="flex items-baseline justify-between gap-3 py-2">
                     <span>
                       {text("mortgage.expense", type)}
-                      <span className="block text-xs text-muted">
+                      <span className="block text-sm text-muted">
                         {t("mortgage.costs.share", {
                           share: share(value.applications, stats.applications),
                         })}

@@ -11,6 +11,7 @@ import { CloseIcon, SpeakerIcon, StopIcon } from "@/components/ui/icons";
 import { useVoice } from "@/components/voice/useVoice";
 import { api } from "@/lib/api-client";
 import type { ChartCard } from "@/lib/contracts/chart";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface Slide {
   id: string;
@@ -180,7 +181,7 @@ export function StoryView(): React.JSX.Element {
             <p className="text-base opacity-90">{slide.text}</p>
             <div className="rounded-2xl bg-surface p-4 text-foreground fs-pop">
               <ChartView card={slide.card} />
-              <p className="mt-3 text-xs text-muted">{slide.card.basis}</p>
+              <InfoTip className="mt-1">{slide.card.basis}</InfoTip>
             </div>
             {slide.lesson ? (
               <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm">{slide.lesson}</p>

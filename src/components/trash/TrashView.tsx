@@ -7,6 +7,7 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { api } from "@/lib/api-client";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface TrashEntry {
   id: string;
@@ -62,8 +63,9 @@ export function TrashView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
       <div>
-        <h1 className="text-xl font-semibold">{t("trash.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("trash.intro")}</p>
+        <InfoTip lead={<h1 className="text-xl font-semibold">{t("trash.title")}</h1>}>
+          {t("trash.intro")}
+        </InfoTip>
       </div>
 
       {items && items.length === 0 ? (
@@ -76,7 +78,7 @@ export function TrashView(): React.JSX.Element {
         {items?.map((item) => (
           <li key={item.id} className="rounded-2xl border border-border bg-surface p-4">
             <p className="text-sm font-semibold">{label(item)}</p>
-            <p className="text-xs text-muted">
+            <p className="text-sm text-muted">
               {t(`trash.kind.${item.kind}` as MessageKey)} ·{" "}
               {formatDay(item.deletedAt.slice(0, 10), locale)}
             </p>

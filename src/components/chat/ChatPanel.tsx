@@ -15,8 +15,9 @@ import { api } from "@/lib/api-client";
 import type { ChartCard, WidgetQuery } from "@/lib/contracts/chart";
 import type { AssistantMessage, ChatMessage, EvidenceRef } from "@/lib/contracts/chat";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
-interface ChatPanelProps {
+export interface ChatPanelProps {
   /** Overrides the default greeting, e.g. inside the new-widget sheet. */
   intro?: string;
   placeholder?: string;
@@ -24,6 +25,11 @@ interface ChatPanelProps {
   initialQuestion?: string;
   /** Begin by listening for a spoken question, or by starting a voice call. */
   start?: "listen" | "call";
+  /**
+   * Asks a panel that stays mounted (the floating coach) to do something new: each `id` acts
+   * once, either asking the question or starting to listen or call.
+   */
+  request?: { id: number; question?: string; start?: "listen" | "call" };
   /** Rendered under each chart the assistant returns, e.g. an "Add to dashboard" button. */
   cardAction?: (card: ChartCard, query: WidgetQuery | undefined) => React.ReactNode;
 }
@@ -50,6 +56,7 @@ export function ChatPanel({
   placeholder,
   initialQuestion,
   start,
+  request,
   cardAction,
 }: ChatPanelProps): React.JSX.Element {
   const { t, locale, voiceReplies } = usePreferences();
@@ -120,6 +127,21 @@ export function ChatPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the account state arrives
   }, [start, me]);
 
+  const handled = useRef(0);
+  useEffect(() => {
+    if (!request || !me || handled.current === request.id) return;
+    handled.current = request.id;
+    if (request.question) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time ask requested from outside the panel
+      void send(request.question);
+    } else if (request.start === "call" && me.voiceAgentEnabled && me.aiConsent) {
+      setCalling(true);
+    } else if (request.start === "listen" && me.voiceEnabled) {
+      void voice.startRecording();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per request
+  }, [request, me]);
+
   async function toggleRecording(): Promise<void> {
     if (!voice.recording) {
       await voice.startRecording();
@@ -181,7 +203,7 @@ export function ChatPanel({
               <li key={message.id} className="flex w-full flex-col gap-2 self-start fs-rise">
                 <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm shadow-sm">
                   <p>{message.text}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
                     {message.mode ? (
                       <span>
                         {t(
@@ -228,9 +250,9 @@ export function ChatPanel({
                     <div className="mt-3">
                       <ChartView card={message.card} />
                     </div>
-                    <p className="mt-3 text-xs text-muted">{message.card.basis}</p>
+                    <InfoTip className="mt-1">{message.card.basis}</InfoTip>
                     {message.lesson ? (
-                      <p className="mt-3 rounded-xl bg-accent-soft px-3 py-2 text-xs">
+                      <p className="mt-3 rounded-xl bg-accent-soft px-3 py-2 text-sm">
                         {message.lesson}
                       </p>
                     ) : null}
@@ -305,7 +327,7 @@ export function ChatPanel({
           />
         ) : null}
 
-        <div className="mb-2 flex items-center justify-center gap-5 text-xs font-semibold text-accent">
+        <div className="mb-2 flex items-center justify-center gap-5 text-sm font-semibold text-accent">
           {me?.voiceAgentEnabled && me.aiConsent && !calling ? (
             <button
               type="button"
@@ -320,7 +342,7 @@ export function ChatPanel({
         </div>
 
         {voice.error === "mic" ? (
-          <p className="mb-2 text-xs text-warning">{t("chat.micDenied")}</p>
+          <p className="mb-2 text-sm text-warning">{t("chat.micDenied")}</p>
         ) : null}
 
         <form
@@ -342,7 +364,7 @@ export function ChatPanel({
             }
             autoComplete="off"
             disabled={voice.recording}
-            className="min-w-0 flex-1 rounded-full border border-border bg-surface px-4 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="min-w-0 flex-1 rounded-full border border-border bg-surface px-4 py-3 text-base outline-none placeholder:text-sm focus-visible:ring-2 focus-visible:ring-accent"
           />
           {me?.voiceEnabled ? (
             <button

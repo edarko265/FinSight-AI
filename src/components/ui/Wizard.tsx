@@ -107,7 +107,7 @@ export function Wizard({
       </header>
 
       <div className="px-5 pt-3">
-        <p className="text-xs font-medium text-muted" aria-live="polite">
+        <p className="text-sm font-medium text-muted" aria-live="polite">
           {t("wizard.step", { current: current + 1, total: steps.length })}
         </p>
         <ol className="mt-2 flex gap-1.5" aria-hidden="true">
@@ -171,7 +171,7 @@ export function Suggestions({
 }): React.JSX.Element {
   return (
     <div className="mt-3">
-      <p className="text-xs font-medium text-muted">{label}</p>
+      <p className="text-sm font-medium text-muted">{label}</p>
       <ul className="mt-1.5 flex flex-wrap gap-2">
         {options.map((option) => (
           <li key={option.value}>
@@ -235,7 +235,7 @@ export function WizardChoices<T extends string>({
           />
           <span className="flex flex-col">
             <span className="font-medium">{option.label}</span>
-            {option.note ? <span className="text-xs text-muted">{option.note}</span> : null}
+            {option.note ? <span className="text-sm text-muted">{option.note}</span> : null}
           </span>
         </label>
       ))}

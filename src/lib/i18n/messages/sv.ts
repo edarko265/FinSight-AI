@@ -65,6 +65,12 @@ export const sv: Record<MessageKey, string> = {
   "chat.error": "Något gick fel hos mig. Försök igen.",
   "chat.addToDashboard": "Lägg till på översikten",
   "chat.added": "Tillagd",
+  "dock.open": "Öppna coachen",
+  "dock.close": "Stäng",
+  "dock.expand": "Helskärm",
+  "dock.collapse": "Halvskärm",
+  "dock.listen": "Fråga med rösten",
+  "dock.call": "Ring coachen",
   "chat.seeTransactions": "Visa transaktioner",
   "chat.why": "Varför det här svaret?",
   "chat.modeAi": "AI-coach",
@@ -500,6 +506,38 @@ export const sv: Record<MessageKey, string> = {
   "common.restore": "Återställ",
   "common.deleteForever": "Radera permanent",
   "common.moveToBin": "Flytta till papperskorgen",
+  "info.show": "Mer information",
+  "info.hide": "Dölj information",
+  "chart.help.bar":
+    "Varje stapel är en period. En högre stapel betyder mer pengar, och den mörka stapeln är den senaste. Beloppen finns i listan under diagrammet.",
+  "chart.help.hbar":
+    "Varje rad är en post, och en längre stapel betyder mer pengar. Färgerna motsvarar listan under diagrammet.",
+  "chart.help.line":
+    "Linjen följer beloppet från en period till nästa. Högre betyder mer pengar, och den stora punkten är den senaste. Beloppen finns i listan under diagrammet.",
+  "chart.help.area":
+    "Linjen följer beloppet över tid, och skuggningen under den gör nivån lättare att se. Högre betyder mer pengar.",
+  "chart.help.donut":
+    "Ringen är helheten och varje färgad bit är en del av den. En större bit är en större andel. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.pie":
+    "Cirkeln är helheten och varje färgad bit är en del av den. En större bit är en större andel. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.stack":
+    "Stapeln är helheten, uppdelad i färgade delar. En bredare del är en större andel. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.treemap":
+    "Varje block är en post, och dess yta visar storleken: ett större block är ett större belopp. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.radial":
+    "Varje ring är en post, och en längre färgad båge betyder ett större belopp jämfört med den största posten. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.radar":
+    "Varje eker är en post, och ju längre från mitten dess punkt ligger, desto större belopp. Formen visar vilka poster som sticker ut.",
+  "chart.help.waterfall": "Varje stapel läggs ovanpå den förra och bygger upp totalen till höger.",
+  "chart.help.lollipop":
+    "Varje pinne är en post, och en högre prick betyder mer pengar. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.funnel":
+    "Posterna är sorterade från störst till minst, så staplarna smalnar av nedåt. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.table":
+    "Posterna och deras belopp som en enkel lista, med en liten stapel som visar varje posts andel.",
+  "chart.help.stat": "Beloppen som stora tal, ett för varje post.",
+  "chart.help.flow":
+    "Din inkomst till vänster delas upp till höger på det den gick till. Ett tjockare band betyder mer pengar. Listan under diagrammet visar vilken färg som är vilken.",
   "trash.title": "Papperskorg",
   "trash.intro":
     "Det du raderar finns kvar här tills du återställer det eller raderar det permanent.",

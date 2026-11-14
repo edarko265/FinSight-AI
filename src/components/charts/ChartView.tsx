@@ -99,7 +99,7 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
             ) : null}
             {point.label}
           </span>
-          <span className="tabular-nums text-muted">
+          <span className="shrink-0 whitespace-nowrap tabular-nums text-muted">
             {formatMoney(point.valueCents, locale)}
             {isDonut && total > 0 ? ` · ${Math.round((point.valueCents / total) * 100)} %` : null}
           </span>

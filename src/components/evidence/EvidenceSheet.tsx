@@ -97,7 +97,7 @@ export function EvidenceSheet({
           <h2 id="evidence-title" className="text-base font-semibold">
             {t("evidence.title")}
           </h2>
-          <p className="text-xs text-muted">
+          <p className="text-sm text-muted">
             {evidence?.periodLabel}
             {page
               ? ` · ${t("evidence.count", { count: page.total })} · ${formatMoney(page.totalCents, locale)}`
@@ -126,7 +126,7 @@ export function EvidenceSheet({
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{label("cat", item.category)}</p>
-                <p className="text-xs text-muted">
+                <p className="text-sm text-muted">
                   {formatDay(item.date, locale)} · {label("basket", item.basket)} ·{" "}
                   {label("necessity", item.necessity)}
                   {item.corrected ? ` · ${t("corrections.yours")}` : ""}
@@ -135,7 +135,7 @@ export function EvidenceSheet({
                 <button
                   type="button"
                   onClick={() => setCorrecting({ ...item })}
-                  className="mt-0.5 text-xs font-semibold text-accent"
+                  className="mt-0.5 text-sm font-semibold text-accent"
                 >
                   {t("corrections.change")}
                 </button>
