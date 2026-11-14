@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { ChartView } from "@/components/charts/ChartView";
+import { callPossible } from "@/components/chat/call-possible";
 import { ConsentSheet } from "@/components/chat/ConsentSheet";
 import { EvidenceSheet } from "@/components/evidence/EvidenceSheet";
 import { useOverview } from "@/components/providers/OverviewProvider";
@@ -82,6 +83,8 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [evidence, setEvidence] = useState<EvidenceRef | null>(null);
+  // A call was asked for while the AI coach was off: the consent question comes first.
+  const [wantsCall, setWantsCall] = useState(false);
   const inputId = useId();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -188,14 +191,21 @@ export function ChatPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ask once when the panel opens
   }, [initialQuestion, restored]);
 
+  /** Starts a call, or first asks for the AI coach to be switched on when it is not. */
+  function startCall(): void {
+    if (!me || !callPossible(me)) return;
+    if (me.aiConsent) setCalling(true);
+    else setWantsCall(true);
+  }
+
   // Once it is known what this customer may use, honour a shortcut from the dashboard, once.
   const started = useRef(false);
   useEffect(() => {
     if (!start || !me || started.current) return;
     started.current = true;
-    if (start === "call" && me.voiceAgentEnabled && me.aiConsent) {
+    if (start === "call" && me.voiceAgentEnabled) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time start asked for by the link that opened the page
-      setCalling(true);
+      startCall();
     } else if (start === "listen" && me.voiceEnabled) {
       void voice.startRecording();
     }
@@ -209,8 +219,8 @@ export function ChatPanel({
     if (request.question) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time ask requested from outside the panel
       void send(request.question);
-    } else if (request.start === "call" && me.voiceAgentEnabled && me.aiConsent) {
-      setCalling(true);
+    } else if (request.start === "call" && me.voiceAgentEnabled) {
+      startCall();
     } else if (request.start === "listen" && me.voiceEnabled) {
       void voice.startRecording();
     }
@@ -231,7 +241,9 @@ export function ChatPanel({
   const followUps =
     !pending && lastAssistant?.role === "assistant" ? (lastAssistant.followUps ?? []) : [];
 
-  const showCall = Boolean(me?.voiceAgentEnabled && me.aiConsent && !calling && !hideCallLink);
+  // Offered whenever calls are possible. Without the AI coach switched on, tapping it asks
+  // for that first instead of the option silently not being there.
+  const showCall = Boolean(callPossible(me) && !calling && !hideCallLink);
   const showAdvisor = me?.advisorEnabled !== false;
 
   return (
@@ -422,7 +434,7 @@ export function ChatPanel({
             {showCall ? (
               <button
                 type="button"
-                onClick={() => setCalling(true)}
+                onClick={startCall}
                 className="inline-flex min-h-11 items-center gap-1.5"
               >
                 <PhoneIcon className="size-4" />
@@ -535,12 +547,17 @@ export function ChatPanel({
 
       <EvidenceSheet evidence={evidence} onClose={() => setEvidence(null)} />
       <ConsentSheet
-        open={Boolean(me?.aiEnabled && !me.aiConsent && !me.aiDecided && !declined)}
+        open={Boolean(
+          me?.aiEnabled && !me.aiConsent && (wantsCall || (!me.aiDecided && !declined)),
+        )}
         onChoose={async (accepted) => {
           // A "no" is stored too, so the question is not asked again on every visit.
           await api("/api/consent", { method: "POST", json: { accepted } });
           // Only after the server has stored it, so a failure leaves the sheet open.
           setDeclined(!accepted);
+          // The call that was asked for starts as soon as the answer is yes.
+          if (wantsCall && accepted) setCalling(true);
+          setWantsCall(false);
           refresh();
         }}
       />
