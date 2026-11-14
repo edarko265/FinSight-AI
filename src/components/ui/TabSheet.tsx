@@ -13,7 +13,7 @@ import { isTopmostSheet, popSheet, pushSheet, type SheetStack } from "@/componen
 
 /** Position of a bottom sheet: pinned above the tab bar, centred in the window from md up (give it a height, or `md:h-fit`). */
 export const TAB_SHEET_POSITION =
-  "fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-50 m-0 mx-auto w-full max-w-md rounded-t-3xl md:inset-y-0 md:my-auto md:max-w-lg md:rounded-3xl";
+  "fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-50 m-0 mx-auto w-full max-w-md rounded-t-3xl md:inset-y-0 md:right-0 md:left-20 md:my-auto md:max-w-lg md:rounded-3xl lg:left-60";
 /** Largest height that still fits between the status bar and the tab bar. */
 export const TAB_SHEET_MAX_H =
   "max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-var(--bottom-nav-h)-0.5rem)]";
@@ -113,7 +113,7 @@ export function TabSheetBackdrop({ onClick }: { onClick: () => void }): React.JS
     <div
       aria-hidden="true"
       onClick={onClick}
-      className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 bg-black/50 md:left-20 lg:left-60"
+      className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 bg-black/50 md:bottom-0 md:left-20 lg:left-60"
     />
   );
 }

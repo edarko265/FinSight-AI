@@ -7,6 +7,7 @@ import { ChartView } from "@/components/charts/ChartView";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon, MicIcon, PhoneIcon } from "@/components/ui/icons";
 import { useCloseOnNavigation, useEscapeClose } from "@/components/ui/TabSheet";
+import { createSessionGuard } from "@/components/voice/session-guard";
 import { api } from "@/lib/api-client";
 import type { AssistantMessage } from "@/lib/contracts/chat";
 
@@ -89,11 +90,9 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
   } = conversation;
 
   // The session is ended once, whether by navigation, Escape, the button or unmounting.
-  const ended = useRef(false);
+  const guard = useRef(createSessionGuard());
   const hangUp = (): void => {
-    if (ended.current) return;
-    ended.current = true;
-    endSession();
+    if (guard.current.end()) endSession();
   };
   const endButton = useRef<HTMLButtonElement>(null);
   useEffect(() => endButton.current?.focus(), []);
@@ -102,10 +101,11 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
     hangUp();
     onEnd();
   });
-  useEscapeClose(true, () => {
+  const endCall = (): void => {
     hangUp();
     onEnd();
-  });
+  };
+  useEscapeClose(true, endCall);
 
   useEffect(() => {
     if (started.current) return;
@@ -114,6 +114,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
       .then(({ signedUrl }) =>
         startSession({ signedUrl, overrides: { agent: { language: localeRef.current } } }),
       )
+      .then(() => guard.current.started())
       .catch(() => setFailed(true));
     return () => hangUp();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once when the call opens, end when it closes
@@ -159,7 +160,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
         <button
           ref={endButton}
           type="button"
-          onClick={onEnd}
+          onClick={endCall}
           aria-label={t("voice.call.end")}
           className="-m-2 rounded-full p-2"
         >
@@ -254,7 +255,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
         </button>
         <button
           type="button"
-          onClick={onEnd}
+          onClick={endCall}
           className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-on-primary"
         >
           <PhoneIcon className="size-5" />
