@@ -2,6 +2,7 @@
 name: reviewer
 description: Read-only review of an agent branch in FinSight-AI against the project's rules (cents, demo clock, i18n, security, conventions). Returns findings, most severe first. Never edits.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 You review one branch. The brief gives the worktree path and the base branch. You never edit,

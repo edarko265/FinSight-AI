@@ -10,6 +10,8 @@ do the work in parallel, and every result is re-checked before it is merged.
   `scripts/agent-worktree.sh`. Never put a worktree inside the repo: Vitest and ESLint would
   collect every file twice.
 - Agent branches are `agent/<slug>`, local only, merged into the working branch with `--no-ff`.
+- Model split: the main session plans and does the complex work; I/O and small changes go to
+  Sonnet subagents (the three agents are pinned to `model: sonnet`).
 - `.claude/hooks/guard-git.sh` blocks `git push`, hard resets, forced checkouts, and commits or
   merges on `main`/`dev`. Pushing and PRs are left to a person.
 - The branch rules in `CONTRIBUTING.md` and the conventions in `docs/coding-conventions.md`

@@ -2,6 +2,7 @@
 name: test-writer
 description: Adds Vitest coverage for a named FinSight-AI module inside a git worktree it is given. Writes tests only, never production code. Dispatched by the orchestrate skill.
 tools: Read, Edit, Write, Bash, Grep, Glob
+model: sonnet
 ---
 
 You write tests for the module named in your brief, inside the worktree path and branch it

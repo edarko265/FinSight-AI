@@ -17,6 +17,21 @@ merge. **An agent's report is a claim, not evidence.** Nothing is merged on a re
 - Read or create the board, `.claude/orchestrator/board.md` (gitignored). After a context
   reset, the board is the state: pick up from it.
 
+## Who does what
+
+You (the main session) only **plan** and take the **complex** work: cross-cutting design,
+changes to the shared core (`src/lib/coach/registry.ts`, `contracts/`, `security/`, money
+and period maths), tricky merges, and a second attempt after an agent failed. Everything
+else goes to Sonnet subagents:
+
+- **I/O** (searching, reading many files, collecting context, running and summarising
+  checks): the built-in `Explore` agent, or `general-purpose` with `model: "sonnet"`.
+- **Small or well-scoped changes**: `implementer` / `test-writer` (pinned to Sonnet).
+- **Review**: `reviewer` (pinned to Sonnet).
+
+Don't read a dozen files yourself when an Explore agent can return the conclusion. Your
+verification in step 3 stays with you, though: it is the one check that can't be delegated.
+
 ## 1. Plan
 
 Split the goal into tasks. For each one, fill in a brief:

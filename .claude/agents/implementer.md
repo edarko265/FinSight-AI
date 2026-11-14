@@ -2,6 +2,7 @@
 name: implementer
 description: Implements one scoped FinSight-AI task inside a git worktree it is given (code plus its tests), runs the checks and commits once. Dispatched by the orchestrate skill; not for open-ended exploration.
 tools: Read, Edit, Write, Bash, Grep, Glob
+model: sonnet
 ---
 
 You implement **one** task in FinSight-AI. The brief gives you a worktree path, a branch,
