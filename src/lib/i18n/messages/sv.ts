@@ -373,11 +373,8 @@ export const sv: Record<MessageKey, string> = {
   "rewards.earned": "Intjänat",
   "rewards.notYet": "Inte än",
   "rewards.unlocked": "Upplåst",
-  "rewards.note":
-    "Poäng jämförs med dina egna tidigare månader. Målen för förmånerna bygger på en offentlig statistik, hushållens sparkvot, så de är desamma för alla. Förmånerna är exempel på vad ett bonusprogram hos en bank skulle kunna erbjuda.",
+
   "voucher.title": "Månatliga förmåner",
-  "voucher.intro":
-    "Ditt sparande i {month} avgör vilka förmåner du kan välja. På upplåsta nivåer väljer du en.",
   "voucher.unavailable":
     "Vi kan inte sätta förmånsmål än, eftersom det saknas inkomst att mäta mot den här månaden. De visas när din inkomst syns.",
   "voucher.tier.bronze": "Brons",
@@ -386,32 +383,21 @@ export const sv: Record<MessageKey, string> = {
   "voucher.brand.grocery": "våra livsmedelsbutiker",
   "voucher.brand.fuel": "våra bensinstationer",
   "voucher.kind.grocery.title": "{percent} rabatt på en matvara",
-  "voucher.kind.grocery.what": "En produkt som du väljer i {brand}",
   "voucher.kind.grocery.chosen": "{percent} rabatt på en matvara i {brand}",
   "voucher.kind.fuel.title": "{cents} öre/l rabatt på bränsle",
-  "voucher.kind.fuel.what": "En tankning vid {brand}",
   "voucher.kind.fuel.chosen": "{cents} öre/l rabatt på en tankning vid {brand}",
   "voucher.next": "Nästa mål",
   "voucher.progress": "{saved} av {target}",
-  "voucher.locked": "Spara {amount} mer i månaden för att låsa upp",
   "voucher.choose": "Välj en {tier}-förmån",
-  "voucher.yours": "Din förmån för {month}",
   "voucher.remove": "Ta bort valet",
   "voucher.invalid": "Ditt tidigare val är inte längre tillgängligt. Välj en annan förmån.",
   "voucher.toast.picked": "Förmån vald",
   "voucher.toast.removed": "Valet har tagits bort",
-  "voucher.basis":
-    "Mål: {base} % av din regelbundna inkomst per nivå, baserat på hushållens sparkvot ({year}{status}). Källa:",
-  "voucher.provisional": ", preliminär",
-  "voucher.source.statfin": "Statistikcentralen",
-  "voucher.source.other": "{name}",
-  "voucher.licence": "Licens: {licence}.",
-  "voucher.floor": "Miniminivån {floor} % användes eftersom den publicerade siffran var lägre.",
   "voucher.lockedNow": "Den här förmånen är inte längre upplåst. Vi uppdaterade dina framsteg.",
   "voucher.confirm": "Välj den här förmånen",
   "voucher.choosing": "Väljer…",
   "voucher.off": "Förmåner är inte aktiverade just nu.",
-  "voucher.sourceLead": "Källa:",
+
   "reward.underAverage.title": "En lättare månad",
   "reward.underAverage.body":
     "Du lade {amount} förra månaden, under ditt tremånaderssnitt på {average}.",

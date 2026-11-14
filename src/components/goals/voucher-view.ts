@@ -16,15 +16,9 @@ export function nextTierId(tiers: readonly VoucherTier[]): VoucherTierId | undef
   return tiers.find((tier) => !tier.unlocked)?.id;
 }
 
-/** Text appended to the source year: the provisional note, or nothing. */
-export function statusKey(provisional: boolean): "voucher.provisional" | null {
-  return provisional ? "voucher.provisional" : null;
-}
-
 export interface OfferText {
-  /** Message keys: what the voucher is, what it is for, and the chosen-voucher sentence. */
+  /** Message keys: what the voucher is, and the chosen-voucher sentence. */
   titleKey: MessageKey;
-  whatKey: MessageKey;
   chosenKey: MessageKey;
   /** Placeholder values for the keys above, already formatted for the locale. */
   params: Record<string, string>;
@@ -40,7 +34,6 @@ export function offerText(
   if (option.kind === "grocery") {
     return {
       titleKey: "voucher.kind.grocery.title",
-      whatKey: "voucher.kind.grocery.what",
       chosenKey: "voucher.kind.grocery.chosen",
       params: {
         percent: new Intl.NumberFormat(intl, { style: "percent" }).format(option.percentOff / 100),
@@ -50,7 +43,6 @@ export function offerText(
   }
   return {
     titleKey: "voucher.kind.fuel.title",
-    whatKey: "voucher.kind.fuel.what",
     chosenKey: "voucher.kind.fuel.chosen",
     params: {
       brand: t("voucher.brand.fuel"),

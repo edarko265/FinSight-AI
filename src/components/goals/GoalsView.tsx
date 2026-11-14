@@ -17,7 +17,6 @@ import { isApiError } from "@/lib/async-action";
 import type { VoucherLadder as VoucherLadderData } from "@/lib/contracts/rewards";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
-import { InfoTip } from "@/components/ui/InfoTip";
 
 interface GoalPlan {
   goal: { id: string; name: string; targetCents: number; months: number; monthlyCents: number };
@@ -485,7 +484,6 @@ export function GoalsView(): React.JSX.Element {
               )
             }
           />
-          <InfoTip>{t("rewards.note")}</InfoTip>
         </section>
       ) : null}
       <Wizard

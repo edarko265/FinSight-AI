@@ -374,11 +374,8 @@ export const fi: Record<MessageKey, string> = {
   "rewards.earned": "Ansaittu",
   "rewards.notYet": "Ei vielä",
   "rewards.unlocked": "Avattu",
-  "rewards.note":
-    "Pisteitä verrataan omiin aiempiin kuukausiisi. Etuuksien tavoitteet perustuvat julkiseen tilastoon, kotitalouksien säästämisasteeseen, joten ne ovat samat kaikille. Etuudet ovat esimerkkejä siitä, mitä pankin bonusohjelma voisi tarjota.",
+
   "voucher.title": "Kuukausittaiset etuudet",
-  "voucher.intro":
-    "Säästösi kuussa {month} ratkaisee, mitä etuuksia voit valita. Avatulta tasolta voit valita yhden.",
   "voucher.unavailable":
     "Etuustavoitteita ei voi vielä asettaa, koska tältä kuulta ei ole tuloa mitattavaksi. Ne ilmestyvät, kun tulosi näkyvät.",
   "voucher.tier.bronze": "Pronssi",
@@ -387,33 +384,21 @@ export const fi: Record<MessageKey, string> = {
   "voucher.brand.grocery": "ruokakauppoissamme",
   "voucher.brand.fuel": "huoltoasemillamme",
   "voucher.kind.grocery.title": "{percent} alennus yhdestä ruokatuotteesta",
-  "voucher.kind.grocery.what": "Yksi valitsemasi tuote {brand}",
   "voucher.kind.grocery.chosen": "{percent} alennus yhdestä ruokatuotteesta {brand}",
   "voucher.kind.fuel.title": "{cents} snt/l alennus polttoaineesta",
-  "voucher.kind.fuel.what": "Yksi tankkaus {brand}",
   "voucher.kind.fuel.chosen": "{cents} snt/l alennus yhdestä tankkauksesta {brand}",
   "voucher.next": "Seuraava tavoite",
   "voucher.progress": "{saved} / {target}",
-  "voucher.locked": "Säästä {amount} enemmän kuukaudessa avataksesi",
   "voucher.choose": "Valitse {tier}-etuus",
-  "voucher.yours": "Etuutesi kuulle {month}",
   "voucher.remove": "Poista valinta",
   "voucher.invalid": "Aiempi valintasi ei ole enää saatavilla. Valitse toinen etuus.",
   "voucher.toast.picked": "Etuus valittu",
   "voucher.toast.removed": "Valinta poistettu",
-  "voucher.basis":
-    "Tavoitteet: {base} % säännöllisistä tuloistasi per taso, perustuen kotitalouksien säästämisasteeseen ({year}{status}). Lähde:",
-  "voucher.provisional": ", ennakkotieto",
-  "voucher.source.statfin": "Tilastokeskus",
-  "voucher.source.other": "{name}",
-  "voucher.licence": "Lisenssi: {licence}.",
-  "voucher.floor":
-    "Käytössä oli {floor} %:n vähimmäistaso, koska julkaistu luku oli sitä pienempi.",
   "voucher.lockedNow": "Tämä etuus ei ole enää avattu. Päivitimme edistymisesi.",
   "voucher.confirm": "Valitse tämä etuus",
   "voucher.choosing": "Valitaan…",
   "voucher.off": "Etuudet eivät ole tällä hetkellä käytössä.",
-  "voucher.sourceLead": "Lähde:",
+
   "reward.underAverage.title": "Kevyempi kuukausi",
   "reward.underAverage.body":
     "Käytit viime kuussa {amount}, alle kolmen kuukauden keskiarvosi {average}.",

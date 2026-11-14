@@ -174,7 +174,7 @@ export function DashboardView(): React.JSX.Element {
 
       <section className="rounded-2xl bg-brand p-5 text-on-brand">
         <p className="text-sm opacity-80">{t("dashboard.balance")}</p>
-        <p className="mt-1 text-3xl font-semibold tabular-nums">
+        <div className="mt-1 text-3xl font-semibold tabular-nums">
           {overview ? (
             <CountUp cents={overview.balanceCents} locale={locale} />
           ) : overviewLoading ? (
@@ -182,7 +182,7 @@ export function DashboardView(): React.JSX.Element {
           ) : (
             "—"
           )}
-        </p>
+        </div>
         {forecast && forecast.status !== "insufficient_data" ? (
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/15 pt-3">
             <div>

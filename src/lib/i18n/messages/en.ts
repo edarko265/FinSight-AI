@@ -381,11 +381,8 @@ export const en = {
   "rewards.earned": "Earned",
   "rewards.notYet": "Not yet",
   "rewards.unlocked": "Unlocked",
-  "rewards.note":
-    "Points compare with your own past months. Voucher targets use a public statistic, the household saving rate, so they are the same for everyone. The vouchers are examples of what a bank bonus programme could offer.",
+
   "voucher.title": "Monthly vouchers",
-  "voucher.intro":
-    "Your saving in {month} decides which vouchers you can pick. Unlocked tiers let you choose one.",
   "voucher.unavailable":
     "We cannot set voucher targets yet, because there is no income to measure this month. They appear once your income shows up.",
   "voucher.tier.bronze": "Bronze",
@@ -394,32 +391,21 @@ export const en = {
   "voucher.brand.grocery": "our grocery stores",
   "voucher.brand.fuel": "our fuel stations",
   "voucher.kind.grocery.title": "{percent} off a grocery product",
-  "voucher.kind.grocery.what": "One product of your choice at {brand}",
   "voucher.kind.grocery.chosen": "{percent} off a grocery product at {brand}",
   "voucher.kind.fuel.title": "{cents} c/l off fuel",
-  "voucher.kind.fuel.what": "One fuel top-up at {brand}",
   "voucher.kind.fuel.chosen": "{cents} c/l off one fuel top-up at {brand}",
   "voucher.next": "Next goal",
   "voucher.progress": "{saved} of {target}",
-  "voucher.locked": "Save {amount} more a month to unlock",
   "voucher.choose": "Choose a {tier} voucher",
-  "voucher.yours": "Your voucher for {month}",
   "voucher.remove": "Remove choice",
   "voucher.invalid": "Your earlier choice is no longer available. Pick another voucher.",
   "voucher.toast.picked": "Voucher chosen",
   "voucher.toast.removed": "Choice removed",
-  "voucher.basis":
-    "Targets: {base}% of your regular income per tier step, based on the household saving rate ({year}{status}). Source:",
-  "voucher.provisional": ", provisional",
-  "voucher.source.statfin": "Statistics Finland",
-  "voucher.source.other": "{name}",
-  "voucher.licence": "Licence: {licence}.",
-  "voucher.floor": "The {floor}% minimum was used because the published rate was lower.",
   "voucher.lockedNow": "This voucher isn't unlocked anymore. We refreshed your progress.",
   "voucher.confirm": "Choose this voucher",
   "voucher.choosing": "Choosing…",
   "voucher.off": "Vouchers are not switched on right now.",
-  "voucher.sourceLead": "Source:",
+
   "reward.underAverage.title": "A lighter month",
   "reward.underAverage.body":
     "You spent {amount} last month, under your three-month average of {average}.",

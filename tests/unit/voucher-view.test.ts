@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nextTierId, offerText, ringOffset, statusKey } from "@/components/goals/voucher-view";
+import { nextTierId, offerText, ringOffset } from "@/components/goals/voucher-view";
 import type { VoucherTier } from "@/lib/contracts/rewards";
 
 const tier = (id: VoucherTier["id"], unlocked: boolean): VoucherTier => ({
@@ -29,10 +29,6 @@ describe("voucher view helpers", () => {
     expect(nextTierId([tier("bronze", true)])).toBeUndefined();
   });
 
-  it("names the provisional status only when it applies", () => {
-    expect(statusKey(true)).toBe("voucher.provisional");
-    expect(statusKey(false)).toBeNull();
-  });
 });
 
 describe("offerText", () => {
