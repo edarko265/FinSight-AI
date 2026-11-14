@@ -62,7 +62,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium shadow-lg ${
+            className={`pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium shadow-lg fs-pop ${
               toast.tone === "success" ? "bg-brand text-on-brand" : "bg-warning text-surface"
             }`}
           >

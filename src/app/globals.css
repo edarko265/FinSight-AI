@@ -90,3 +90,153 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* ---- Motion. Everything here is decoration: with reduced motion it is switched off below. ---- */
+@keyframes fs-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fs-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes fs-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes fs-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes fs-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes fs-draw {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+@keyframes fs-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+@keyframes fs-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes fs-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes fs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fs-rise {
+  animation: fs-rise 0.28s ease-out both;
+}
+.fs-pop {
+  animation: fs-pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.fs-dot {
+  animation: fs-dot 1.2s ease-in-out infinite;
+}
+.fs-grow-x {
+  transform-origin: left center;
+  animation: fs-grow-x 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.fs-grow-y {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: fs-grow-y 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.fs-draw {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fs-draw 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.fs-ring {
+  animation: fs-ring 1.6s ease-out infinite;
+}
+.fs-wave {
+  transform-origin: center;
+  animation: fs-wave 0.9s ease-in-out infinite;
+}
+.fs-breathe {
+  animation: fs-breathe 3.2s ease-in-out infinite;
+}
+.fs-spin {
+  animation: fs-spin 9s linear infinite;
+}
+
+dialog[open] {
+  animation: fs-rise 0.24s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-rise,
+  .fs-pop,
+  .fs-dot,
+  .fs-grow-x,
+  .fs-grow-y,
+  .fs-draw,
+  .fs-ring,
+  .fs-wave,
+  .fs-breathe,
+  .fs-spin,
+  dialog[open] {
+    animation: none;
+  }
+}

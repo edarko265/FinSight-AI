@@ -782,6 +782,37 @@ export const fi: Record<MessageKey, string> = {
   "settings.termsLink": "Käyttöehdot",
   "admin.audit.admin.sign_in_failed": "Epäonnistunut ylläpidon kirjautuminen",
   "admin.grounding": "Korjatut tekoälyvastaukset",
+  "coach.afford.title": "Onko sinulla varaa?",
+  "coach.afford.ok":
+    "Kyllä, se mahtuu. {purchase} ostoksen jälkeen noin {available} olisi yhä vapaasti käytettävissä seuraavien {days} päivän aikana, kun laskut, välttämättömät menot ja varaus on jo laitettu sivuun.",
+  "coach.afford.short":
+    "Ei aivan. {purchase} ostos jättäisi sinut noin {shortfall} vajaaksi seuraavien {days} päivän aikana, kun laskut ja välttämättömät menot on huomioitu. Odottaminen tai pienempi summa pitäisi sinut turvassa.",
+  "coach.safe.row.purchase": "Suunniteltu ostos",
+  "coach.safe.row.left": "Jää ostoksen jälkeen",
+  "coach.safe.row.short": "Vaje",
+  "chat.suggest.afford": "Onko minulla varaa johonkin?",
+  "afford.cta": "Onko minulla varaa tähän?",
+  "afford.step.amount": "Paljonko se maksaa?",
+  "afford.step.amountHint":
+    "Anna hinta euroina. Valmentaja vertaa sitä saldoosi laskujen, välttämättömien menojen ja varauksen jälkeen.",
+  "afford.step.when": "Millä aikavälillä?",
+  "afford.step.whenHint":
+    "Valitse, kuinka pitkälle katsotaan. Pidempi aika varaa enemmän laskuille ja välttämättömille menoille.",
+  "afford.days.7": "Tämä viikko",
+  "afford.days.14": "Kaksi viikkoa",
+  "afford.days.30": "Kuukausi",
+  "afford.check": "Tarkista",
+  "afford.field": "Hinta (€)",
+  "afford.done": "Selvä",
+  "afford.question": "Onko minulla varaa {amount} € seuraavien {days} päivän aikana?",
+  "voice.call.title": "Äänipuhelu",
+  "voice.call.mute": "Mykistä mikrofoni",
+  "voice.call.unmute": "Poista mykistys",
+  "voice.call.hint":
+    "Puhu vain. Kysy kulutuksestasi, käytettävissä olevasta summasta tai tavoitteesta.",
+  "voice.call.you": "Sinä",
+  "voice.call.coach": "Valmentaja",
+  "voice.call.thinking": "Tarkistan lukujasi…",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
   "coach.statfin.title": "Sinä ja suomalaiset kotitaloudet",

@@ -188,7 +188,7 @@ export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
     }),
     set_savings_goal: tool({
       description:
-        "Save a savings goal the user has described in their own words, and return a plan for funding it. Call it as soon as you know roughly what they want and how much; a time span is optional (default 12 months).",
+        "Save a savings goal and return a plan for funding it. Call it only when the user says they want to save up for something, as soon as you know roughly what and how much; a time span is optional (default 12 months). Never call it for a question about whether they can afford something now: use get_safe_to_spend with otherOutflowsEuros for that.",
       inputSchema: z.object({
         name: z
           .string()

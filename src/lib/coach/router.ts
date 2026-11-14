@@ -102,10 +102,16 @@ function route(ctx: CoachContext, question: string): ToolResult {
     });
   }
   if (PATTERNS.safe.test(text)) {
+    // "Can I afford a 300 € bike?" checks the estimate with that purchase taken out.
+    const price = /afford|varaa|råd/.test(text) ? AMOUNT.exec(text) : null;
+    const euros = price
+      ? Number((price[1] ?? price[2] ?? "").replace(/[\s.]/g, "").replace(",", "."))
+      : NaN;
     const days = /(\d{1,2})\s*(day|päiv|dag)/.exec(text);
     const month = /month|kuukau|kuun|månad/.test(text);
     return runTool(ctx, "safe_to_spend", {
       horizonDays: Math.min(31, Math.max(1, days ? Number(days[1]) : month ? 30 : 7)),
+      otherOutflowsCents: Number.isFinite(euros) && euros > 0 ? Math.round(euros * 100) : undefined,
     });
   }
   if (PATTERNS.flow.test(text)) return runTool(ctx, "flow", { period });

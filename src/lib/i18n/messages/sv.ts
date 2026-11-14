@@ -780,6 +780,37 @@ export const sv: Record<MessageKey, string> = {
   "settings.termsLink": "Användarvillkor",
   "admin.audit.admin.sign_in_failed": "Misslyckad admininloggning",
   "admin.grounding": "Rättade AI-svar",
+  "coach.afford.title": "Har du råd?",
+  "coach.afford.ok":
+    "Ja, det ryms. Efter ett köp på {purchase} skulle ungefär {available} fortfarande vara fritt de kommande {days} dagarna, med räkningar, nödvändigheter och en reserv redan undanlagda.",
+  "coach.afford.short":
+    "Inte riktigt. Ett köp på {purchase} skulle lämna dig ungefär {shortfall} kort de kommande {days} dagarna när räkningar och nödvändigheter är undanlagda. Att vänta, eller ett mindre belopp, håller dig på den säkra sidan.",
+  "coach.safe.row.purchase": "Planerat köp",
+  "coach.safe.row.left": "Kvar efter köpet",
+  "coach.safe.row.short": "Underskott",
+  "chat.suggest.afford": "Har jag råd med något?",
+  "afford.cta": "Har jag råd med det här?",
+  "afford.step.amount": "Vad kostar det?",
+  "afford.step.amountHint":
+    "Ange priset i euro. Coachen jämför det med ditt saldo efter räkningar, nödvändigheter och en reserv.",
+  "afford.step.when": "Under vilken tid?",
+  "afford.step.whenHint":
+    "Välj hur långt fram du vill titta. En längre period lägger undan mer för räkningar och nödvändigheter.",
+  "afford.days.7": "Den här veckan",
+  "afford.days.14": "Två veckor",
+  "afford.days.30": "En månad",
+  "afford.check": "Kontrollera",
+  "afford.field": "Pris (€)",
+  "afford.done": "Okej",
+  "afford.question": "Har jag råd med {amount} € de kommande {days} dagarna?",
+  "voice.call.title": "Röstsamtal",
+  "voice.call.mute": "Stäng av mikrofonen",
+  "voice.call.unmute": "Slå på mikrofonen",
+  "voice.call.hint":
+    "Prata bara. Fråga om dina utgifter, vad som är tryggt att använda eller ett mål.",
+  "voice.call.you": "Du",
+  "voice.call.coach": "Coach",
+  "voice.call.thinking": "Kontrollerar dina siffror…",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
   "coach.statfin.title": "Du och hushållen i Finland",

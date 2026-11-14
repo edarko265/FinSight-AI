@@ -30,6 +30,7 @@ const SUGGESTIONS: MessageKey[] = [
   "chat.suggest.where",
   "chat.suggest.recommend",
   "chat.suggest.goal",
+  "chat.suggest.afford",
   "chat.suggest.flow",
   "chat.suggest.taxi",
   "chat.suggest.safe",
@@ -123,12 +124,12 @@ export function ChatPanel({
             message.role === "user" ? (
               <li
                 key={message.id}
-                className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-brand px-4 py-3 text-sm text-on-brand"
+                className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-brand px-4 py-3 text-sm text-on-brand fs-rise"
               >
                 {message.text}
               </li>
             ) : (
-              <li key={message.id} className="flex w-full flex-col gap-2 self-start">
+              <li key={message.id} className="flex w-full flex-col gap-2 self-start fs-rise">
                 <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm shadow-sm">
                   <p>{message.text}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
@@ -146,7 +147,15 @@ export function ChatPanel({
                         className="flex items-center gap-1 font-medium text-accent"
                       >
                         {voice.speakingId === message.id ? (
-                          <StopIcon className="size-4" />
+                          <span className="flex h-4 items-center gap-0.5" aria-hidden="true">
+                            {[0, 1, 2].map((bar) => (
+                              <span
+                                key={bar}
+                                className="h-full w-0.5 rounded-full bg-accent fs-wave"
+                                style={{ animationDelay: `${bar * 0.15}s` }}
+                              />
+                            ))}
+                          </span>
                         ) : (
                           <SpeakerIcon className="size-4" />
                         )}
@@ -157,7 +166,7 @@ export function ChatPanel({
                 </div>
 
                 {message.card ? (
-                  <div className="rounded-2xl border border-border bg-surface p-4">
+                  <div className="rounded-2xl border border-border bg-surface p-4 fs-pop">
                     <h3 className="text-sm font-semibold">{message.card.title}</h3>
                     <div className="mt-3">
                       <ChartView card={message.card} />
@@ -191,7 +200,16 @@ export function ChatPanel({
               className="max-w-[85%] self-start rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm text-muted shadow-sm"
               role="status"
             >
-              {t("chat.thinking")}
+              <span className="sr-only">{t("chat.thinking")}</span>
+              <span className="flex items-center gap-1.5 py-1" aria-hidden="true">
+                {[0, 1, 2].map((dot) => (
+                  <span
+                    key={dot}
+                    className="size-2 rounded-full bg-accent fs-dot"
+                    style={{ animationDelay: `${dot * 0.18}s` }}
+                  />
+                ))}
+              </span>
             </li>
           ) : null}
         </ol>
@@ -273,13 +291,23 @@ export function ChatPanel({
               onClick={() => void toggleRecording()}
               aria-label={t(voice.recording ? "chat.stop" : "chat.speak")}
               aria-pressed={voice.recording}
-              className={`rounded-full p-3 ${
+              className={`relative rounded-full p-3 ${
                 voice.recording
                   ? "bg-accent text-surface"
                   : "border border-border bg-surface text-accent"
               }`}
             >
-              {voice.recording ? <StopIcon className="size-5" /> : <MicIcon className="size-5" />}
+              {voice.recording ? (
+                <>
+                  <span
+                    className="absolute inset-0 rounded-full bg-accent fs-ring"
+                    aria-hidden="true"
+                  />
+                  <StopIcon className="relative size-5" />
+                </>
+              ) : (
+                <MicIcon className="size-5" />
+              )}
             </button>
           ) : null}
           <button

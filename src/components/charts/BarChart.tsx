@@ -16,7 +16,7 @@ function Rows({ points }: { points: ChartPoint[] }): React.JSX.Element {
           <span className="text-xs text-muted">{point.label}</span>
           <span className="h-3 w-full overflow-hidden rounded-full bg-border">
             <span
-              className="block h-full rounded-full"
+              className="block h-full rounded-full fs-grow-x"
               style={{
                 width: `${Math.max((Math.max(point.valueCents, 0) / max) * 100, 1)}%`,
                 background:
@@ -52,6 +52,8 @@ export function BarChart({ points }: { points: ChartPoint[] }): React.JSX.Elemen
               height={height}
               rx={4}
               fill={isLast ? "var(--chart-1)" : "var(--chart-bar-muted)"}
+              className="fs-grow-y"
+              style={{ animationDelay: `${index * 0.05}s` }}
             />
             <text
               x={x + barWidth / 2}

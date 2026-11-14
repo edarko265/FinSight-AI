@@ -105,6 +105,30 @@ describe("basic-mode routing", () => {
   });
 });
 
+describe("safe-to-spend with optional inputs", () => {
+  it("gives the same estimate when optional inputs are present but undefined", () => {
+    const plain = runTool(ctx, "safe_to_spend", { horizonDays: 7 });
+    const sparse = runTool(ctx, "safe_to_spend", {
+      horizonDays: 7,
+      protectedCents: undefined,
+      otherOutflowsCents: undefined,
+      includeExpectedIncome: undefined,
+    });
+    expect(sparse.facts).toEqual(plain.facts);
+    expect(sparse.facts.every((fact) => Number.isSafeInteger(fact.valueCents))).toBe(true);
+  });
+
+  it("lowers what is free by a planned purchase", () => {
+    const plain = runTool(ctx, "safe_to_spend", { horizonDays: 7 });
+    const withPurchase = runTool(ctx, "safe_to_spend", {
+      horizonDays: 7,
+      otherOutflowsCents: 20_000,
+    });
+    const free = (result: typeof plain): number => result.facts.at(-1)?.valueCents ?? 0;
+    expect(free(plain) - free(withPurchase)).toBe(20_000);
+  });
+});
+
 describe("saved widgets", () => {
   it("re-runs a stored query and applies the view's period and chart", () => {
     const result = runQuery(

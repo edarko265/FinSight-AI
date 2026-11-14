@@ -23,20 +23,22 @@ export function DonutChart({ points }: { points: ChartPoint[] }): React.JSX.Elem
 
   return (
     <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="mx-auto h-auto w-40" aria-hidden="true">
-      <g transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}>
-        {segments.map((segment) => (
-          <circle
-            key={segment.label}
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={RADIUS}
-            fill="none"
-            stroke={segment.color}
-            strokeWidth={STROKE}
-            strokeDasharray={`${Math.max(segment.length - 1.5, 0)} ${CIRCUMFERENCE}`}
-            strokeDashoffset={-segment.offset}
-          />
-        ))}
+      <g className="fs-draw">
+        <g transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}>
+          {segments.map((segment) => (
+            <circle
+              key={segment.label}
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={RADIUS}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth={STROKE}
+              strokeDasharray={`${Math.max(segment.length - 1.5, 0)} ${CIRCUMFERENCE}`}
+              strokeDashoffset={-segment.offset}
+            />
+          ))}
+        </g>
       </g>
     </svg>
   );

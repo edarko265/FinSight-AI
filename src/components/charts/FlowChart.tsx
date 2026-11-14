@@ -51,6 +51,8 @@ export function FlowChart({
             } Z`}
             fill={band.color}
             opacity={0.35}
+            className="fs-grow-x"
+            style={{ transformBox: "fill-box" }}
           />
           <rect
             x={right}

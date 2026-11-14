@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { AffordWizard } from "@/components/dashboard/AffordWizard";
 import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { CountUp } from "@/components/ui/CountUp";
 import { PlusIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import {
@@ -19,7 +21,6 @@ import {
   type ViewPeriod,
   type WidgetQuery,
 } from "@/lib/contracts/chart";
-import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 interface InsightItem {
@@ -37,6 +38,7 @@ export function DashboardView(): React.JSX.Element {
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [affordOpen, setAffordOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
 
   useEffect(() => {
@@ -115,7 +117,7 @@ export function DashboardView(): React.JSX.Element {
       <section className="rounded-2xl bg-brand p-5 text-on-brand">
         <p className="text-sm opacity-80">{t("dashboard.balance")}</p>
         <p className="mt-1 text-3xl font-semibold tabular-nums">
-          {overview ? formatMoney(overview.balanceCents, locale) : "—"}
+          {overview ? <CountUp cents={overview.balanceCents} locale={locale} /> : "—"}
         </p>
         {forecast && forecast.status !== "insufficient_data" ? (
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/15 pt-3">
@@ -124,12 +126,19 @@ export function DashboardView(): React.JSX.Element {
                 {t(shortfall ? "dashboard.shortfall" : "dashboard.safeToSpend")}
               </p>
               <p className="text-xl font-semibold tabular-nums">
-                {formatMoney(shortfall ? forecast.shortfallCents : forecast.availableCents, locale)}
+                <CountUp
+                  cents={shortfall ? forecast.shortfallCents : forecast.availableCents}
+                  locale={locale}
+                />
               </p>
             </div>
-            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium">
-              {t("dashboard.estimate")}
-            </span>
+            <button
+              type="button"
+              onClick={() => setAffordOpen(true)}
+              className="rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary"
+            >
+              {t("afford.cta")}
+            </button>
           </div>
         ) : null}
       </section>
@@ -263,6 +272,7 @@ export function DashboardView(): React.JSX.Element {
         </div>
       )}
 
+      <AffordWizard open={affordOpen} onClose={() => setAffordOpen(false)} />
       <ViewWizard draft={viewDraft} onClose={() => setViewDraft(null)} onSave={saveView} />
 
       <NewWidgetSheet

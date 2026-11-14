@@ -384,10 +384,15 @@ export type ForecastOverrides = Partial<
 export function forecastFor(ctx: CoachContext, overrides: ForecastOverrides = {}) {
   const horizon = Math.min(31, Math.max(1, overrides.horizonDays ?? 7));
   const suggested = suggestAssumptions(ctx.record.transactions, ctx.asOf, horizon);
+  // Only values that were actually given replace a suggestion: an override that is present but
+  // undefined must not blank out the suggested figure.
+  const given = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ForecastOverrides;
   return estimateSafeToSpend(
     ctx.record.transactions,
     ctx.asOf,
-    { ...suggested, ...overrides, horizonDays: horizon },
+    { ...suggested, ...given, horizonDays: horizon },
     ["essentialDailyCents", "irregularReserveCents", "bills", "spreadBillsDailyCents"],
   );
 }
@@ -406,26 +411,35 @@ export function safeToSpendTool(ctx: CoachContext, input: ForecastOverrides): To
     };
   }
   const b = result.breakdown;
-  const text = h.t(result.status === "ok" ? "coach.safe.ok" : "coach.safe.shortfall", {
+  const purchase = b.otherOutflowsCents;
+  const params = {
     available: h.money(result.availableCents),
     shortfall: h.money(result.shortfallCents),
     balance: h.money(result.balanceCents),
+    purchase: h.money(purchase),
     days,
-  });
+  };
+  // With a planned purchase the question is "can I afford this?", so the answer says what is left
+  // after it, or how far short it falls.
+  const text =
+    purchase > 0
+      ? h.t(result.status === "ok" ? "coach.afford.ok" : "coach.afford.short", params)
+      : h.t(result.status === "ok" ? "coach.safe.ok" : "coach.safe.shortfall", params);
   const rows: [MessageKey, number][] = [
     ["coach.safe.row.balance", result.balanceCents],
     ["coach.safe.row.bills", b.billsCents + b.spreadBillsCents],
     ["coach.safe.row.essentials", b.essentialsCents],
     ["coach.safe.row.reserve", b.irregularReserveCents],
-    ["coach.safe.row.protected", b.protectedCents + b.otherOutflowsCents],
-    ["coach.safe.row.available", result.availableCents],
+    ["coach.safe.row.protected", b.protectedCents],
+    ["coach.safe.row.purchase", purchase],
+    [purchase > 0 ? "coach.safe.row.left" : "coach.safe.row.available", result.availableCents],
   ];
-  const shown = rows.filter(([key, cents]) => cents > 0 || key === "coach.safe.row.available");
+  const shown = rows.filter(([, cents], index) => cents > 0 || index === rows.length - 1);
   return {
     tool: "safe_to_spend",
     text,
     card: {
-      title: h.t("coach.safe.title"),
+      title: h.t(purchase > 0 ? "coach.afford.title" : "coach.safe.title"),
       summary: text,
       chart: {
         kind: "bar",
@@ -433,7 +447,12 @@ export function safeToSpendTool(ctx: CoachContext, input: ForecastOverrides): To
       },
       basis: h.t("coach.safe.basis"),
     },
-    facts: shown.map(([key, cents]) => ({ label: h.t(key), valueCents: cents })),
+    facts: [
+      ...shown.map(([key, cents]) => ({ label: h.t(key), valueCents: cents })),
+      ...(result.shortfallCents > 0
+        ? [{ label: h.t("coach.safe.row.short"), valueCents: result.shortfallCents }]
+        : []),
+    ],
     lesson: h.t("basket.irregular.lesson"),
     followUps: [h.t("chat.suggest.bills"), h.t("chat.suggest.whatif")],
   };
