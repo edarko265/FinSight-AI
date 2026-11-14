@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { assertSignedIn } from "@/components/admin/admin-api";
+import { applyQueueAction, type QueueAction } from "@/components/admin/queue-state";
+import { LoadState } from "@/components/admin/LoadState";
+import { RowButton } from "@/components/admin/RowButton";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { formatMoney, formatSlot } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -24,9 +30,33 @@ interface Thread extends QueueItem {
 
 const POLL_MS = 4000;
 
+/** Null when the request failed, whether by status or by network. A 401 throws (see `assertSignedIn`). */
 async function getJson<T>(path: string, init?: RequestInit): Promise<T | null> {
-  const response = await fetch(path, { credentials: "same-origin", ...init });
-  return response.ok ? ((await response.json()) as T) : null;
+  let response: Response;
+  try {
+    response = await fetch(path, { credentials: "same-origin", ...init });
+  } catch {
+    return null;
+  }
+  assertSignedIn(response);
+  try {
+    return response.ok ? ((await response.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+type Action = QueueAction;
+
+/** Posts an action for one request and returns the fresh queue (null if only the refresh failed); throws when the action failed. */
+async function postAction(id: string, action: Action): Promise<QueueItem[] | null> {
+  const done = await getJson(`/api/admin/advisor/${id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
+  });
+  if (done === null) throw new Error("request_failed");
+  return (await getJson<{ queue: QueueItem[] }>("/api/admin/advisor"))?.queue ?? null;
 }
 
 /** The adviser's side of a hand-over: the queue of requests, and the conversation with one customer. */
@@ -34,21 +64,44 @@ export function AdvisorQueue(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const [queue, setQueue] = useState<QueueItem[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<Thread | null>(null);
   const [draft, setDraft] = useState("");
+  const epoch = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
+    let first = true;
     const load = (): void => {
-      void getJson<{ queue: QueueItem[] }>("/api/admin/advisor").then((data) => {
-        if (!cancelled && data) setQueue(data.queue);
-      });
-      if (openId) {
-        void getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`).then((data) => {
-          if (!cancelled && data) setThread(data.thread);
+      // A response that started before a change that has since completed is stale: drop it.
+      const startedAt = epoch.current;
+      const fresh = (): boolean => !cancelled && epoch.current === startedAt;
+      void getJson<{ queue: QueueItem[] }>("/api/admin/advisor")
+        .catch(() => null)
+        .then((data) => {
+          if (!fresh()) return;
+          if (data) {
+            setQueue(data.queue);
+            setFailed(false);
+          } else setFailed(true);
         });
+      if (openId) {
+        const opening = first;
+        void getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`)
+          .catch(() => null)
+          .then((data) => {
+            if (!fresh()) return;
+            if (data) setThread(data.thread);
+            else if (opening) {
+              // The thread never arrived: go back to the queue instead of waiting forever.
+              toast.fail("common.loadFailed");
+              setOpenId(null);
+            }
+          });
       }
+      first = false;
     };
     load();
     const timer = window.setInterval(load, POLL_MS);
@@ -56,33 +109,46 @@ export function AdvisorQueue(): React.JSX.Element {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [openId]);
+  }, [openId, tick, toast]);
 
-  type Action = "close" | "reopen" | "trash" | "restore" | "purge";
+  /** Takes the refreshed queue after an action, or applies the action locally if only the refresh failed. */
+  const applyToQueue = (id: string, action: Action, fresh: QueueItem[] | null): void => {
+    epoch.current += 1;
+    setQueue((current) => fresh ?? (current ? applyQueueAction(current, id, action) : current));
+  };
 
-  async function act(id: string, action: Action): Promise<void> {
-    await getJson(`/api/admin/advisor/${id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    const data = await getJson<{ queue: QueueItem[] }>("/api/admin/advisor");
-    if (action === "trash") toast.notify("toast.movedToBin");
-    else if (action === "restore") toast.notify("toast.restored");
-    else if (action === "purge") toast.notify("toast.deleted");
-    else toast.notify("toast.updated");
-    if (data) setQueue(data.queue);
-  }
+  const retry = (): void => {
+    setFailed(false);
+    setTick((value) => value + 1);
+  };
 
-  async function post(payload: { text: string } | { action: Action }): Promise<void> {
-    if (!openId) return;
-    const data = await getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (data) setThread(data.thread);
-  }
+  const sendReply = useAsyncAction(
+    async (text: string): Promise<void> => {
+      const data = await getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!data) throw new Error("request_failed");
+      epoch.current += 1;
+      setThread(data.thread);
+      setDraft("");
+    },
+    { successKey: "toast.sent", errorKey: "common.saveFailed" },
+  );
+  const changeStatus = useAsyncAction(
+    async (action: "close" | "reopen"): Promise<void> => {
+      const data = await getJson<{ thread: Thread }>(`/api/admin/advisor/${openId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (!data) throw new Error("request_failed");
+      epoch.current += 1;
+      setThread(data.thread);
+    },
+    { errorKey: "common.saveFailed" },
+  );
 
   const fee = (cents: number): string =>
     cents === 0 ? t("admin.advisor.free") : formatMoney(cents, locale);
@@ -124,13 +190,14 @@ export function AdvisorQueue(): React.JSX.Element {
         {thread.status === "closed" ? (
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="text-muted">{t("advisor.status.closed")}</span>
-            <button
-              type="button"
-              onClick={() => void post({ action: "reopen" })}
-              className="font-semibold text-accent"
+            <RowButton
+              pending={changeStatus.pending}
+              pendingLabel={t("common.saving")}
+              onClick={() => void changeStatus.run("reopen")}
+              className="min-h-11 font-semibold text-accent"
             >
               {t("admin.advisor.reopen")}
-            </button>
+            </RowButton>
           </div>
         ) : (
           <form
@@ -138,10 +205,8 @@ export function AdvisorQueue(): React.JSX.Element {
             onSubmit={(event) => {
               event.preventDefault();
               const text = draft.trim();
-              if (!text) return;
-              setDraft("");
-              void post({ text });
-              toast.notify("toast.sent");
+              if (!text || sendReply.pending) return;
+              void sendReply.run(text);
             }}
           >
             <label htmlFor="adviser-reply" className="sr-only">
@@ -157,16 +222,28 @@ export function AdvisorQueue(): React.JSX.Element {
             />
             <button
               type="submit"
-              className="rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary"
+              aria-disabled={sendReply.pending}
+              className="min-h-11 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary aria-disabled:opacity-60"
             >
-              {t("admin.advisor.send")}
+              {sendReply.pending ? (
+                <PendingLabel>{t("common.sending")}</PendingLabel>
+              ) : (
+                t("admin.advisor.send")
+              )}
             </button>
             <button
               type="button"
-              onClick={() => void post({ action: "close" })}
-              className="rounded-full border border-border px-4 py-2.5 text-sm font-semibold"
+              aria-disabled={changeStatus.pending}
+              onClick={() => {
+                if (!changeStatus.pending) void changeStatus.run("close");
+              }}
+              className="min-h-11 rounded-full border border-border px-4 py-2.5 text-sm font-semibold aria-disabled:opacity-60"
             >
-              {t("admin.advisor.close")}
+              {changeStatus.pending ? (
+                <PendingLabel>{t("common.saving")}</PendingLabel>
+              ) : (
+                t("admin.advisor.close")
+              )}
             </button>
           </form>
         )}
@@ -180,56 +257,21 @@ export function AdvisorQueue(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted">{t("admin.advisor.note")}</p>
+      <LoadState show={!queue} failed={failed} onRetry={retry} />
       {queue && live.length === 0 ? (
         <p className="text-sm text-muted">{t("admin.advisor.empty")}</p>
       ) : null}
       <ul className="flex flex-col gap-2">
         {live.map((item) => (
-          <li key={item.id} className="rounded-xl border border-border px-4 py-3 text-sm">
-            <button
-              type="button"
-              onClick={() => setOpenId(item.id)}
-              className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
-            >
-              <span className="flex flex-col">
-                <span className="font-semibold">
-                  {item.alias} · {t(`advisor.topic.${item.topic}` as MessageKey)}
-                </span>
-                <span className="text-xs text-muted">
-                  {t("admin.advisor.call")} {formatSlot(item.slot, locale)} · {fee(item.feeCents)}
-                </span>
-              </span>
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  item.waitingForAdvisor
-                    ? "bg-warning-soft text-warning"
-                    : "bg-accent-soft text-accent"
-                }`}
-              >
-                {item.waitingForAdvisor
-                  ? t("admin.advisor.needsReply")
-                  : t(`advisor.status.${item.status}` as MessageKey)}
-              </span>
-            </button>
-            <div className="mt-2 flex gap-4 text-xs font-semibold">
-              {item.status === "closed" ? (
-                <button
-                  type="button"
-                  onClick={() => void act(item.id, "reopen")}
-                  className="text-accent"
-                >
-                  {t("admin.advisor.reopen")}
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => void act(item.id, "trash")}
-                className="text-muted"
-              >
-                {t("common.moveToBin")}
-              </button>
-            </div>
-          </li>
+          <QueueRow
+            key={item.id}
+            item={item}
+            opening={openId === item.id}
+            busyOpening={openId !== null}
+            fee={fee(item.feeCents)}
+            onOpen={() => setOpenId(item.id)}
+            onApplied={applyToQueue}
+          />
         ))}
       </ul>
 
@@ -238,34 +280,137 @@ export function AdvisorQueue(): React.JSX.Element {
           <h3 className="text-sm font-semibold">{t("admin.bin")}</h3>
           <ul className="flex flex-col gap-2">
             {binned.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm"
-              >
-                <span className="text-muted">
-                  {item.alias} · {t(`advisor.topic.${item.topic}` as MessageKey)}
-                </span>
-                <span className="flex gap-4 font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => void act(item.id, "restore")}
-                    className="text-accent"
-                  >
-                    {t("common.restore")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void act(item.id, "purge")}
-                    className="text-warning"
-                  >
-                    {t("common.deleteForever")}
-                  </button>
-                </span>
-              </li>
+              <QueueRow key={item.id} item={item} fee="" onApplied={applyToQueue} />
             ))}
           </ul>
         </div>
       ) : null}
     </div>
+  );
+}
+
+function QueueRow({
+  item,
+  fee,
+  opening = false,
+  busyOpening = false,
+  onOpen,
+  onApplied,
+}: {
+  item: QueueItem;
+  fee: string;
+  /** This row's thread is being fetched. */
+  opening?: boolean;
+  /** Some row's thread is being fetched, so opening another is ignored. */
+  busyOpening?: boolean;
+  onOpen?: () => void;
+  onApplied: (id: string, action: Action, fresh: QueueItem[] | null) => void;
+}): React.JSX.Element {
+  const { t, locale } = usePreferences();
+  const toast = useToast();
+  const [which, setWhich] = useState<Action>("trash");
+  const { run, pending } = useAsyncAction(async (action: Action): Promise<void> => {
+    const fresh = await postAction(item.id, action);
+    onApplied(item.id, action, fresh);
+    toast.notify(
+      action === "trash"
+        ? "toast.movedToBin"
+        : action === "restore"
+          ? "toast.restored"
+          : action === "purge"
+            ? "toast.deleted"
+            : "toast.updated",
+    );
+  });
+  const start = (action: Action): void => {
+    setWhich(action);
+    void run(action);
+  };
+  const topic = t(`advisor.topic.${item.topic}` as MessageKey);
+
+  if (item.deleted) {
+    return (
+      <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm">
+        <span className="text-muted">
+          {item.alias} · {topic}
+        </span>
+        <span className="flex gap-4 font-semibold">
+          <RowButton
+            pending={pending}
+            active={which === "restore"}
+            pendingLabel={t("common.restoring")}
+            onClick={() => start("restore")}
+            className="min-h-11 text-accent"
+          >
+            {t("common.restore")}
+          </RowButton>
+          <RowButton
+            pending={pending}
+            active={which === "purge"}
+            pendingLabel={t("common.deleting")}
+            onClick={() => start("purge")}
+            className="min-h-11 text-warning"
+          >
+            {t("common.deleteForever")}
+          </RowButton>
+        </span>
+      </li>
+    );
+  }
+  return (
+    <li className="rounded-xl border border-border px-4 py-3 text-sm">
+      <button
+        type="button"
+        aria-disabled={busyOpening}
+        onClick={() => {
+          if (!busyOpening) onOpen?.();
+        }}
+        className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
+      >
+        <span className="flex flex-col">
+          <span className="font-semibold">
+            {item.alias} · {topic}
+          </span>
+          <span className="text-xs text-muted">
+            {t("admin.advisor.call")} {formatSlot(item.slot, locale)} · {fee}
+          </span>
+        </span>
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+            item.waitingForAdvisor ? "bg-warning-soft text-warning" : "bg-accent-soft text-accent"
+          }`}
+        >
+          {opening ? (
+            <PendingLabel>{t("common.loading")}</PendingLabel>
+          ) : item.waitingForAdvisor ? (
+            t("admin.advisor.needsReply")
+          ) : (
+            t(`advisor.status.${item.status}` as MessageKey)
+          )}
+        </span>
+      </button>
+      <div className="mt-2 flex gap-4 text-xs font-semibold">
+        {item.status === "closed" ? (
+          <RowButton
+            pending={pending}
+            active={which === "reopen"}
+            pendingLabel={t("common.saving")}
+            onClick={() => start("reopen")}
+            className="min-h-11 text-accent"
+          >
+            {t("admin.advisor.reopen")}
+          </RowButton>
+        ) : null}
+        <RowButton
+          pending={pending}
+          active={which === "trash"}
+          pendingLabel={t("common.deleting")}
+          onClick={() => start("trash")}
+          className="min-h-11 text-muted"
+        >
+          {t("common.moveToBin")}
+        </RowButton>
+      </div>
+    </li>
   );
 }

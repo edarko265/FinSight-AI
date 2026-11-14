@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useLoad } from "@/components/shared/useLoad";
 import {
   Suggestions,
   Wizard,
@@ -15,6 +16,11 @@ import {
 import { api, ApiError } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 
 type Bank = "aurora" | "kaski" | "nordlys";
 type Kind = "everyday" | "savings" | "credit";
@@ -44,9 +50,7 @@ export function AccountsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const { refresh } = useOverview();
-  const [data, setData] = useState<Payload | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [tick, setTick] = useState(0);
+  const { data, failed, retry, setData, headingRef } = useLoad(() => api<Payload>("/api/accounts"));
   const [open, setOpen] = useState(false);
   const [bank, setBank] = useState<Bank>("aurora");
   const [kind, setKind] = useState<Kind>("everyday");
@@ -55,27 +59,28 @@ export function AccountsView(): React.JSX.Element {
   const [renaming, setRenaming] = useState<Account | null>(null);
   const [error, setError] = useState<MessageKey | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    api<Payload>("/api/accounts")
-      .then((payload) => {
-        if (cancelled) return;
-        setData(payload);
-        setFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tick]);
-
   // The balance and estimates elsewhere in the app change with what is linked.
   const reload = useCallback(() => {
-    setTick((value) => value + 1);
+    retry();
     refresh();
-  }, [refresh]);
+  }, [retry, refresh]);
+  // A row shows its change at once, so it cannot be acted on again before the reload lands.
+  const change = useCallback(
+    (id: string, update: Partial<Account> | null): void => {
+      setData((current) =>
+        current
+          ? {
+              ...current,
+              accounts: current.accounts.flatMap((account) =>
+                account.id !== id ? [account] : update ? [{ ...account, ...update }] : [],
+              ),
+            }
+          : null,
+      );
+      reload();
+    },
+    [setData, reload],
+  );
   const money = (cents: number): string => formatMoney(cents, locale);
 
   async function send(payload: Record<string, unknown>, message: MessageKey): Promise<boolean> {
@@ -110,31 +115,20 @@ export function AccountsView(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
-      <div>
-        <h1 className="text-xl font-semibold">{t("accounts.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("accounts.intro")}</p>
-      </div>
+      <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+        {t("accounts.title")}
+      </h1>
       <p className="rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm">
         {t("accounts.simulation")}
       </p>
-      {failed ? (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm"
-        >
-          <span>{t("admin.loadFailed")}</span>
-          <button type="button" className="font-semibold underline" onClick={reload}>
-            {t("admin.retry")}
-          </button>
-        </div>
-      ) : null}
+      {failed ? <LoadError onRetry={reload} /> : null}
 
       {data ? (
         <>
           <section className="rounded-2xl bg-brand p-5 text-on-brand">
             <p className="text-sm opacity-80">{t("accounts.total")}</p>
             <p className="mt-1 text-3xl font-semibold tabular-nums">{money(total)}</p>
-            <p className="mt-1 text-xs opacity-80">
+            <p className="mt-1 text-sm opacity-80">
               {t("accounts.total.note", {
                 count: data.accounts.filter((account) => account.included).length,
               })}
@@ -143,69 +137,15 @@ export function AccountsView(): React.JSX.Element {
 
           <ul className="grid gap-3 md:grid-cols-2">
             {data.accounts.map((account) => (
-              <li
+              <AccountRow
                 key={account.id}
-                className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-base font-semibold">
-                      {account.simulated ? account.nickname : t("accounts.main")}
-                    </h2>
-                    <p className="text-xs text-muted">
-                      {account.simulated && account.bank
-                        ? `${t(`accounts.bank.${account.bank}`)} · ${t(`accounts.kind.${account.kind}` as MessageKey)}`
-                        : t("accounts.main.note")}
-                    </p>
-                  </div>
-                  {account.simulated ? (
-                    <span className="shrink-0 rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">
-                      {t("accounts.simulated")}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="text-2xl font-semibold tabular-nums">{money(account.balanceCents)}</p>
-                {account.simulated ? (
-                  <>
-                    <label className="flex items-center justify-between gap-3 text-sm">
-                      <span>{t("accounts.include")}</span>
-                      <input
-                        type="checkbox"
-                        role="switch"
-                        checked={account.included}
-                        onChange={(event) =>
-                          void send(
-                            { action: "update", id: account.id, included: event.target.checked },
-                            "toast.updated",
-                          )
-                        }
-                        className="size-5 accent-[var(--accent)]"
-                      />
-                    </label>
-                    <div className="flex gap-4 text-sm font-semibold">
-                      <button
-                        type="button"
-                        className="text-accent"
-                        onClick={() => {
-                          setNickname(account.nickname ?? "");
-                          setRenaming(account);
-                        }}
-                      >
-                        {t("common.edit")}
-                      </button>
-                      <button
-                        type="button"
-                        className="text-muted"
-                        onClick={() =>
-                          void send({ action: "unlink", id: account.id }, "toast.movedToBin")
-                        }
-                      >
-                        {t("common.moveToBin")}
-                      </button>
-                    </div>
-                  </>
-                ) : null}
-              </li>
+                account={account}
+                onRename={() => {
+                  setNickname(account.nickname ?? "");
+                  setRenaming(account);
+                }}
+                onChanged={change}
+              />
             ))}
           </ul>
 
@@ -216,12 +156,16 @@ export function AccountsView(): React.JSX.Element {
           >
             {t("accounts.link")}
           </button>
-          <p className="text-xs text-muted">{t("accounts.note")}</p>
+          <InfoTip>{t("accounts.note")}</InfoTip>
         </>
       ) : failed ? null : (
-        <p className="py-10 text-center text-sm text-muted" role="status">
-          …
-        </p>
+        <LoadingRegion className="flex flex-col gap-5">
+          <SkeletonCard />
+          <div className="grid gap-3 md:grid-cols-2">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </LoadingRegion>
       )}
 
       <Wizard
@@ -395,5 +339,100 @@ export function AccountsView(): React.JSX.Element {
         ]}
       />
     </div>
+  );
+}
+
+/** One linked account. It owns its hooks so the switch and the bin button show their own pending state. */
+function AccountRow({
+  account,
+  onRename,
+  onChanged,
+}: {
+  account: Account;
+  onRename: () => void;
+  onChanged: (id: string, update: Partial<Account> | null) => void;
+}): React.JSX.Element {
+  const { t, locale } = usePreferences();
+  const include = useAsyncAction(
+    (included: boolean) =>
+      api("/api/accounts", {
+        method: "POST",
+        json: { action: "update", id: account.id, included },
+      }),
+    { successKey: "toast.updated" },
+  );
+  const unlink = useAsyncAction(
+    () => api("/api/accounts", { method: "POST", json: { action: "unlink", id: account.id } }),
+    { successKey: "toast.movedToBin" },
+  );
+  const busy = include.pending || unlink.pending;
+
+  async function toggle(included: boolean): Promise<void> {
+    if (busy) return;
+    const result = await include.run(included);
+    if (result.ok) onChanged(account.id, { included });
+  }
+
+  async function moveToBin(): Promise<void> {
+    if (busy) return;
+    const result = await unlink.run();
+    if (result.ok) onChanged(account.id, null);
+  }
+
+  return (
+    <li className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold">
+            {account.simulated ? account.nickname : t("accounts.main")}
+          </h2>
+          <p className="text-sm text-muted">
+            {account.simulated && account.bank
+              ? `${t(`accounts.bank.${account.bank}`)} · ${t(`accounts.kind.${account.kind}` as MessageKey)}`
+              : t("accounts.main.note")}
+          </p>
+        </div>
+        {account.simulated ? (
+          <span className="shrink-0 rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">
+            {t("accounts.simulated")}
+          </span>
+        ) : null}
+      </div>
+      <p className="text-2xl font-semibold tabular-nums">
+        {formatMoney(account.balanceCents, locale)}
+      </p>
+      {account.simulated ? (
+        <>
+          <label className="flex items-center justify-between gap-3 text-sm">
+            <span>{t("accounts.include")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={account.included}
+              aria-disabled={busy}
+              onChange={(event) => void toggle(event.target.checked)}
+              className="size-5 accent-[var(--accent)]"
+            />
+          </label>
+          <div className="flex gap-4 text-sm font-semibold">
+            <button type="button" className="min-h-11 text-accent" onClick={onRename}>
+              {t("common.edit")}
+            </button>
+            <button
+              type="button"
+              className="min-h-11 text-muted"
+              aria-disabled={busy}
+              onClick={() => void moveToBin()}
+            >
+              {unlink.pending ? (
+                <PendingLabel>{t("common.removing")}</PendingLabel>
+              ) : (
+                t("common.moveToBin")
+              )}
+            </button>
+          </div>
+        </>
+      ) : null}
+    </li>
   );
 }

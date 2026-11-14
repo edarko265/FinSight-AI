@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { adminCall, requireResult, unlessSignedOut } from "@/components/admin/admin-api";
+import { LoadState } from "@/components/admin/LoadState";
+import { RowButton } from "@/components/admin/RowButton";
+import { useAdminLoad } from "@/components/admin/use-admin-load";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -60,52 +65,30 @@ function toPayload(form: typeof EMPTY): Record<string, unknown> {
 const SEVERITIES: Severity[] = ["info", "warning", "good"];
 const EXAMPLES = ["feature", "tip", "break"] as const;
 
-async function call(
-  path: string,
-  method: string,
-  payload?: unknown,
-): Promise<Announcement[] | null> {
-  const response = await fetch(path, {
-    method,
-    credentials: "same-origin",
-    headers: payload ? { "Content-Type": "application/json" } : undefined,
-    body: payload ? JSON.stringify(payload) : undefined,
-  });
-  if (!response.ok) return null;
-  return ((await response.json()) as { announcements: Announcement[] }).announcements;
-}
+type Result = { announcements: Announcement[] };
 
 /** Notices staff publish to every customer: create, edit, bin, restore and delete for good. */
 export function Announcements(): React.JSX.Element {
   const { t } = usePreferences();
   const toast = useToast();
-  const [items, setItems] = useState<Announcement[] | null>(null);
+  const { data, failed, reload, setData } = useAdminLoad<Result>("/api/admin/announcements");
+  const items = data?.announcements ?? null;
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    void call("/api/admin/announcements", "GET").then((list) => {
-      if (!cancelled && list) setItems(list);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const apply = (list: Announcement[] | null): void => {
-    if (list) setItems(list);
-  };
-
-  async function submit(): Promise<void> {
-    apply(
-      editingId
-        ? await call(`/api/admin/announcements/${editingId}`, "PATCH", toPayload(form))
-        : await call("/api/admin/announcements", "POST", toPayload(form)),
-    );
+  async function submit(): Promise<boolean> {
+    const result = editingId
+      ? await adminCall<Result>(`/api/admin/announcements/${editingId}`, "PATCH", form)
+      : await adminCall<Result>("/api/admin/announcements", "POST", form);
+    if (!result) {
+      toast.fail("common.saveFailed");
+      return false;
+    }
+    setData(result);
     toast.notify(editingId ? "toast.updated" : "toast.published");
     close();
+    return true;
   }
 
   function close(): void {
@@ -114,23 +97,11 @@ export function Announcements(): React.JSX.Element {
     setEditingId(null);
   }
 
-  const act = async (id: string, action: "trash" | "restore" | "purge"): Promise<void> => {
-    apply(await call(`/api/admin/announcements/${id}`, "POST", { action }));
-    toast.notify(
-      action === "trash"
-        ? "toast.movedToBin"
-        : action === "restore"
-          ? "toast.restored"
-          : "toast.deleted",
-    );
-  };
-
   const live = items?.filter((item) => !item.deletedAt) ?? [];
   const binned = items?.filter((item) => item.deletedAt) ?? [];
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-muted">{t("admin.announcements.note")}</p>
 
       <button
         type="button"
@@ -145,7 +116,7 @@ export function Announcements(): React.JSX.Element {
         title={t(editingId ? "admin.announcements.editTitle" : "admin.announcements.new")}
         finishLabel={t(editingId ? "common.save" : "admin.announcements.publish")}
         onClose={close}
-        onFinish={submit}
+        onFinish={() => unlessSignedOut(submit)}
         steps={[
           {
             title: t("admin.announcements.step.type"),
@@ -313,67 +284,22 @@ export function Announcements(): React.JSX.Element {
         ]}
       />
 
+      <LoadState show={!items} failed={failed} onRetry={reload} />
       {items && live.length === 0 ? (
         <p className="text-sm text-muted">{t("admin.announcements.empty")}</p>
       ) : null}
       <ul className="flex flex-col gap-2">
         {live.map((item) => (
-          <li key={item.id} className="rounded-xl border border-border px-4 py-3 text-sm">
-            <p className="font-semibold">
-              {item.title}{" "}
-              <span className="font-normal text-muted">
-                · {t(`admin.announcements.severity.${item.severity}` as MessageKey)}
-              </span>
-            </p>
-            <p className="mt-0.5 text-muted">{item.body}</p>
-            <p className="mt-1 text-xs text-muted">
-              {item.publishAt && Date.parse(item.publishAt) > Date.now()
-                ? t("admin.announcements.scheduled", {
-                    when: new Date(item.publishAt).toLocaleString(),
-                  })
-                : t("admin.reach", { count: item.views })}
-              {item.translations.fi || item.translations.sv
-                ? ` · ${["EN", item.translations.fi ? "FI" : "", item.translations.sv ? "SV" : ""].filter(Boolean).join(" ")}`
-                : ""}
-            </p>
-            <div className="mt-2 flex gap-4 font-semibold">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingId(item.id);
-                  const scheduled = item.publishAt && Date.parse(item.publishAt) > Date.now();
-                  setForm({
-                    title: item.title,
-                    body: item.body,
-                    severity: item.severity,
-                    when: scheduled ? "later" : "now",
-                    // A date-time field wants local time without a zone.
-                    publishAt: scheduled
-                      ? new Date(
-                          Date.parse(item.publishAt ?? "") -
-                            new Date().getTimezoneOffset() * 60_000,
-                        )
-                          .toISOString()
-                          .slice(0, 16)
-                      : "",
-                    fi: item.translations.fi ?? { title: "", body: "" },
-                    sv: item.translations.sv ?? { title: "", body: "" },
-                  });
-                  setOpen(true);
-                }}
-                className="text-accent"
-              >
-                {t("common.edit")}
-              </button>
-              <button
-                type="button"
-                onClick={() => void act(item.id, "trash")}
-                className="text-muted"
-              >
-                {t("common.moveToBin")}
-              </button>
-            </div>
-          </li>
+          <AnnouncementRow
+            key={item.id}
+            item={item}
+            onChange={setData}
+            onEdit={() => {
+              setEditingId(item.id);
+              setForm({ ...EMPTY, title: item.title, body: item.body, severity: item.severity });
+              setOpen(true);
+            }}
+          />
         ))}
       </ul>
 
@@ -382,32 +308,98 @@ export function Announcements(): React.JSX.Element {
           <h3 className="text-sm font-semibold">{t("admin.bin")}</h3>
           <ul className="flex flex-col gap-2">
             {binned.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm"
-              >
-                <span className="text-muted">{item.title}</span>
-                <span className="flex gap-4 font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => void act(item.id, "restore")}
-                    className="text-accent"
-                  >
-                    {t("common.restore")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void act(item.id, "purge")}
-                    className="text-warning"
-                  >
-                    {t("common.deleteForever")}
-                  </button>
-                </span>
-              </li>
+              <AnnouncementRow key={item.id} item={item} onChange={setData} />
             ))}
           </ul>
         </div>
       ) : null}
     </div>
+  );
+}
+
+type Action = "trash" | "restore" | "purge";
+
+function AnnouncementRow({
+  item,
+  onEdit,
+  onChange,
+}: {
+  item: Announcement;
+  /** Only live announcements can be edited. */
+  onEdit?: () => void;
+  onChange: (result: Result) => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const toast = useToast();
+  const [which, setWhich] = useState<Action>("trash");
+  const { run, pending } = useAsyncAction(async (action: Action): Promise<void> => {
+    const result = requireResult(
+      await adminCall<Result>(`/api/admin/announcements/${item.id}`, "POST", { action }),
+    );
+    onChange(result);
+    toast.notify(
+      action === "trash"
+        ? "toast.movedToBin"
+        : action === "restore"
+          ? "toast.restored"
+          : "toast.deleted",
+    );
+  });
+  const start = (action: Action): void => {
+    setWhich(action);
+    void run(action);
+  };
+
+  if (item.deletedAt) {
+    return (
+      <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm">
+        <span className="text-muted">{item.title}</span>
+        <span className="flex gap-4 font-semibold">
+          <RowButton
+            pending={pending}
+            active={which === "restore"}
+            pendingLabel={t("common.restoring")}
+            className="min-h-11 text-accent"
+            onClick={() => start("restore")}
+          >
+            {t("common.restore")}
+          </RowButton>
+          <RowButton
+            pending={pending}
+            active={which === "purge"}
+            pendingLabel={t("common.deleting")}
+            className="min-h-11 text-warning"
+            onClick={() => start("purge")}
+          >
+            {t("common.deleteForever")}
+          </RowButton>
+        </span>
+      </li>
+    );
+  }
+  return (
+    <li className="rounded-xl border border-border px-4 py-3 text-sm">
+      <p className="font-semibold">
+        {item.title}{" "}
+        <span className="font-normal text-muted">
+          · {t(`admin.announcements.severity.${item.severity}` as MessageKey)}
+        </span>
+      </p>
+      <p className="mt-0.5 text-muted">{item.body}</p>
+      <p className="mt-1 text-xs text-muted">{t("admin.reach", { count: item.views })}</p>
+      <div className="mt-2 flex gap-4 font-semibold">
+        <button type="button" onClick={onEdit} className="min-h-11 text-accent">
+          {t("common.edit")}
+        </button>
+        <RowButton
+          pending={pending}
+          pendingLabel={t("common.deleting")}
+          className="min-h-11 text-muted"
+          onClick={() => start("trash")}
+        >
+          {t("common.moveToBin")}
+        </RowButton>
+      </div>
+    </li>
   );
 }

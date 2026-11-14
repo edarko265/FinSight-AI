@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { adminCall } from "@/components/admin/admin-api";
+import { adminCall, requireResult, unlessSignedOut } from "@/components/admin/admin-api";
+import { LoadState } from "@/components/admin/LoadState";
 import { Panel } from "@/components/admin/parts";
+import { RowButton } from "@/components/admin/RowButton";
+import { useAdminLoad } from "@/components/admin/use-admin-load";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -54,23 +58,11 @@ export function Training({
 }): React.JSX.Element {
   const { t } = usePreferences();
   const toast = useToast();
-  const [items, setItems] = useState<TaughtAnswer[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  const { data, failed, reload, setData } = useAdminLoad<Result>("/api/admin/training");
+  const items = data?.answers ?? null;
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void adminCall<Result>("/api/admin/training").then((result) => {
-      if (cancelled) return;
-      if (result) setItems(result.answers);
-      else setFailed(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const theme = (name: string): string =>
     hasMessage(`admin.theme.${name}`) ? t(`admin.theme.${name}` as MessageKey) : name;
@@ -82,16 +74,6 @@ export function Training({
     .split(",")
     .map((word) => word.trim())
     .filter((word) => word.length >= 2);
-
-  function apply(result: Result | null, message: MessageKey): boolean {
-    if (!result) {
-      toast.fail();
-      return false;
-    }
-    setItems(result.answers);
-    toast.notify(message);
-    return true;
-  }
 
   function close(): void {
     setOpen(false);
@@ -108,7 +90,7 @@ export function Training({
     setOpen(true);
   }
 
-  async function submit(): Promise<void> {
+  async function submit(): Promise<boolean> {
     const payload = {
       theme: form.theme,
       keywords,
@@ -117,7 +99,14 @@ export function Training({
     const result = editingId
       ? await adminCall<Result>(`/api/admin/training/${editingId}`, "PATCH", payload)
       : await adminCall<Result>("/api/admin/training", "POST", payload);
-    if (apply(result, editingId ? "toast.updated" : "toast.saved")) close();
+    if (!result) {
+      toast.fail("common.saveFailed");
+      return false;
+    }
+    setData(result);
+    toast.notify(editingId ? "toast.updated" : "toast.saved");
+    close();
+    return true;
   }
 
   const answerStep = (language: (typeof LANGUAGES)[number], required: boolean) => ({
@@ -197,63 +186,29 @@ export function Training({
         >
           {t("admin.training.new")}
         </button>
-        {failed ? <p className="text-sm text-warning">{t("admin.loadFailed")}</p> : null}
+        <LoadState show={!items} failed={failed} onRetry={reload} />
         {items && live.length === 0 ? (
           <p className="text-sm text-muted">{t("admin.training.empty")}</p>
         ) : null}
         <ul className="flex flex-col gap-2">
           {live.map((item) => (
-            <li key={item.id} className="rounded-xl border border-border px-4 py-3 text-sm">
-              <p className="font-semibold">
-                {theme(item.theme)}
-                <span className="font-normal text-muted">
-                  {" · "}
-                  {item.keywords.length > 0
-                    ? item.keywords.join(", ")
-                    : t("admin.training.wholeTheme")}
-                </span>
-              </p>
-              <p className="mt-1 line-clamp-3 whitespace-pre-line text-muted">
-                {item.answers.en || item.answers.fi || item.answers.sv}
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                {t("admin.training.uses", { count: item.uses })}
-                {" · "}
-                {LANGUAGES.filter((language) => item.answers[language])
-                  .map((language) => language.toUpperCase())
-                  .join(" ")}
-              </p>
-              <div className="mt-2 flex gap-4 font-semibold">
-                <button
-                  type="button"
-                  className="text-accent"
-                  onClick={() => {
-                    setEditingId(item.id);
-                    setForm({
-                      theme: (THEMES as readonly string[]).includes(item.theme)
-                        ? (item.theme as Theme)
-                        : "other",
-                      keywords: item.keywords.join(", "),
-                      ...item.answers,
-                    });
-                    setOpen(true);
-                  }}
-                >
-                  {t("common.edit")}
-                </button>
-                <button
-                  type="button"
-                  className="text-muted"
-                  onClick={() =>
-                    void adminCall<Result>(`/api/admin/training/${item.id}`, "POST", {
-                      action: "trash",
-                    }).then((result) => apply(result, "toast.movedToBin"))
-                  }
-                >
-                  {t("common.moveToBin")}
-                </button>
-              </div>
-            </li>
+            <TrainingRow
+              key={item.id}
+              item={item}
+              themeLabel={theme(item.theme)}
+              onEdit={() => {
+                setEditingId(item.id);
+                setForm({
+                  theme: (THEMES as readonly string[]).includes(item.theme)
+                    ? (item.theme as Theme)
+                    : "other",
+                  keywords: item.keywords.join(", "),
+                  ...item.answers,
+                });
+                setOpen(true);
+              }}
+              onChange={setData}
+            />
           ))}
         </ul>
         <p className="text-xs text-muted">{t("admin.training.note")}</p>
@@ -264,7 +219,7 @@ export function Training({
         title={t(editingId ? "admin.training.edit" : "admin.training.new")}
         finishLabel={t("common.save")}
         onClose={close}
-        onFinish={submit}
+        onFinish={() => unlessSignedOut(submit)}
         steps={[
           {
             title: t("admin.training.step.theme"),
@@ -338,5 +293,61 @@ export function Training({
         ]}
       />
     </>
+  );
+}
+
+function TrainingRow({
+  item,
+  themeLabel,
+  onEdit,
+  onChange,
+}: {
+  item: TaughtAnswer;
+  themeLabel: string;
+  onEdit: () => void;
+  onChange: (result: Result) => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const toast = useToast();
+  const { run, pending } = useAsyncAction(async (): Promise<void> => {
+    const result = requireResult(
+      await adminCall<Result>(`/api/admin/training/${item.id}`, "POST", { action: "trash" }),
+    );
+    onChange(result);
+    toast.notify("toast.movedToBin");
+  });
+  return (
+    <li className="rounded-xl border border-border px-4 py-3 text-sm">
+      <p className="font-semibold">
+        {themeLabel}
+        <span className="font-normal text-muted">
+          {" · "}
+          {item.keywords.length > 0 ? item.keywords.join(", ") : t("admin.training.wholeTheme")}
+        </span>
+      </p>
+      <p className="mt-1 line-clamp-3 whitespace-pre-line text-muted">
+        {item.answers.en || item.answers.fi || item.answers.sv}
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        {t("admin.training.uses", { count: item.uses })}
+        {" · "}
+        {LANGUAGES.filter((language) => item.answers[language])
+          .map((language) => language.toUpperCase())
+          .join(" ")}
+      </p>
+      <div className="mt-2 flex gap-4 font-semibold">
+        <button type="button" className="min-h-11 text-accent" onClick={onEdit}>
+          {t("common.edit")}
+        </button>
+        <RowButton
+          pending={pending}
+          pendingLabel={t("common.deleting")}
+          className="min-h-11 text-muted"
+          onClick={() => void run()}
+        >
+          {t("common.moveToBin")}
+        </RowButton>
+      </div>
+    </li>
   );
 }

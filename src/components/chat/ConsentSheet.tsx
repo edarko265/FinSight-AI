@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 const POINTS: MessageKey[] = [
@@ -14,16 +16,39 @@ const POINTS: MessageKey[] = [
   "consent.point.choice",
 ];
 
-/** Terms for the AI coach. Shown before any question is sent to an AI service. */
+/**
+ * Terms for the AI coach. Shown before any question is sent to an AI service.
+ * `onChoose` should reject when the choice could not be saved: the sheet then stays open,
+ * shows the error toast and lets the person try again.
+ */
 export function ConsentSheet({
   open,
   onChoose,
 }: {
   open: boolean;
-  onChoose: (accepted: boolean) => void;
+  onChoose: (accepted: boolean) => Promise<void>;
 }): React.JSX.Element {
   const { t } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [choice, setChoice] = useState<boolean | null>(null);
+  // Set after a successful save and kept until the parent closes the sheet, so the buttons
+  // and Escape stay inert while the new state is still arriving.
+  const [decided, setDecided] = useState(false);
+  if (decided && !open) setDecided(false);
+  const { run, pending: running } = useAsyncAction(async (accepted: boolean) => {
+    setChoice(accepted);
+    try {
+      await onChoose(accepted);
+      setDecided(true);
+    } catch (failure) {
+      setChoice(null);
+      throw failure;
+    }
+  });
+  const pending = running || decided;
+  const choose = (accepted: boolean): void => {
+    if (!pending) void run(accepted);
+  };
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -37,7 +62,7 @@ export function ConsentSheet({
       ref={dialogRef}
       onCancel={(event) => {
         event.preventDefault();
-        onChoose(false);
+        choose(false);
       }}
       aria-labelledby="consent-title"
       className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
@@ -65,17 +90,27 @@ export function ConsentSheet({
       <div className="flex flex-col gap-2 px-5 pt-4 pb-5">
         <button
           type="button"
-          onClick={() => onChoose(true)}
-          className="rounded-full bg-primary px-5 py-3.5 text-base font-semibold text-on-primary"
+          aria-disabled={pending}
+          onClick={() => choose(true)}
+          className="min-h-11 rounded-full bg-primary px-5 py-3.5 text-base font-semibold text-on-primary aria-disabled:opacity-60"
         >
-          {t("consent.accept")}
+          {pending && choice === true ? (
+            <PendingLabel>{t("common.saving")}</PendingLabel>
+          ) : (
+            t("consent.accept")
+          )}
         </button>
         <button
           type="button"
-          onClick={() => onChoose(false)}
-          className="rounded-full border border-border px-5 py-3 text-sm font-semibold"
+          aria-disabled={pending}
+          onClick={() => choose(false)}
+          className="min-h-11 rounded-full border border-border px-5 py-3 text-sm font-semibold aria-disabled:opacity-60"
         >
-          {t("consent.decline")}
+          {pending && choice === false ? (
+            <PendingLabel>{t("common.saving")}</PendingLabel>
+          ) : (
+            t("consent.decline")
+          )}
         </button>
       </div>
     </dialog>

@@ -65,6 +65,13 @@ export const sv: Record<MessageKey, string> = {
   "chat.error": "Något gick fel hos mig. Försök igen.",
   "chat.addToDashboard": "Lägg till på översikten",
   "chat.added": "Tillagd",
+  "dock.open": "Öppna coachen",
+  "dock.close": "Stäng",
+  "dock.expand": "Helskärm",
+  "dock.collapse": "Halvskärm",
+  "dock.new": "Ny konversation",
+  "dock.unread": "Oläst svar från coachen",
+  "dock.call": "Ring coachen",
   "chat.seeTransactions": "Visa transaktioner",
   "chat.why": "Varför det här svaret?",
   "chat.modeAi": "AI-coach",
@@ -99,8 +106,10 @@ export const sv: Record<MessageKey, string> = {
   "dashboard.noChart":
     "Jag kunde inte göra ett diagram av det. Prova att nämna en kategori eller en tidsperiod.",
 
-  "chart.showValues": "Visa värden",
   "evidence.title": "Transaktionerna bakom svaret",
+  "chart.average": "Genomsnitt {amount}",
+  "chart.caption.columns":
+    "Senaste månaden är mörkare; den streckade linjen är månadsgenomsnittet, {average}.",
   "evidence.count": "{count} transaktioner",
   "evidence.empty": "Inga matchande transaktioner i den här datan och perioden.",
   "evidence.close": "Stäng",
@@ -363,11 +372,36 @@ export const sv: Record<MessageKey, string> = {
   "rewards.next": "{points} poäng till nästa nivå",
   "rewards.earned": "Intjänat",
   "rewards.notYet": "Inte än",
-  "rewards.coupons": "Kuponger",
   "rewards.unlocked": "Upplåst",
-  "rewards.locked": "Låses upp vid {points} poäng",
-  "rewards.note":
-    "Belöningar mäts mot dina egna tidigare månader, aldrig mot andra människor. Kupongerna är exempel på vad ett bonusprogram hos en bank skulle kunna erbjuda.",
+
+  "voucher.title": "Månatliga förmåner",
+  "voucher.unavailable":
+    "Vi kan inte sätta förmånsmål än, eftersom det saknas inkomst att mäta mot den här månaden. De visas när din inkomst syns.",
+  "voucher.tier.bronze": "Brons",
+  "voucher.tier.silver": "Silver",
+  "voucher.tier.gold": "Guld",
+  "voucher.tier.platinum": "Platina",
+  "voucher.tier.diamond": "Diamant",
+  "voucher.stage.prev": "Föregående steg",
+  "voucher.stage.next": "Nästa steg",
+  "voucher.brand.grocery": "våra livsmedelsbutiker",
+  "voucher.brand.fuel": "våra bensinstationer",
+  "voucher.kind.grocery.title": "{percent} rabatt på en matvara",
+  "voucher.kind.grocery.chosen": "{percent} rabatt på en matvara i {brand}",
+  "voucher.kind.fuel.title": "{cents} öre/l rabatt på bränsle",
+  "voucher.kind.fuel.chosen": "{cents} öre/l rabatt på en tankning vid {brand}",
+  "voucher.next": "Nästa mål",
+  "voucher.progress": "{saved} av {target}",
+  "voucher.choose": "Välj en {tier}-förmån",
+  "voucher.remove": "Ta bort valet",
+  "voucher.invalid": "Ditt tidigare val är inte längre tillgängligt. Välj en annan förmån.",
+  "voucher.toast.picked": "Förmån vald",
+  "voucher.toast.removed": "Valet har tagits bort",
+  "voucher.lockedNow": "Den här förmånen är inte längre upplåst. Vi uppdaterade dina framsteg.",
+  "voucher.confirm": "Välj den här förmånen",
+  "voucher.choosing": "Väljer…",
+  "voucher.off": "Förmåner är inte aktiverade just nu.",
+
   "reward.underAverage.title": "En lättare månad",
   "reward.underAverage.body":
     "Du lade {amount} förra månaden, under ditt tremånaderssnitt på {average}.",
@@ -381,12 +415,6 @@ export const sv: Record<MessageKey, string> = {
   "reward.investing.body": "Du investerade {amount} förra månaden.",
   "reward.goal.title": "Satte ett mål",
   "reward.goal.body": "Berättade för coachen vad du sparar till.",
-  "reward.coupon.coffee.title": "Gratis kaffe",
-  "reward.coupon.coffee.body": "Exempelkupong: en kaffe på huset.",
-  "reward.coupon.groceries.title": "Extra bonus på livsmedel",
-  "reward.coupon.groceries.body": "Exempelkupong: +1 % bonus på livsmedel i en månad.",
-  "reward.coupon.voucher.title": "Värdecheck på 5 €",
-  "reward.coupon.voucher.body": "Exempelkupong: 5 € rabatt på nästa köp.",
   "admin.title": "FinSight admin",
   "admin.login.title": "Admininloggning",
   "admin.login.hint": "Endast aggregerad statistik. Inga kunduppgifter kan öppnas härifrån.",
@@ -500,6 +528,52 @@ export const sv: Record<MessageKey, string> = {
   "common.restore": "Återställ",
   "common.deleteForever": "Radera permanent",
   "common.moveToBin": "Flytta till papperskorgen",
+  "common.loading": "Laddar…",
+  "common.saving": "Sparar…",
+  "common.deleting": "Raderar…",
+  "common.removing": "Tar bort…",
+  "common.restoring": "Återställer…",
+  "common.sending": "Skickar…",
+  "common.signingOut": "Loggar ut…",
+  "common.erasing": "Raderar dina uppgifter…",
+  "common.transcribing": "Transkriberar…",
+  "common.connecting": "Ansluter…",
+  "common.refreshing": "Uppdaterar…",
+  "common.loadFailed": "Det gick inte att ladda. Kontrollera anslutningen och försök igen.",
+  "common.saveFailed": "Det gick inte att spara. Inget ändrades.",
+  "common.retry": "Försök igen",
+  "info.show": "Mer information",
+  "info.hide": "Dölj information",
+  "chart.help.bar":
+    "En längre eller högre stapel betyder mer pengar. Den mörkare stapeln är den största posten, eller den senaste månaden när staplarna är månader. Beloppen står utskrivna vid diagrammet.",
+  "chart.help.hbar":
+    "Varje rad är en post, och en längre stapel betyder mer pengar. Färgerna motsvarar listan under diagrammet.",
+  "chart.help.line":
+    "Linjen följer beloppet från en period till nästa. Högre betyder mer pengar, och den stora punkten är den senaste. Beloppen finns i listan under diagrammet.",
+  "chart.help.area":
+    "Linjen följer beloppet över tid, och skuggningen under den gör nivån lättare att se. Högre betyder mer pengar.",
+  "chart.help.donut":
+    "Ringen är helheten och varje färgad bit är en del av den. En större bit är en större andel. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.pie":
+    "Cirkeln är helheten och varje färgad bit är en del av den. En större bit är en större andel. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.stack":
+    "Stapeln är helheten, uppdelad i färgade delar. En bredare del är en större andel. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.treemap":
+    "Varje block är en post, och dess yta visar storleken: ett större block är ett större belopp. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.radial":
+    "Varje ring är en post, och en längre färgad båge betyder ett större belopp jämfört med den största posten. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.radar":
+    "Varje eker är en post, och ju längre från mitten dess punkt ligger, desto större belopp. Formen visar vilka poster som sticker ut.",
+  "chart.help.waterfall": "Varje stapel läggs ovanpå den förra och bygger upp totalen till höger.",
+  "chart.help.lollipop":
+    "Varje pinne är en post, och en högre prick betyder mer pengar. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.funnel":
+    "Posterna är sorterade från störst till minst, så staplarna smalnar av nedåt. Listan under diagrammet visar vilken färg som är vilken.",
+  "chart.help.table":
+    "Posterna och deras belopp som en enkel lista, med en liten stapel som visar varje posts andel.",
+  "chart.help.stat": "Beloppen som stora tal, ett för varje post.",
+  "chart.help.flow":
+    "Din inkomst till vänster delas upp till höger på det den gick till. Ett tjockare band betyder mer pengar. Listan under diagrammet visar vilken färg som är vilken.",
   "trash.title": "Papperskorg",
   "trash.intro":
     "Det du raderar finns kvar här tills du återställer det eller raderar det permanent.",
@@ -514,8 +588,6 @@ export const sv: Record<MessageKey, string> = {
   "goals.edit.months": "Månader",
   "views.rename": "Byt namn",
   "admin.announcements": "Meddelanden till kunder",
-  "admin.announcements.note":
-    "Visas för alla kunder bland deras insikter. Skriv på det språk dina kunder läser.",
   "admin.announcements.title": "Rubrik",
   "admin.announcements.body": "Meddelande",
   "admin.announcements.severity": "Typ",
@@ -632,14 +704,12 @@ export const sv: Record<MessageKey, string> = {
   "voice.call.end": "Avsluta samtalet",
   "voice.call.failed": "Samtalet kunde inte startas.",
   "admin.controls": "Styrning",
-  "admin.controls.note":
-    "Ändringar börjar gälla inom några sekunder, utan driftsättning. Varje ändring skrivs i granskningsloggen.",
   "admin.flag.ai": "AI-coach",
   "admin.flag.ai.note": "Av: alla kunder får grundläge och inget skickas till en AI-tjänst.",
   "admin.flag.voice": "Röst",
   "admin.flag.voice.note": "Talade frågor, talade svar och röstsamtal.",
   "admin.flag.rewards": "Belöningar",
-  "admin.flag.rewards.note": "Poäng, nivåer och kuponger på målsidan.",
+  "admin.flag.rewards.note": "Poäng, nivåer och värdechecker på målsidan.",
   "admin.flag.advisor": "Mänsklig rådgivare",
   "admin.flag.advisor.note": "Låter kunder be om en rådgivare från coachen.",
   "admin.fee": "Rådgivaravgift",
@@ -662,10 +732,7 @@ export const sv: Record<MessageKey, string> = {
   "admin.rules.points": "Poäng för varje prestation",
   "admin.rules.pointsHint":
     "Ange hur många poäng varje slags framsteg ger. Värdet för sviten gäller per månad, upp till sex månader.",
-  "admin.rules.coupons": "När kuponger låses upp",
-  "admin.rules.couponsHint":
-    "Ange poängen en kund behöver för varje kupong. Lägre tal gör belöningarna lättare att nå.",
-  "admin.rules.summary": "{count} prestationer · kuponger vid {a}, {b} och {c} poäng",
+  "admin.rules.summary": "{count} prestationer · värdechecker använder den offentliga sparkvotsstatistiken",
   "admin.rule.under_average": "En lättare månad",
   "admin.rule.choice_down": "Egna val −10 %",
   "admin.rule.buffer": "En månads räkningar täckta",
@@ -678,8 +745,6 @@ export const sv: Record<MessageKey, string> = {
   "admin.aiUsage.month": "Under perioden",
   "admin.aiUsage.input": "Skickade tokens",
   "admin.aiUsage.output": "Mottagna tokens",
-  "admin.aiUsage.note":
-    "Tokens är det AI-leverantören tar betalt för. Multiplicera med leverantörens aktuella priser för kostnaden.",
   "admin.aiUsage.empty": "Inga AI-svar registrerade än.",
   "admin.workload": "Rådgivarnas arbetsbelastning",
   "admin.workload.open": "Öppna",
@@ -773,7 +838,7 @@ export const sv: Record<MessageKey, string> = {
     "Använd tjänsten bara för ditt eget konto. Försök inte komma åt andra kunders uppgifter, överbelasta tjänsten eller missbruka AI:n.",
   "terms.rewards.title": "Belöningar och rådgivare",
   "terms.rewards.body":
-    "Poäng och kuponger är exempel och har inget penningvärde. Rådgivarsamtal och deras pris visas som exempel på hur tjänsten skulle kunna fungera.",
+    "Poäng och värdechecker är exempel och har inget penningvärde. Rådgivarsamtal och deras pris visas som exempel på hur tjänsten skulle kunna fungera.",
   "terms.changes.title": "Tillgänglighet och ändringar",
   "terms.changes.body":
     "Prototypen tillhandahålls i befintligt skick och kan ändras eller vara otillgänglig. Om villkoren ändras ombeds du godkänna dem igen.",
@@ -893,15 +958,12 @@ export const sv: Record<MessageKey, string> = {
   "admin.chart.consent": "Samtyckesval",
   "admin.chart.tokens": "Tokens per modell",
   "admin.chart.empty": "Inget att visa än.",
-  "admin.overview.intro":
-    "Vad kunderna använder coachen till, och vad det kostar. Öppna en ruta för att se mer och agera.",
   "admin.notifications.devices": "{count} kunder har aviseringar på",
   "admin.notifications.note":
     "Påminnelser går ut varje morgon: ett mål att lägga undan till, en räkning som snart förfaller, en vana som går åt fel håll, ett möjligt underskott. Varje kund får en avisering om det viktigaste som hen inte har fått veta än. Aviseringen innehåller bara rubriken; beloppen stannar i appen.",
   "admin.notifications.send": "Skicka påminnelser nu",
   "admin.notifications.sending": "Skickar…",
   "admin.notifications.result": "{sent} påminnelser skickade till {customers} kunder",
-  "admin.notifications.announce": "Meddelanden skickas också till alla enheter när de publiceras.",
   "admin.menu": "Adminsektioner",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
@@ -970,8 +1032,6 @@ export const sv: Record<MessageKey, string> = {
   "admin.role.banker": "Personlig bankrådgivare",
   "admin.role.banker.note":
     "Samma som rådgivare, för personal som sköter kundernas vardagsärenden.",
-  "admin.team.intro":
-    "Personer som kan logga in här utöver ägaren. Var och en har eget användarnamn, lösenord och roll.",
   "admin.team.add": "Lägg till en teammedlem",
   "admin.team.edit": "Redigera teammedlem",
   "admin.team.count": "Teammedlemmar",
@@ -997,8 +1057,6 @@ export const sv: Record<MessageKey, string> = {
     "Anteckna lösenordet nu: det sparas bara som hash och kan inte visas igen.",
   "admin.team.note":
     "Att flytta någon till papperskorgen avslutar åtkomsten direkt. Namn och användarnamn lagras krypterade; lösenord bara som saltad hash.",
-  "admin.training.intro":
-    "När coachen saknar svar, skriv det svar den borde ha gett. Därefter ger den ditt svar ordagrant till alla som frågar.",
   "admin.training.gaps": "Det coachen inte kunde besvara",
   "admin.training.gaps.note":
     "Per tema de senaste 30 dagarna. Frågor sorteras i ett tema när de kommer in och bara temat räknas: ingens fråga sparas.",
@@ -1027,7 +1085,6 @@ export const sv: Record<MessageKey, string> = {
   "admin.training.useExample": "Börja från ett exempel",
   "admin.training.note":
     "Inlärda svar visas exakt som de skrivits och märks som svar från bankens team. De används bara när ingen beräkning passar frågan.",
-  "admin.trash.intro": "Allt personalen raderar väntar här. Återställ det eller radera permanent.",
   "admin.trash.note": "Permanent radering kan inte ångras.",
   "admin.trash.confirm": "Radera alla {count} objekt permanent?",
   "admin.trash.kind.announcement": "Meddelande",
@@ -1192,14 +1249,10 @@ export const sv: Record<MessageKey, string> = {
   "admin.flag.sharing": "Delade planer",
   "admin.flag.sharing.note": "Låter kunder dela planer som procent och kopiera varandras.",
   "admin.nav.plans": "Delade planer",
-  "admin.plans.intro":
-    "Det kunder har delat med varandra: ett namn och procent. Inte vem som delade, och aldrig ett belopp.",
   "admin.plans.shared": "Delade planer",
   "admin.plans.listed": "Listade för alla",
   "admin.plans.copies": "Antal kopieringar",
   "admin.plans.average": "Den genomsnittliga delade planen",
-  "admin.plans.average.note":
-    "Medelprocent per del över alla delade planer: vad kunderna siktar på.",
   "admin.plans.top": "Mest kopierade",
   "admin.plans.empty": "Inget delat ännu.",
   "admin.plans.isListed": "listad",
@@ -1398,6 +1451,9 @@ export const sv: Record<MessageKey, string> = {
   "goals.reached": "Målet nått.",
   "goals.monthsLeft": "Cirka {months} månader till med planerat belopp.",
   "goals.aside.cta": "Lägg undan pengar",
+  "goals.safeShort": "Säkert att spara undan",
+  "goals.savedShort": "Undansparat hittills",
+  "goals.monthsShort": "{months} mån kvar",
   "goals.aside.safe":
     "Du kan lägga undan cirka {amount} nu och ändå täcka en månads räkningar, nödvändigt och din vanliga konsumtion.",
   "goals.aside.none":

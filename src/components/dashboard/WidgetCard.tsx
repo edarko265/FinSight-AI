@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { ChartLabelsProvider } from "@/components/charts/chart-labels";
 import { ChartView } from "@/components/charts/ChartView";
+import { dragStartDelay } from "@/components/dashboard/widget-drag";
+import { nextWidgetMode, type WidgetMode } from "@/components/dashboard/widget-edit-mode";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { CloseIcon } from "@/components/ui/icons";
+import { CloseIcon, SettingsIcon } from "@/components/ui/icons";
 import {
   CHART_STYLES,
   type ChartStyle,
@@ -12,6 +15,7 @@ import {
   type WidgetSize,
 } from "@/lib/contracts/chart";
 import type { MessageKey } from "@/lib/i18n/translate";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 export interface WidgetHandlers {
   onRemove: (id: string) => void;
@@ -19,8 +23,6 @@ export interface WidgetHandlers {
   onChart: (id: string, chart: ChartStyle) => void;
   onCollapse: (id: string, collapsed: boolean) => void;
   onResize: (id: string, size: WidgetSize) => void;
-  /** Moves the widget one place earlier (-1) or later (1). */
-  onMove: (id: string, by: -1 | 1) => void;
   /** The widget under the pointer while one is being dragged, or null. */
   onDragOver: (targetId: string | null) => void;
   /** Lets go of the dragged widget where it is. */
@@ -30,9 +32,6 @@ export interface WidgetHandlers {
 
 interface WidgetCardProps extends WidgetHandlers {
   widget: DashboardWidget;
-  /** Whether this is the first or last widget, to disable a move that would do nothing. */
-  first: boolean;
-  last: boolean;
   /** True while this widget is the one a dragged widget would land on. */
   over: boolean;
   /** True while this widget is the one being dragged. */
@@ -62,9 +61,8 @@ function Glyph({ d }: { d: string }): React.JSX.Element {
 }
 
 /**
- * One widget on the dashboard. The title bar carries everything that can be
- * done to it: drag to move (or the arrows, for touch and keyboard), make it
- * small or wide, minimise it to the bar, and remove it to the recycle bin.
+ * One widget on the dashboard. A press-and-hold on its title bar enters the
+ * Android-like editing state: drag to move, or use the exposed controls to resize.
  */
 const SIZES: WidgetSize[] = ["small", "medium", "wide"];
 
@@ -81,8 +79,6 @@ function scroller(from: HTMLElement | null): HTMLElement | null {
 
 export function WidgetCard({
   widget,
-  first,
-  last,
   over,
   dragged,
   children,
@@ -90,15 +86,19 @@ export function WidgetCard({
   onChart,
   onCollapse,
   onResize,
-  onMove,
   onDragOver,
   onDrop,
   onDragStart,
 }: WidgetCardProps): React.JSX.Element {
   const { t } = usePreferences();
   const frame = useRef<HTMLElement>(null);
+  const dragTimer = useRef<number | null>(null);
+  const pendingDrag = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   // Dragging uses pointer events, so it works the same with a mouse, a pen and a finger.
   const [grabbing, setGrabbing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [editing, setEditing] = useState<WidgetMode>("view");
+  const isEditing = editing === "editing";
   // While the edge is being pulled, the size it would snap to.
   const [pulling, setPulling] = useState<{ startX: number; from: number; width: number } | null>(
     null,
@@ -121,8 +121,76 @@ export function WidgetCard({
         : "col-span-2 md:col-span-1";
   const nextSize = SIZES[(SIZES.indexOf(widget.size) + 1) % SIZES.length] ?? "small";
 
+  useEffect(
+    () => () => {
+      if (dragTimer.current !== null) window.clearTimeout(dragTimer.current);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    // Native capture prevents Chrome's menu before it can be shown, even when a
+    // pointer is captured by this header during a long press.
+    function blockWidgetContextMenu(event: MouseEvent): void {
+      if (event.target instanceof Element && event.target.closest("[data-widget-id]")) {
+        event.preventDefault();
+      }
+    }
+
+    window.addEventListener("contextmenu", blockWidgetContextMenu, true);
+    return () => window.removeEventListener("contextmenu", blockWidgetContextMenu, true);
+  }, []);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    function close(event: Event): void {
+      if (event.target instanceof Node && frame.current?.contains(event.target)) return;
+      setSettingsOpen(false);
+    }
+    function escape(event: KeyboardEvent): void {
+      if (event.key === "Escape") setSettingsOpen(false);
+    }
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [settingsOpen]);
+
+  function clearPendingDrag(): void {
+    pendingDrag.current = null;
+    if (dragTimer.current !== null) window.clearTimeout(dragTimer.current);
+    dragTimer.current = null;
+  }
+
+  function beginDrag(): void {
+    clearPendingDrag();
+    setEditing((mode) => nextWidgetMode(mode, "long-press"));
+    setGrabbing(true);
+    onDragStart(widget.id);
+  }
+
+  function startDrag(event: React.PointerEvent, immediate = false): void {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const delay = immediate ? 0 : dragStartDelay(event.pointerType);
+    if (delay === 0) {
+      beginDrag();
+      return;
+    }
+    pendingDrag.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+    dragTimer.current = window.setTimeout(beginDrag, delay);
+  }
+
   function dragMove(event: React.PointerEvent): void {
+    const pending = pendingDrag.current;
+    if (pending?.pointerId === event.pointerId) {
+      // Let a finger that starts scrolling leave the card before the hold completes.
+      if (Math.hypot(event.clientX - pending.x, event.clientY - pending.y) > 10) clearPendingDrag();
+      return;
+    }
     if (!grabbing) return;
+    event.preventDefault();
     const under = document
       .elementFromPoint(event.clientX, event.clientY)
       ?.closest<HTMLElement>("[data-widget-id]");
@@ -136,6 +204,17 @@ export function WidgetCard({
     }
   }
 
+  function finishDrag(event: React.PointerEvent): void {
+    const wasGrabbing = grabbing;
+    clearPendingDrag();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (wasGrabbing) onDrop();
+    else setEditing((mode) => nextWidgetMode(mode, "tap-surface"));
+    setGrabbing(false);
+  }
+
   function pullMove(event: React.PointerEvent): void {
     if (!pulling) return;
     // One step for every column's width the edge is pulled.
@@ -147,114 +226,100 @@ export function WidgetCard({
     <article
       ref={frame}
       data-widget-id={widget.id}
-      className={`${span} relative min-w-0 rounded-2xl border bg-surface transition-shadow ${
+      onContextMenu={(event) => event.preventDefault()}
+      onContextMenuCapture={(event) => event.preventDefault()}
+      className={`${span} relative min-w-0 [-webkit-touch-callout:none] rounded-2xl border bg-surface transition-[box-shadow,opacity,transform] duration-150 motion-reduce:transition-none ${
         over ? "border-accent ring-2 ring-accent" : "border-border"
-      } ${dragged ? "opacity-60" : ""} ${compact ? "p-3" : "p-4"}`}
+      } ${dragged ? "opacity-60" : ""} ${grabbing ? "z-10 scale-[1.02] border-accent shadow-xl" : ""} ${isEditing ? "ring-1 ring-accent" : ""} ${compact ? "p-3" : "p-4"}`}
     >
-      <header className={`flex items-center gap-1 ${compact ? "flex-wrap justify-between" : ""}`}>
-        <button
-          type="button"
-          aria-label={`${t("widget.drag")}: ${title}`}
-          title={t("widget.drag")}
-          onPointerDown={(event) => {
-            event.currentTarget.setPointerCapture(event.pointerId);
-            setGrabbing(true);
-            onDragStart(widget.id);
-          }}
-          onPointerMove={dragMove}
-          onPointerUp={() => {
-            if (grabbing) onDrop();
-            setGrabbing(false);
-          }}
-          onPointerCancel={() => {
-            setGrabbing(false);
-            onDragOver(null);
-            onDrop();
-          }}
-          className={`${control} -ml-1.5 touch-none ${grabbing ? "cursor-grabbing" : "cursor-grab"}`}
-        >
-          <Glyph d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />
-        </button>
+      <header
+        onPointerDown={(event) => {
+          if ((event.target as HTMLElement).closest("button, select, input, textarea, a")) return;
+          startDrag(event);
+        }}
+        onPointerMove={dragMove}
+        onPointerUp={finishDrag}
+        onPointerCancel={finishDrag}
+        className={`flex cursor-grab touch-pan-y select-none items-center gap-1 ${grabbing ? "cursor-grabbing touch-none" : ""} ${compact ? "flex-wrap justify-between" : ""}`}
+      >
         <h2
-          className={`line-clamp-2 min-w-0 font-semibold ${compact ? "order-first basis-full text-sm" : "flex-1 text-base"}`}
+          className={`line-clamp-2 min-w-0 select-none font-semibold ${compact ? "order-first basis-full text-sm" : "flex-1 text-base"}`}
         >
           {title}
         </h2>
-        {compact ? null : (
+        {card && card.chart.kind !== "flow" ? (
+          <button
+            type="button"
+            aria-expanded={settingsOpen}
+            aria-label={`${t("nav.settings")}: ${title}`}
+            title={t("nav.settings")}
+            onClick={() => setSettingsOpen((open) => !open)}
+            className={`${control} ${settingsOpen ? "bg-background" : ""}`}
+          >
+            <SettingsIcon className="size-4" />
+          </button>
+        ) : null}
+        {isEditing ? (
           <>
             <button
               type="button"
-              disabled={first}
-              aria-label={`${t("widget.moveEarlier")}: ${title}`}
-              title={t("widget.moveEarlier")}
-              onClick={() => onMove(widget.id, -1)}
-              className={`${control} md:hidden`}
+              aria-label={`${t("widget.resize")}: ${title}. ${t(`widget.size.${nextSize}` as MessageKey)}`}
+              title={`${t("widget.resize")}: ${t(`widget.size.${nextSize}` as MessageKey)}`}
+              onClick={() => onResize(widget.id, nextSize)}
+              className={control}
             >
-              <Glyph d="M12 19V5M5 12l7-7 7 7" />
+              <Glyph d="M10 12H3M3 12l3-3M3 12l3 3M14 12h7M21 12l-3-3M21 12l-3 3" />
             </button>
             <button
               type="button"
-              disabled={last}
-              aria-label={`${t("widget.moveLater")}: ${title}`}
-              title={t("widget.moveLater")}
-              onClick={() => onMove(widget.id, 1)}
-              className={`${control} md:hidden`}
+              aria-expanded={!widget.collapsed}
+              aria-label={`${t(widget.collapsed ? "widget.expand" : "widget.minimise")}: ${title}`}
+              title={t(widget.collapsed ? "widget.expand" : "widget.minimise")}
+              onClick={() => onCollapse(widget.id, !widget.collapsed)}
+              className={control}
             >
-              <Glyph d="M12 5v14M5 12l7 7 7-7" />
+              <Glyph d={widget.collapsed ? "M12 5v14M5 12h14" : "M5 12h14"} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemove(widget.id)}
+              aria-label={`${t("dashboard.remove")}: ${title}`}
+              title={t("dashboard.remove")}
+              className={`${control} -mr-1.5`}
+            >
+              <CloseIcon className="size-4" />
             </button>
           </>
-        )}
-        <button
-          type="button"
-          aria-label={`${t("widget.resize")}: ${title}. ${t(`widget.size.${nextSize}` as MessageKey)}`}
-          title={`${t("widget.resize")}: ${t(`widget.size.${nextSize}` as MessageKey)}`}
-          onClick={() => onResize(widget.id, nextSize)}
-          className={control}
-        >
-          <Glyph d="M10 12H3M3 12l3-3M3 12l3 3M14 12h7M21 12l-3-3M21 12l-3 3" />
-        </button>
-        <button
-          type="button"
-          aria-expanded={!widget.collapsed}
-          aria-label={`${t(widget.collapsed ? "widget.expand" : "widget.minimise")}: ${title}`}
-          title={t(widget.collapsed ? "widget.expand" : "widget.minimise")}
-          onClick={() => onCollapse(widget.id, !widget.collapsed)}
-          className={control}
-        >
-          <Glyph d={widget.collapsed ? "M12 5v14M5 12h14" : "M5 12h14"} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onRemove(widget.id)}
-          aria-label={`${t("dashboard.remove")}: ${title}`}
-          title={t("dashboard.remove")}
-          className={`${control} -mr-1.5`}
-        >
-          <CloseIcon className="size-4" />
-        </button>
+        ) : null}
       </header>
+
+      {settingsOpen && card && card.chart.kind !== "flow" ? (
+        <div className="absolute right-3 top-12 z-20 w-56 rounded-xl border border-border bg-surface p-3 shadow-lg">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted">{t("chart.type")}</span>
+            <select
+              value={card.chart.kind}
+              onChange={(event) => onChart(widget.id, event.target.value as ChartStyle)}
+              className="w-full rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground"
+            >
+              {CHART_STYLES.map((style) => (
+                <option key={style} value={style}>
+                  {t(`chart.type.${style}` as MessageKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
 
       {widget.collapsed ? null : card ? (
         <div className="mt-1">
-          <p className="mb-3 text-sm text-muted">{card.summary}</p>
-          <ChartView card={card} />
-          {card.chart.kind === "flow" ? null : (
-            <label className="mt-3 flex items-center gap-2 text-xs text-muted">
-              {t("chart.type")}
-              <select
-                value={card.chart.kind}
-                onChange={(event) => onChart(widget.id, event.target.value as ChartStyle)}
-                className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground"
-              >
-                {CHART_STYLES.map((style) => (
-                  <option key={style} value={style}>
-                    {t(`chart.type.${style}` as MessageKey)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <p className="mt-3 text-xs text-muted">{card.basis}</p>
+          <ChartLabelsProvider value>
+            <ChartView card={card} compact />
+          </ChartLabelsProvider>
+          <InfoTip className="mt-1">
+            <span className="block">{card.basis}</span>
+          </InfoTip>
         </div>
       ) : (
         <div className={compact ? "mt-2" : "mt-3"}>{children}</div>
@@ -283,7 +348,7 @@ export function WidgetCard({
           setPulling(null);
           setPreview(null);
         }}
-        className={`absolute inset-y-3 right-0 hidden w-2 cursor-ew-resize touch-none rounded-full md:block ${
+        className={`absolute inset-y-3 right-0 w-2 cursor-ew-resize touch-none rounded-full ${isEditing ? "md:block" : "hidden"} ${
           pulling ? "bg-accent" : "hover:bg-border"
         }`}
       />

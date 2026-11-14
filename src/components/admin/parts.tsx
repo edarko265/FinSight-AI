@@ -326,7 +326,6 @@ export function DailyChart({
           );
         })}
       </svg>
-      <p className="text-xs text-muted">{t("admin.chart.hint")}</p>
     </figure>
   );
 }

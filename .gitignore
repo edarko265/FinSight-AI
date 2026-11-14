@@ -73,8 +73,5 @@ tmp/
 /video/.hyperframes/
 /video/node_modules/
 
-# Browser tests: throw-away database, build output and reports
-/.e2e/
-/.next-e2e/
-/test-results/
-/playwright-report/
+# ---- Claude orchestrator: per-session task board ----
+/.claude/orchestrator/
