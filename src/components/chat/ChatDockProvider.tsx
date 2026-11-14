@@ -21,6 +21,8 @@ interface ChatDockValue {
   unread: boolean;
   /** The coach is working on a reply. */
   pending: boolean;
+  /** Messages in the current conversation. */
+  count: number;
   /** Key of the current conversation; changes on restart. */
   conversation: number;
   /** Opens the floating coach, optionally asking a question or starting to listen or call. */
@@ -39,6 +41,7 @@ const ChatDockContext = createContext<ChatDockValue>({
   request: null,
   unread: false,
   pending: false,
+  count: 0,
   conversation: 0,
   open: () => undefined,
   close: () => undefined,
@@ -71,13 +74,13 @@ export function ChatDockProvider({ children }: { children: React.ReactNode }): R
     dispatch({ type: "restart" });
   }, []);
 
-  const { mode, mounted, unread, pending, conversation } = state;
+  const { mode, mounted, unread, pending, count, conversation } = state;
   const value = useMemo(
     () => ({
-      mode, mounted, request, unread, pending, conversation,
+      mode, mounted, request, unread, pending, count, conversation,
       open, close, setMode, reportStatus, restart,
     }),
-    [mode, mounted, request, unread, pending, conversation, open, close, setMode, reportStatus, restart],
+    [mode, mounted, request, unread, pending, count, conversation, open, close, setMode, reportStatus, restart],
   );
   return <ChatDockContext.Provider value={value}>{children}</ChatDockContext.Provider>;
 }

@@ -37,7 +37,7 @@ export function ChatDock(): React.JSX.Element | null {
   const { t } = usePreferences();
   const { me } = useOverview();
   const pathname = usePathname();
-  const { mode, mounted, request, unread, pending, conversation, open, close, setMode, reportStatus, restart } =
+  const { mode, mounted, request, unread, pending, count, conversation, open, close, setMode, reportStatus, restart } =
     useChatDock();
   const swipeStart = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -65,12 +65,23 @@ export function ChatDock(): React.JSX.Element | null {
   }, [shown, mode, setMode, close]);
 
   const onPointerDown = (event: ReactPointerEvent): void => {
-    swipeStart.current = (event.target as HTMLElement).closest("button") ? null : event.clientY;
+    if ((event.target as HTMLElement).closest("button")) {
+      swipeStart.current = null;
+      return;
+    }
+    swipeStart.current = event.clientY;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const onPointerCancel = (event: ReactPointerEvent): void => {
+    swipeStart.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
   const onPointerUp = (event: ReactPointerEvent): void => {
     if (swipeStart.current === null) return;
     const dy = event.clientY - swipeStart.current;
-    swipeStart.current = null;
+    onPointerCancel(event);
     if (dy <= -SWIPE_PX && mode === "half") setMode("full");
     else if (dy >= SWIPE_PX) {
       if (mode === "full") setMode("half");
@@ -85,12 +96,18 @@ export function ChatDock(): React.JSX.Element | null {
       event.currentTarget.querySelectorAll<HTMLElement>(
         'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])',
       ),
+    ).filter(
+      (el) =>
+        !el.closest("[inert],[hidden]") && (el.checkVisibility?.() ?? el.offsetParent !== null),
     );
     if (items.length === 0) return;
     const first = items[0];
     const last = items[items.length - 1];
     const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === event.currentTarget)) {
+    if (!event.currentTarget.contains(active)) {
+      event.preventDefault();
+      first.focus();
+    } else if (event.shiftKey && (active === first || active === event.currentTarget)) {
       event.preventDefault();
       last.focus();
     } else if (!event.shiftKey && active === last) {
@@ -134,7 +151,7 @@ export function ChatDock(): React.JSX.Element | null {
       ) : null}
 
       {shown && !full ? (
-        <div aria-hidden="true" onClick={close} className="fixed inset-0 z-40 bg-black/30 md:hidden" />
+        <div aria-hidden="true" onClick={close} className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+3.5rem)] z-40 bg-black/30 md:hidden" />
       ) : null}
 
       {mounted ? (
@@ -145,28 +162,31 @@ export function ChatDock(): React.JSX.Element | null {
           aria-label={t("nav.chat")}
           tabIndex={-1}
           onKeyDown={trapTab}
-          className={`fixed z-40 flex flex-col overflow-hidden bg-background outline-none transition-transform duration-300 motion-reduce:transition-none ${
+          className={`fixed z-40 flex flex-col overflow-hidden bg-background outline-none transition-[transform,visibility] duration-300 motion-reduce:transition-none ${
             shown ? "" : CLOSED
           } ${full ? FULL : HALF}`}
         >
           <div
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
+            onPointerCancel={onPointerCancel}
             className="shrink-0 touch-none border-b border-border bg-surface"
           >
             <div aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-border" />
             <div className="flex items-center justify-between gap-2 px-4 pb-1">
               <h2 className="text-sm font-semibold">{t("nav.chat")}</h2>
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={restart}
-                  aria-label={t("dock.new")}
-                  title={t("dock.new")}
-                  className={HEADER_BUTTON}
-                >
-                  <NewChatIcon className="size-5" />
-                </button>
+                {count > 0 ? (
+                  <button
+                    type="button"
+                    onClick={restart}
+                    aria-label={t("dock.new")}
+                    title={t("dock.new")}
+                    className={HEADER_BUTTON}
+                  >
+                    <NewChatIcon className="size-5" />
+                  </button>
+                ) : null}
                 {canCall ? (
                   <button
                     type="button"
