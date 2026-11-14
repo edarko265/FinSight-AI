@@ -7,7 +7,9 @@ import { runQuery } from "@/lib/coach/registry";
 import {
   CHART_STYLES,
   CUSTOM_PERIOD,
+  isActionWidget,
   VIEW_PERIODS,
+  WIDGET_SIZES,
   type DashboardPayload,
   type DashboardState,
   type DashboardView,
@@ -29,7 +31,16 @@ const view = z.object({
   preset: z.enum(["overview", "baskets", "everyday"]).optional(),
   name: z.string().trim().max(40),
   period: z.union([z.enum(VIEW_PERIODS), z.string().regex(CUSTOM_PERIOD)]),
-  widgets: z.array(z.object({ id: z.string().min(1).max(60), query })).max(16),
+  widgets: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(60),
+        query,
+        size: z.enum(WIDGET_SIZES).optional(),
+        collapsed: z.boolean().optional(),
+      }),
+    )
+    .max(24),
 });
 export const dashboardStateSchema = z.object({
   activeId: z.string().max(60),
@@ -55,7 +66,10 @@ export function defaultState(): DashboardState {
         name: "",
         period: "last_month",
         widgets: [
-          w("flow", "flow"),
+          { ...w("ask", "ask"), size: "wide" },
+          w("call", "call"),
+          w("afford", "afford"),
+          { ...w("flow", "flow"), size: "wide" },
           w("spending", "spending"),
           w("safe", "safe_to_spend"),
           w("trend", "trend"),
@@ -130,7 +144,7 @@ export async function restoreToDashboard(
   await writeState(ctx.customerRef, STATE_KIND, {
     ...state,
     views: state.views.map((view) =>
-      view.id === targetId ? { ...view, widgets: [item.item, ...view.widgets].slice(0, 16) } : view,
+      view.id === targetId ? { ...view, widgets: [item.item, ...view.widgets].slice(0, 24) } : view,
     ),
   });
 }
@@ -139,8 +153,18 @@ function render(ctx: SessionContext, state: DashboardState): DashboardPayload {
   const active = state.views.find((item) => item.id === state.activeId) ?? state.views[0];
   const cards: DashboardWidget[] = [];
   for (const widget of active?.widgets ?? []) {
+    const layout = {
+      id: widget.id,
+      size: widget.size ?? "small",
+      collapsed: widget.collapsed ?? false,
+    };
+    // Shortcuts and live panels have nothing to calculate here; the app draws them.
+    if (isActionWidget(widget.query.tool)) {
+      cards.push({ ...layout, action: widget.query.tool });
+      continue;
+    }
     const result = runQuery(ctx, widget.query, active?.period);
-    if (result?.card) cards.push({ id: widget.id, ...result.card });
+    if (result?.card) cards.push({ ...layout, card: result.card });
   }
   return { ...state, activeId: active?.id ?? state.activeId, cards };
 }

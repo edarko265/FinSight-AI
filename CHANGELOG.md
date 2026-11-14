@@ -41,6 +41,11 @@ All notable changes to this project are documented here. The format follows
   daily reminders for goals, bills, shortfalls and habits going the wrong way.
 - **Layout.** Responsive from 320 px phones to desktops; custom date ranges with a date
   picker; language as a selector; error and not-found pages.
+- **Charts and widgets.** Fifteen chart types any widget can switch between, by selector
+  or by asking; a step-by-step add-widget form with a chart gallery and live preview;
+  widgets can be dragged, moved, made wide or small, minimised and removed; shortcut and
+  live widgets for asking by voice, calling the coach, checking a purchase, goals and
+  insights.
 - **Demo video.** A 55-second narrated product film made with HyperFrames, voiced with ElevenLabs; source in `video/`.
 - **Documentation.** `docs/how-it-works.md`: the logic step by step with flowcharts, and
   how the statistical data is used.

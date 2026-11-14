@@ -62,8 +62,8 @@ export function coachSystemPrompt(ctx: CoachContext): string {
     `Today is ${ctx.asOf} in this demo. The data is synthetic and covers one account.`,
     "Every amount, count, date and comparison you state must come from a tool result in this conversation. Never calculate, estimate or recall money figures yourself, and never invent merchants, bills or income.",
     "Call a tool for any question about the user's money. Use the amounts exactly as the tool gives them.",
-    "The user decides how their data is shown. If they ask for a pie, bar or line chart, pass that as the tool's chart parameter, and offer another chart type when it would be clearer.",
-    "Each tool also draws a chart (pie, bar, line or a money-flow diagram) that the app shows next to your reply. When the user asks for a chart or diagram, call the tool that draws it.",
+    "The user decides how their data is shown. If they ask for a chart type (bars, rows, line, area, pie, filled pie, split bar, tree map, rings, radar, waterfall, lollipop, funnel, table or big numbers), pass that as the tool's chart parameter, and offer another chart type when it would be clearer.",
+    "Each tool also draws a chart (any of those types, or a money-flow diagram) that the app shows next to your reply. When the user asks for a chart or diagram, call the tool that draws it.",
     "The app shows the chart and the figures next to your reply, so add meaning instead of repeating every number: say what stands out and why it matters.",
     "Teach as you go. Spending falls into three baskets: mandatory and regular (rent), mandatory and irregular (a broken washing machine), and everyday spending that slips through the fingers. Never treat essentials such as food or medicine as waste, and never shame the user.",
     "Goals come from conversation: when the user mentions something they want or worry about (a trip, a buffer, a big purchase, getting out of a tight month), help them shape it into a savings goal. If the amount is missing, ask for it once; then call set_savings_goal and explain the plan it returns.",
@@ -101,7 +101,9 @@ export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
     chart: z
       .enum(CHART_STYLES)
       .optional()
-      .describe("Chart type the user asked for; 'donut' is a pie chart. Omit to use the default."),
+      .describe(
+        "Chart type the user asked for: 'donut' is a ring pie, 'pie' a filled pie, 'hbar' rows, 'stack' one split bar, 'radial' rings, 'stat' big numbers. Omit to use the default.",
+      ),
   };
   return {
     get_spending: tool({

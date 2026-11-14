@@ -131,9 +131,22 @@ function route(ctx: CoachContext, question: string): ToolResult {
 }
 
 const CHART_WORDS: [ChartStyle, RegExp][] = [
+  // The more specific names first: "area chart" before "line", "filled pie" before "pie".
+  ["treemap", /tree ?map|puukart|trädkart/],
+  ["waterfall", /waterfall|vesiputou|vattenfall/],
+  ["radar", /radar|spider|tutka|spindel/],
+  ["radial", /radial|\brings?\b|renkaa|ringar/],
+  ["funnel", /funnel|suppilo|\btratt/],
+  ["lollipop", /lollipop|tikkari|klubb/],
+  ["table", /\btable\b|as a list|taulukko|tabell/],
+  ["stat", /big numbers?|as numbers|tiles|isoina lukuina|stora tal/],
+  ["stack", /stacked|split bar|pinottu|jaettu palkki|staplad|delad stapel/],
+  ["area", /area (chart|graph)|as an area|aluekaavio|ytdiagram/],
+  ["hbar", /horizontal bars?|as rows|vaakapalk|liggande stap/],
+  ["pie", /filled pie|full pie|täysi piirakka|fylld tårta/],
   ["donut", /\bpie\b|donut|doughnut|piirakka|ympyrä|cirkel|tårt/],
   ["line", /line (chart|graph)|as a line|viiva|linje/],
-  ["bar", /bar (chart|graph)|as bars|pylväs|palkki|stapel/],
+  ["bar", /bar (chart|graph)|as bars|columns?\b|pylväs|palkki|stapel/],
 ];
 
 /** The chart type the user asked for by name, if any. */

@@ -5,22 +5,76 @@ import { chartColor } from "@/components/charts/chart-palette";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { FlowChart } from "@/components/charts/FlowChart";
 import { LineChart } from "@/components/charts/LineChart";
+import {
+  AreaChart,
+  FunnelChart,
+  HBarChart,
+  LollipopChart,
+  PieChart,
+  RadarChart,
+  RadialChart,
+  StackChart,
+  StatChart,
+  TableChart,
+  TreemapChart,
+  WaterfallChart,
+} from "@/components/charts/MoreCharts";
 import type { ChartCard, ChartSpec } from "@/lib/contracts/chart";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { formatMoney } from "@/lib/i18n/config";
 
-function Plot({ chart }: { chart: ChartSpec }): React.JSX.Element {
+/** The drawing alone, without the values list: used for previews. */
+export function ChartPlot({ chart }: { chart: ChartSpec }): React.JSX.Element {
   switch (chart.kind) {
     case "bar":
       return <BarChart points={chart.points} />;
+    case "hbar":
+      return <HBarChart points={chart.points} />;
     case "line":
       return <LineChart points={chart.points} />;
+    case "area":
+      return <AreaChart points={chart.points} />;
     case "donut":
       return <DonutChart points={chart.points} />;
+    case "pie":
+      return <PieChart points={chart.points} />;
+    case "stack":
+      return <StackChart points={chart.points} />;
+    case "treemap":
+      return <TreemapChart points={chart.points} />;
+    case "radial":
+      return <RadialChart points={chart.points} />;
+    case "radar":
+      return <RadarChart points={chart.points} />;
+    case "waterfall":
+      return <WaterfallChart points={chart.points} />;
+    case "lollipop":
+      return <LollipopChart points={chart.points} />;
+    case "funnel":
+      return <FunnelChart points={chart.points} />;
+    case "table":
+      return <TableChart points={chart.points} />;
+    case "stat":
+      return <StatChart points={chart.points} />;
     case "flow":
       return <FlowChart source={chart.source} points={chart.points} />;
   }
 }
+
+/** Shapes where each item has its own colour, so the values list needs the colour key. */
+const KEYED = new Set([
+  "donut",
+  "pie",
+  "stack",
+  "treemap",
+  "radial",
+  "funnel",
+  "hbar",
+  "lollipop",
+  "flow",
+]);
+/** Shapes that already write every number out. */
+const SELF_EXPLAINING = new Set(["table", "stat"]);
 
 /**
  * A chart is never the only carrier of the numbers: every one is paired with a values list, so the
@@ -28,7 +82,7 @@ function Plot({ chart }: { chart: ChartSpec }): React.JSX.Element {
  */
 function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const isDonut = chart.kind === "donut" || chart.kind === "flow";
+  const isDonut = KEYED.has(chart.kind);
   const total = chart.points.reduce((sum, point) => sum + point.valueCents, 0);
 
   const list = (
@@ -70,9 +124,9 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
 export function ChartView({ card }: { card: ChartCard }): React.JSX.Element {
   return (
     <figure aria-label={card.title}>
-      <Plot chart={card.chart} />
+      <ChartPlot chart={card.chart} />
       <figcaption className="sr-only">{card.summary}</figcaption>
-      <Values chart={card.chart} />
+      {SELF_EXPLAINING.has(card.chart.kind) ? null : <Values chart={card.chart} />}
     </figure>
   );
 }

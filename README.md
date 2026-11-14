@@ -70,23 +70,23 @@ real progress.
 
 ## 📊 What is built
 
-|                    |                                                                                          |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| 🗣️ **Coach**       | Text chat and realtime voice calls; 12 calculations it can run; works with or without AI |
-| 🌍 **Languages**   | English, Finnish, Swedish — interface, answers and speech                                |
-| 📈 **Charts**      | Pie, bar, line and money-flow; the customer picks the type by asking or with a switch    |
-| 🧩 **Dashboard**   | Widgets pinned from conversation, saved as named views, with a period filter             |
-| 🎬 **Month story** | "My month in 30 seconds": a narrated, tap-through recap of last month                    |
-| 🎯 **Goals**       | Set by describing them; planned from the customer's own monthly room                     |
-| 🏆 **Rewards**     | Points, levels and example coupons for progress against one's own past                   |
-| 👥 **Benchmarks**  | Age-group percentiles from the dataset, plus Statistics Finland 2022                     |
-| 🥧 **Plans**       | Split income into five slices; share with friends as percentages only, never amounts     |
-| 🔔 **Insights**    | Notifications in the app and on the device: shortfalls, habits, bills, goal reminders    |
-| 🎓 **Teach**       | Staff write the answer for what the coach could not answer; it then gives it             |
-| 🧑‍💼 **Adviser**     | Hand-over to a human, with a booked call; first conversation free                        |
-| 🛠️ **Admin**       | Eleven sections, staff accounts with roles, charts, moderation, recycle bin, audit log   |
-| 🔐 **Data**        | 5,100 customers and 3,626,755 transactions, every one encrypted per customer             |
-| 🧪 **Tests**       | 88, including the real migrations on an in-memory PostgreSQL                             |
+|                    |                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| 🗣️ **Coach**       | Text chat and realtime voice calls; 12 calculations it can run; works with or without AI  |
+| 🌍 **Languages**   | English, Finnish, Swedish — interface, answers and speech                                 |
+| 📈 **Charts**      | 15 chart types plus money-flow; the customer picks by asking or with a selector           |
+| 🧩 **Dashboard**   | Widgets you add, drag, resize, minimise and remove; voice and call shortcuts; saved views |
+| 🎬 **Month story** | "My month in 30 seconds": a narrated, tap-through recap of last month                     |
+| 🎯 **Goals**       | Set by describing them; planned from the customer's own monthly room                      |
+| 🏆 **Rewards**     | Points, levels and example coupons for progress against one's own past                    |
+| 👥 **Benchmarks**  | Age-group percentiles from the dataset, plus Statistics Finland 2022                      |
+| 🥧 **Plans**       | Split income into five slices; share with friends as percentages only, never amounts      |
+| 🔔 **Insights**    | Notifications in the app and on the device: shortfalls, habits, bills, goal reminders     |
+| 🎓 **Teach**       | Staff write the answer for what the coach could not answer; it then gives it              |
+| 🧑‍💼 **Adviser**     | Hand-over to a human, with a booked call; first conversation free                         |
+| 🛠️ **Admin**       | Eleven sections, staff accounts with roles, charts, moderation, recycle bin, audit log    |
+| 🔐 **Data**        | 5,100 customers and 3,626,755 transactions, every one encrypted per customer              |
+| 🧪 **Tests**       | 90, including the real migrations on an in-memory PostgreSQL                              |
 
 🎬 [Watch the 55-second narrated demo](docs/media/finsight-demo.mp4) ([how it was made](video/README.md))
 

@@ -22,6 +22,7 @@
   --chart-3: #885600;
   --chart-4: #757575;
   --chart-5: #91fa9b;
+  --chart-ink: #ffffff;
   --chart-bar-muted: #b7d9c4;
 }
 
@@ -44,6 +45,7 @@
     --chart-3: #d9a441;
     --chart-4: #9aa3a8;
     --chart-5: #91fa9b;
+    --chart-ink: #04291a;
     --chart-bar-muted: #2c5a43;
   }
 }
@@ -65,6 +67,7 @@
   --chart-3: #d9a441;
   --chart-4: #9aa3a8;
   --chart-5: #91fa9b;
+  --chart-ink: #04291a;
   --chart-bar-muted: #2c5a43;
 }
 

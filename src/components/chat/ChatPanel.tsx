@@ -22,6 +22,8 @@ interface ChatPanelProps {
   placeholder?: string;
   /** A question to ask as soon as the panel opens (used by insights). */
   initialQuestion?: string;
+  /** Begin by listening for a spoken question, or by starting a voice call. */
+  start?: "listen" | "call";
   /** Rendered under each chart the assistant returns, e.g. an "Add to dashboard" button. */
   cardAction?: (card: ChartCard, query: WidgetQuery | undefined) => React.ReactNode;
 }
@@ -47,6 +49,7 @@ export function ChatPanel({
   intro,
   placeholder,
   initialQuestion,
+  start,
   cardAction,
 }: ChatPanelProps): React.JSX.Element {
   const { t, locale, voiceReplies } = usePreferences();
@@ -102,6 +105,20 @@ export function ChatPanel({
     void send(initialQuestion);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ask once when the panel opens
   }, [initialQuestion]);
+
+  // Once it is known what this customer may use, honour a shortcut from the dashboard, once.
+  const started = useRef(false);
+  useEffect(() => {
+    if (!start || !me || started.current) return;
+    started.current = true;
+    if (start === "call" && me.voiceAgentEnabled && me.aiConsent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time start asked for by the link that opened the page
+      setCalling(true);
+    } else if (start === "listen" && me.voiceEnabled) {
+      void voice.startRecording();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the account state arrives
+  }, [start, me]);
 
   async function toggleRecording(): Promise<void> {
     if (!voice.recording) {

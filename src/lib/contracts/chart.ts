@@ -9,18 +9,33 @@ export interface ChartPoint {
   valueCents: number;
 }
 
-export interface BarChartSpec {
-  kind: "bar";
-  points: ChartPoint[];
-}
+/**
+ * Chart types a user can ask for or switch any widget to. Every calculation
+ * returns a list of labelled amounts, so each of them can be drawn in any of
+ * these shapes; the customer chooses.
+ */
+export const CHART_STYLES = [
+  "bar",
+  "hbar",
+  "line",
+  "area",
+  "donut",
+  "pie",
+  "stack",
+  "treemap",
+  "radial",
+  "radar",
+  "waterfall",
+  "lollipop",
+  "funnel",
+  "table",
+  "stat",
+] as const;
+export type ChartStyle = (typeof CHART_STYLES)[number];
 
-export interface LineChartSpec {
-  kind: "line";
-  points: ChartPoint[];
-}
-
-export interface DonutChartSpec {
-  kind: "donut";
+/** Any chart drawn from a list of labelled amounts. */
+export interface PointsChartSpec {
+  kind: ChartStyle;
   points: ChartPoint[];
 }
 
@@ -31,13 +46,9 @@ export interface FlowChartSpec {
   points: ChartPoint[];
 }
 
-export type ChartSpec = BarChartSpec | LineChartSpec | DonutChartSpec | FlowChartSpec;
+export type ChartSpec = PointsChartSpec | FlowChartSpec;
 
 export type ChartKind = ChartSpec["kind"];
-
-/** Chart types a user can ask for or switch any widget to. */
-export const CHART_STYLES = ["bar", "line", "donut"] as const;
-export type ChartStyle = (typeof CHART_STYLES)[number];
 
 /** A chart with the text that must accompany it: colour and shape are never the only signal. */
 export interface ChartCard {
@@ -56,8 +67,39 @@ export interface WidgetQuery {
   chart?: ChartStyle;
 }
 
-export interface DashboardWidget extends ChartCard {
+/** How much room a widget takes: one column, or the full width of the grid. */
+export const WIDGET_SIZES = ["small", "wide"] as const;
+export type WidgetSize = (typeof WIDGET_SIZES)[number];
+
+/**
+ * Widgets that are not a calculation but a shortcut or a live panel: ask the
+ * coach by typing or speaking, start a voice call, check a purchase, play the
+ * month story, see goals or the latest insights.
+ */
+export const ACTION_WIDGETS = ["ask", "call", "afford", "story", "goals", "insights"] as const;
+export type ActionWidget = (typeof ACTION_WIDGETS)[number];
+
+export function isActionWidget(tool: string): tool is ActionWidget {
+  return (ACTION_WIDGETS as readonly string[]).includes(tool);
+}
+
+/** One saved widget in a view: the question to run (or the action), and how it is laid out. */
+export interface SavedWidget {
   id: string;
+  query: WidgetQuery;
+  size?: WidgetSize;
+  /** Minimised to its title bar. */
+  collapsed?: boolean;
+}
+
+/** A widget ready to draw. A calculation carries its chart; an action widget carries only its kind. */
+export interface DashboardWidget {
+  id: string;
+  size: WidgetSize;
+  collapsed: boolean;
+  action?: ActionWidget;
+  /** Present for calculations. */
+  card?: ChartCard;
 }
 
 export const VIEW_PERIODS = [
@@ -86,7 +128,7 @@ export interface DashboardView {
   preset?: "overview" | "baskets" | "everyday";
   name: string;
   period: ViewPeriod;
-  widgets: { id: string; query: WidgetQuery }[];
+  widgets: SavedWidget[];
 }
 
 export interface DashboardState {

@@ -15,7 +15,7 @@ import { runQuery, runTool } from "@/lib/coach/registry";
 import { detectChart, detectGoal, routeQuestion } from "@/lib/coach/router";
 import type { CoachContext } from "@/lib/coach/tools";
 import { removedFromDashboard } from "@/lib/coach/trash";
-import type { DashboardState } from "@/lib/contracts/chart";
+import { CHART_STYLES, type DashboardState } from "@/lib/contracts/chart";
 import type { Transaction } from "@/lib/data/types";
 
 /** Hand-authored fixture: eight months of a steady salary, rent, food and eating out. */
@@ -368,5 +368,40 @@ describe("plans", () => {
     const result = routeQuestion(ctx, "Make me a budget plan");
     expect(result.tool).toBe("plan");
     expect(result.card?.chart.kind).toBe("donut");
+  });
+});
+
+describe("chart types", () => {
+  it("recognises every chart type by name, in three languages", () => {
+    const asked: [string, string][] = [
+      ["show my spending as a tree map", "treemap"],
+      ["menot vesiputouksena", "waterfall"],
+      ["as a radar chart please", "radar"],
+      ["visa som ringar", "radial"],
+      ["as a funnel", "funnel"],
+      ["lollipop chart of my categories", "lollipop"],
+      ["in a table", "table"],
+      ["as big numbers", "stat"],
+      ["as a stacked bar", "stack"],
+      ["as an area chart", "area"],
+      ["as horizontal bars", "hbar"],
+      ["as a filled pie", "pie"],
+      ["as a pie chart", "donut"],
+      ["viivakaaviona", "line"],
+      ["as a bar chart", "bar"],
+    ];
+    for (const [question, chart] of asked) expect(detectChart(question)).toBe(chart);
+    // Words that only look like a chart name are left alone.
+    expect(detectChart("how are my savings and earrings")).toBeUndefined();
+  });
+
+  it("redraws any calculation in any chart type with the same figures", () => {
+    const base = runTool(ctx, "spending", {});
+    for (const chart of CHART_STYLES) {
+      const drawn = runTool(ctx, "spending", {}, chart);
+      expect(drawn.card?.chart.kind).toBe(chart);
+      expect(drawn.card?.chart.points).toEqual(base.card?.chart.points);
+      expect(drawn.query?.chart).toBe(chart);
+    }
   });
 });

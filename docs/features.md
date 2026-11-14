@@ -38,10 +38,35 @@ terms change, the sheet appears again.
 | **My month in 30 seconds**                          | A full-screen story of last month: where income went, the three baskets, spending by category, the trend, what could be freed up, and what is safe to spend. Tap through it, hold to pause, or have it read aloud |
 | **Views**                                           | Named sets of widgets. Three to start with: _Overview_, _Three baskets_, _Everyday spending_                                                                                                                      |
 | **Period**                                          | Last month, this month, 3, 6 or 12 months, or **your own dates** picked from a calendar. Every widget in the view follows it                                                                                      |
-| **Widgets**                                         | Charts with a plain-language summary and a note on where the numbers come from                                                                                                                                    |
-| **Chart type**                                      | Each widget has a Bars / Line / Pie switch; the choice is saved with the view                                                                                                                                     |
-| **New widget**                                      | Opens the coach; describe what you want to see and pin the result                                                                                                                                                 |
+| **Widgets**                                         | Charts with a plain-language summary and a note on where the numbers come from, plus shortcuts and live panels (see below)                                                                                        |
+| **Chart type**                                      | Each chart widget has a selector with 15 types: bars, rows, line, area, pie, filled pie, split bar, tree map, rings, radar, waterfall, lollipop, funnel, table and big numbers. The choice is saved with the view |
+| **New widget**                                      | A step-by-step form: what it shows, which spending, the chart type (a gallery with a live preview), and the size. Or **Describe it instead** and the coach builds it                                              |
 | **Save as new view / Rename / Move to recycle bin** | Manage views                                                                                                                                                                                                      |
+
+### What can be done with a widget
+
+Every widget has the same controls in its title bar:
+
+| Control                  | What it does                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| **Drag** (grip)          | On a tablet or desktop, drag a widget onto another to move it there                                |
+| **Move earlier / later** | The same with arrows, on a phone or from the keyboard                                              |
+| **Make wide / small**    | Wide takes the full width; small takes one column. Small shortcuts sit two side by side on a phone |
+| **Minimise**             | Folds the widget to its title bar; the plus opens it again                                         |
+| **Remove** (×)           | Moves it to the recycle bin, from where it can be restored                                         |
+
+The order, size and minimised state are saved with the view.
+
+### Shortcut and live widgets
+
+| Widget                     | What it does                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| **Ask the coach**          | Type a question, or tap the microphone and say it, straight from the dashboard |
+| **Voice call**             | One tap to a live call with the coach                                          |
+| **Can I afford this?**     | Checks a purchase against what is safe to spend                                |
+| **My month in 30 seconds** | Plays the month story                                                          |
+| **My goals**               | Each goal, what it needs a month, and whether the usual month covers it        |
+| **Needs attention**        | The latest insights, unread first                                              |
 
 The customer decides what is on the dashboard and how it is drawn. Nothing is fixed by the
 bank.
@@ -52,22 +77,22 @@ Ask in your own words, by typing, by holding the microphone, or in a voice call.
 
 ### What it can answer
 
-| Ask something like                              | You get                                                                                        |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| "Where does my money go?"                       | Spending by category, as a pie                                                                 |
-| "How much did I spend on taxis last month?"     | The amount, the count, and that category by month                                              |
-| "Show how my income flows"                      | A money-flow diagram: bills, essentials, everyday, investing, what was left                    |
-| "Explain my three baskets"                      | Regular bills, irregular essentials, everyday spending, and how much of that was a free choice |
-| "What is safe to spend this week?"              | The estimate and what was set aside to reach it                                                |
-| "Can I afford a 300 € bike?"                    | What would be left after the purchase, or how far short it falls                               |
-| "What if I cut restaurants by 20%?"             | The saving, and what that is over a year                                                       |
-| "How do I compare with people my age?"          | Your typical month against the middle half of your age group, with Statistics Finland context  |
-| "What kind of spender am I?"                    | Basket shares and your largest free-choice categories                                          |
-| "What bills are coming up?"                     | Regular payments and the usual income pattern                                                  |
-| "What would you recommend?"                     | Ranked suggestions, each with an estimated monthly value                                       |
-| "I want to save for a trip, maybe two thousand" | A saved goal and a plan for funding it                                                         |
-| "Make me a budget plan"                         | Your month as five slices, in percentages, ready to keep as a plan                             |
-| "…as a pie chart" / "viivakaaviona"             | The same answer, drawn the way you asked                                                       |
+| Ask something like                                   | You get                                                                                        |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| "Where does my money go?"                            | Spending by category, as a pie                                                                 |
+| "How much did I spend on taxis last month?"          | The amount, the count, and that category by month                                              |
+| "Show how my income flows"                           | A money-flow diagram: bills, essentials, everyday, investing, what was left                    |
+| "Explain my three baskets"                           | Regular bills, irregular essentials, everyday spending, and how much of that was a free choice |
+| "What is safe to spend this week?"                   | The estimate and what was set aside to reach it                                                |
+| "Can I afford a 300 € bike?"                         | What would be left after the purchase, or how far short it falls                               |
+| "What if I cut restaurants by 20%?"                  | The saving, and what that is over a year                                                       |
+| "How do I compare with people my age?"               | Your typical month against the middle half of your age group, with Statistics Finland context  |
+| "What kind of spender am I?"                         | Basket shares and your largest free-choice categories                                          |
+| "What bills are coming up?"                          | Regular payments and the usual income pattern                                                  |
+| "What would you recommend?"                          | Ranked suggestions, each with an estimated monthly value                                       |
+| "I want to save for a trip, maybe two thousand"      | A saved goal and a plan for funding it                                                         |
+| "Make me a budget plan"                              | Your month as five slices, in percentages, ready to keep as a plan                             |
+| "…as a tree map" / "viivakaaviona" / "som en tabell" | The same answer, drawn the way you asked: any of the 15 chart types                            |
 
 ### With every answer
 

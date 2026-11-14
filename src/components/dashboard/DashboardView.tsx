@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ActionWidgetBody } from "@/components/dashboard/ActionWidgets";
+import { AddWidgetWizard } from "@/components/dashboard/AddWidgetWizard";
 import { AffordWizard } from "@/components/dashboard/AffordWizard";
 import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
 import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
@@ -20,6 +22,7 @@ import {
   type DashboardPayload,
   type DashboardState,
   type DashboardView as SavedView,
+  type SavedWidget,
   type ViewPeriod,
   type WidgetQuery,
 } from "@/lib/contracts/chart";
@@ -46,6 +49,8 @@ export function DashboardView(): React.JSX.Element {
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
   const [affordOpen, setAffordOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
@@ -91,6 +96,35 @@ export function DashboardView(): React.JSX.Element {
       ...state,
       views: state.views.map((view) => (view.id === state.activeId ? change(view) : view)),
     }));
+
+  const changeWidget = (id: string, change: (widget: SavedWidget) => SavedWidget): void =>
+    updateActive((view) => ({
+      ...view,
+      widgets: view.widgets.map((item) => (item.id === id ? change(item) : item)),
+    }));
+
+  /** Puts widget `id` at the place of widget `beforeId`, shifting the rest along. */
+  function reorder(id: string, beforeId: string): void {
+    if (id === beforeId) return;
+    updateActive((view) => {
+      const moving = view.widgets.find((item) => item.id === id);
+      if (!moving) return view;
+      const from = view.widgets.findIndex((item) => item.id === id);
+      const to = view.widgets.findIndex((item) => item.id === beforeId);
+      const rest = view.widgets.filter((item) => item.id !== id);
+      // Dragging downwards lands after the target, upwards before it: where the eye expects.
+      const at = rest.findIndex((item) => item.id === beforeId) + (from < to ? 1 : 0);
+      return { ...view, widgets: [...rest.slice(0, at), moving, ...rest.slice(at)] };
+    });
+  }
+
+  function addWidget(widget: Omit<SavedWidget, "id">): void {
+    updateActive((view) => ({
+      ...view,
+      widgets: [{ id: newId("widget"), ...widget }, ...view.widgets].slice(0, 24),
+    }));
+    toast.notify("toast.added");
+  }
 
   function saveView(name: string, period: ViewPeriod): void {
     if (!active || !viewDraft) return;
@@ -177,7 +211,7 @@ export function DashboardView(): React.JSX.Element {
         <h1 className="text-xl font-semibold">{t("dashboard.title")}</h1>
         <button
           type="button"
-          onClick={() => setSheetOpen(true)}
+          onClick={() => setAddOpen(true)}
           className="flex items-center gap-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary"
         >
           <PlusIcon className="size-4" />
@@ -289,11 +323,29 @@ export function DashboardView(): React.JSX.Element {
           {t("dashboard.empty")}
         </p>
       ) : (
-        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {(dashboard?.cards ?? []).map((widget) => (
+        <div className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:gap-4 xl:grid-cols-3">
+          {(dashboard?.cards ?? []).map((widget, index, all) => (
             <WidgetCard
               key={widget.id}
               widget={widget}
+              first={index === 0}
+              last={index === all.length - 1}
+              dragging={dragId !== null && dragId !== widget.id}
+              onDragStart={setDragId}
+              onDragEnd={() => setDragId(null)}
+              onDropOn={(targetId) => {
+                if (dragId) reorder(dragId, targetId);
+                setDragId(null);
+              }}
+              onMove={(id, by) => {
+                const neighbour = all[index + by];
+                if (neighbour) reorder(id, neighbour.id);
+              }}
+              onResize={(id, size) => changeWidget(id, (item) => ({ ...item, size }))}
+              onCollapse={(id, collapsed) => changeWidget(id, (item) => ({ ...item, collapsed }))}
+              onChart={(id, chart) =>
+                changeWidget(id, (item) => ({ ...item, query: { ...item.query, chart } }))
+              }
               onRemove={(id) => {
                 updateActive((view) => ({
                   ...view,
@@ -301,15 +353,11 @@ export function DashboardView(): React.JSX.Element {
                 }));
                 toast.notify("toast.movedToBin");
               }}
-              onChart={(id, chart) =>
-                updateActive((view) => ({
-                  ...view,
-                  widgets: view.widgets.map((item) =>
-                    item.id === id ? { ...item, query: { ...item.query, chart } } : item,
-                  ),
-                }))
-              }
-            />
+            >
+              {widget.action ? (
+                <ActionWidgetBody action={widget.action} onAfford={() => setAffordOpen(true)} />
+              ) : null}
+            </WidgetCard>
           ))}
         </div>
       )}
@@ -331,16 +379,16 @@ export function DashboardView(): React.JSX.Element {
       ) : null}
       <ViewWizard draft={viewDraft} onClose={() => setViewDraft(null)} onSave={saveView} />
 
+      <AddWidgetWizard
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onAdd={addWidget}
+        onDescribe={() => setSheetOpen(true)}
+      />
       <NewWidgetSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        onAdd={(query: WidgetQuery) => {
-          updateActive((view) => ({
-            ...view,
-            widgets: [{ id: newId("widget"), query }, ...view.widgets].slice(0, 16),
-          }));
-          toast.notify("toast.added");
-        }}
+        onAdd={(query: WidgetQuery) => addWidget({ query })}
       />
     </div>
   );

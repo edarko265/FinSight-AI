@@ -23,7 +23,7 @@ async function pinToDashboard(query: WidgetQuery, locale: string): Promise<void>
         view.id === state.activeId
           ? {
               ...view,
-              widgets: [{ id: `widget-${Date.now()}`, query }, ...view.widgets].slice(0, 16),
+              widgets: [{ id: `widget-${Date.now()}`, query }, ...view.widgets].slice(0, 24),
             }
           : view,
       ),
@@ -35,12 +35,16 @@ async function pinToDashboard(query: WidgetQuery, locale: string): Promise<void>
 export function ChatScreen(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const question = useSearchParams().get("q") ?? undefined;
+  const params = useSearchParams();
+  const question = params.get("q") ?? undefined;
+  // Shortcuts from the dashboard: start listening, or start a voice call, straight away.
+  const start = params.get("call") ? "call" : params.get("listen") ? "listen" : undefined;
   const [added, setAdded] = useState<Set<string>>(new Set());
 
   return (
     <ChatPanel
       initialQuestion={question}
+      start={start}
       cardAction={(card, query) => {
         if (!query) return null;
         const key = card.title + card.summary;
