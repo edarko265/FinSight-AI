@@ -211,7 +211,7 @@ export function Training({
             />
           ))}
         </ul>
-        <p className="text-sm text-muted">{t("admin.training.note")}</p>
+        <p className="text-xs text-muted">{t("admin.training.note")}</p>
       </Panel>
 
       <Wizard
@@ -328,7 +328,7 @@ function TrainingRow({
       <p className="mt-1 line-clamp-3 whitespace-pre-line text-muted">
         {item.answers.en || item.answers.fi || item.answers.sv}
       </p>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-xs text-muted">
         {t("admin.training.uses", { count: item.uses })}
         {" · "}
         {LANGUAGES.filter((language) => item.answers[language])

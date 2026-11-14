@@ -195,7 +195,7 @@ export function StackChart({ points }: Props): React.JSX.Element {
         <span
           key={point.label}
           title={tip(point, total)}
-          className="fs-grow-x flex items-center justify-center overflow-hidden text-sm font-semibold"
+          className="fs-grow-x flex items-center justify-center overflow-hidden text-xs font-semibold"
           style={{
             width: `${(point.valueCents / total) * 100}%`,
             background: chartColor(index),
@@ -458,7 +458,7 @@ export function FunnelChart({ points }: Props): React.JSX.Element {
         <li
           key={point.label}
           title={tip(point)}
-          className="fs-grow-x flex h-7 items-center justify-center overflow-hidden rounded-lg px-2 text-sm font-semibold whitespace-nowrap"
+          className="fs-grow-x flex h-7 items-center justify-center overflow-hidden rounded-lg px-2 text-xs font-semibold whitespace-nowrap"
           style={{
             width: `${Math.max(18, (point.valueCents / max) * 100)}%`,
             background: chartColor(index),
@@ -494,7 +494,7 @@ export function TableChart({ points }: Props): React.JSX.Element {
             <td className="py-1.5 text-right font-medium tabular-nums">
               {formatMoney(point.valueCents, locale)}
             </td>
-            <td className="w-14 py-1.5 pl-2 text-right text-sm text-muted tabular-nums">
+            <td className="w-14 py-1.5 pl-2 text-right text-xs text-muted tabular-nums">
               {formatPercent(Math.round((Math.max(0, point.valueCents) / total) * 100), locale)}
             </td>
           </tr>
@@ -516,7 +516,7 @@ export function StatChart({ points }: Props): React.JSX.Element {
             points.length === 1 || (index === 0 && points.length === 3) ? "col-span-2" : ""
           }`}
         >
-          <p className="truncate text-sm text-muted">{point.label}</p>
+          <p className="truncate text-xs text-muted">{point.label}</p>
           <p className="mt-0.5 text-lg font-semibold tabular-nums">
             {formatMoney(point.valueCents, locale)}
           </p>

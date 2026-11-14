@@ -27,17 +27,14 @@ export function chartInk(index: number): string {
 }
 
 /**
- * Axis and tile labels in SVG charts, in rem so they follow the font-size preference. The charts
- * draw in a 300-unit-wide viewBox that is shown at roughly 1:1 on a phone, so 0.875rem is about
- * 14 units at the default root size; `CHART_LABEL_UNITS` is that width for fitting labels.
+ * Axis and tile labels in SVG charts. The charts draw in a 300-unit-wide viewBox that is shown
+ * at roughly 1:1 on a phone, so this is close to the pixel size; 14 keeps labels at about 12px
+ * down to a 320px screen (about 12px there).
  */
-export const CHART_LABEL_SIZE = "0.875rem";
-
-/** Label size in viewBox units at the default root size, for estimating label widths. */
-export const CHART_LABEL_UNITS = 14;
+export const CHART_LABEL_SIZE = 14;
 
 /** Cuts a label to what fits in `width` viewBox units at the chart label size, with an ellipsis. */
 export function fitLabel(label: string, width: number): string {
-  const chars = Math.max(3, Math.floor(width / (CHART_LABEL_UNITS * 0.55)));
+  const chars = Math.max(3, Math.floor(width / (CHART_LABEL_SIZE * 0.55)));
   return label.length > chars ? `${label.slice(0, chars - 1)}…` : label;
 }

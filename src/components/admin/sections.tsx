@@ -110,7 +110,6 @@ export function OverviewSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.overview")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.overview.intro")}</p>
       </div>
       <Panel title={t("admin.attention")}>
         {attention.length === 0 ? (
@@ -381,7 +380,7 @@ export function AiSection(): React.JSX.Element {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-sm text-muted">
+                  <tr className="text-left text-xs text-muted">
                     <th className="py-1 font-medium" />
                     <th className="py-1 text-right font-medium">{t("admin.aiUsage.requests")}</th>
                     <th className="py-1 text-right font-medium">{t("admin.aiUsage.input")}</th>
@@ -405,11 +404,10 @@ export function AiSection(): React.JSX.Element {
               </table>
             </div>
           )}
-          <p className="text-sm text-muted">{t("admin.aiUsage.note")}</p>
         </Panel>
         <Panel title={t("admin.chart.mode")}>
           <Ring unit={t("admin.questions.unit")} parts={modeParts(data, t)} />
-          <p className="text-sm text-muted">{t("admin.chart.mode.note")}</p>
+          <p className="text-xs text-muted">{t("admin.chart.mode.note")}</p>
         </Panel>
       </div>
       <Panel title={t("admin.how")}>
@@ -577,7 +575,6 @@ export function NotificationsSection(): React.JSX.Element {
           <p className="text-sm">{t("admin.notifications.devices", { count: customers })}</p>
         )}
         <p className="text-sm text-muted">{t("admin.notifications.note")}</p>
-        <p className="text-sm text-muted">{t("admin.notifications.announce")}</p>
         <button
           type="button"
           aria-disabled={busy}
@@ -653,7 +650,7 @@ export function SystemSection(): React.JSX.Element {
             <dt className="text-muted">{t("admin.sessions")}</dt>
             <dd className="tabular-nums">{number(system.activeSessions)}</dd>
             <dt className="text-muted">{t("admin.checksum")}</dt>
-            <dd className="truncate font-mono text-sm">{system.sourceChecksum?.slice(0, 16)}…</dd>
+            <dd className="truncate font-mono text-xs">{system.sourceChecksum?.slice(0, 16)}…</dd>
           </dl>
         </Panel>
         <Panel title={t("admin.spendingByAge")}>
@@ -665,7 +662,7 @@ export function SystemSection(): React.JSX.Element {
               note: formatMoney(row.medianCents, locale),
             }))}
           />
-          <p className="text-sm text-muted">{t("admin.spendingByAge.note")}</p>
+          <p className="text-xs text-muted">{t("admin.spendingByAge.note")}</p>
         </Panel>
       </div>
       <Panel title={t("admin.audit")}>
@@ -690,7 +687,7 @@ export function SystemSection(): React.JSX.Element {
                     </span>
                   ) : null}
                 </span>
-                <time className="text-sm text-muted tabular-nums">
+                <time className="text-xs text-muted tabular-nums">
                   {new Intl.DateTimeFormat(LOCALE_INFO[locale].intl, {
                     dateStyle: "medium",
                     timeStyle: "short",
@@ -712,7 +709,6 @@ export function TrainingSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.training")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.training.intro")}</p>
       </div>
       <Training gaps={data.usage.unansweredThemes} />
     </>
@@ -726,7 +722,6 @@ export function TeamSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.team")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.team.intro")}</p>
       </div>
       <Team myId={data.me.id} />
     </>
@@ -740,7 +735,6 @@ export function TrashSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.trash")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.trash.intro")}</p>
       </div>
       <AdminTrash manager={isManager(data.me.role)} />
     </>
@@ -753,7 +747,6 @@ export function PlansSection(): React.JSX.Element {
     <>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.plans")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("admin.plans.intro")}</p>
       </div>
       <SharedPlans />
     </>

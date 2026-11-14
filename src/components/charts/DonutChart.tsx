@@ -45,7 +45,7 @@ export function DonutChart({ points }: { points: ChartPoint[] }): React.JSX.Elem
         </g>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-sm text-muted">{t("chart.total")}</span>
+        <span className="text-xs text-muted">{t("chart.total")}</span>
         <span className="text-sm font-semibold tabular-nums">
           {formatMoney(positiveCents, locale)}
         </span>

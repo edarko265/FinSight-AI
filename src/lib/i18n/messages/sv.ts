@@ -598,8 +598,6 @@ export const sv: Record<MessageKey, string> = {
   "goals.edit.months": "Månader",
   "views.rename": "Byt namn",
   "admin.announcements": "Meddelanden till kunder",
-  "admin.announcements.note":
-    "Visas för alla kunder bland deras insikter. Skriv på det språk dina kunder läser.",
   "admin.announcements.title": "Rubrik",
   "admin.announcements.body": "Meddelande",
   "admin.announcements.severity": "Typ",
@@ -716,8 +714,6 @@ export const sv: Record<MessageKey, string> = {
   "voice.call.end": "Avsluta samtalet",
   "voice.call.failed": "Samtalet kunde inte startas.",
   "admin.controls": "Styrning",
-  "admin.controls.note":
-    "Ändringar börjar gälla inom några sekunder, utan driftsättning. Varje ändring skrivs i granskningsloggen.",
   "admin.flag.ai": "AI-coach",
   "admin.flag.ai.note": "Av: alla kunder får grundläge och inget skickas till en AI-tjänst.",
   "admin.flag.voice": "Röst",
@@ -759,8 +755,6 @@ export const sv: Record<MessageKey, string> = {
   "admin.aiUsage.month": "Senaste 30 dagarna",
   "admin.aiUsage.input": "Skickade tokens",
   "admin.aiUsage.output": "Mottagna tokens",
-  "admin.aiUsage.note":
-    "Tokens är det AI-leverantören tar betalt för. Multiplicera med leverantörens aktuella priser för kostnaden.",
   "admin.aiUsage.empty": "Inga AI-svar registrerade än.",
   "admin.workload": "Rådgivarnas arbetsbelastning",
   "admin.workload.open": "Öppna",
@@ -974,15 +968,12 @@ export const sv: Record<MessageKey, string> = {
   "admin.chart.consent": "Samtyckesval",
   "admin.chart.tokens": "Tokens per modell",
   "admin.chart.empty": "Inget att visa än.",
-  "admin.overview.intro":
-    "Vad kunderna använder coachen till, och vad det kostar. Öppna en ruta för att se mer och agera.",
   "admin.notifications.devices": "{count} kunder har aviseringar på",
   "admin.notifications.note":
     "Påminnelser går ut varje morgon: ett mål att lägga undan till, en räkning som snart förfaller, en vana som går åt fel håll, ett möjligt underskott. Varje kund får en avisering om det viktigaste som hen inte har fått veta än. Aviseringen innehåller bara rubriken; beloppen stannar i appen.",
   "admin.notifications.send": "Skicka påminnelser nu",
   "admin.notifications.sending": "Skickar…",
   "admin.notifications.result": "{sent} påminnelser skickade till {customers} kunder",
-  "admin.notifications.announce": "Meddelanden skickas också till alla enheter när de publiceras.",
   "admin.menu": "Adminsektioner",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
@@ -1051,8 +1042,6 @@ export const sv: Record<MessageKey, string> = {
   "admin.role.banker": "Personlig bankrådgivare",
   "admin.role.banker.note":
     "Samma som rådgivare, för personal som sköter kundernas vardagsärenden.",
-  "admin.team.intro":
-    "Personer som kan logga in här utöver ägaren. Var och en har eget användarnamn, lösenord och roll.",
   "admin.team.add": "Lägg till en teammedlem",
   "admin.team.edit": "Redigera teammedlem",
   "admin.team.count": "Teammedlemmar",
@@ -1078,8 +1067,6 @@ export const sv: Record<MessageKey, string> = {
     "Anteckna lösenordet nu: det sparas bara som hash och kan inte visas igen.",
   "admin.team.note":
     "Att flytta någon till papperskorgen avslutar åtkomsten direkt. Namn och användarnamn lagras krypterade; lösenord bara som saltad hash.",
-  "admin.training.intro":
-    "När coachen saknar svar, skriv det svar den borde ha gett. Därefter ger den ditt svar ordagrant till alla som frågar.",
   "admin.training.gaps": "Det coachen inte kunde besvara",
   "admin.training.gaps.note":
     "Per tema de senaste 30 dagarna. Frågor sorteras i ett tema när de kommer in och bara temat räknas: ingens fråga sparas.",
@@ -1108,7 +1095,6 @@ export const sv: Record<MessageKey, string> = {
   "admin.training.useExample": "Börja från ett exempel",
   "admin.training.note":
     "Inlärda svar visas exakt som de skrivits och märks som svar från bankens team. De används bara när ingen beräkning passar frågan.",
-  "admin.trash.intro": "Allt personalen raderar väntar här. Återställ det eller radera permanent.",
   "admin.trash.note": "Permanent radering kan inte ångras.",
   "admin.trash.confirm": "Radera alla {count} objekt permanent?",
   "admin.trash.kind.announcement": "Meddelande",
@@ -1273,14 +1259,10 @@ export const sv: Record<MessageKey, string> = {
   "admin.flag.sharing": "Delade planer",
   "admin.flag.sharing.note": "Låter kunder dela planer som procent och kopiera varandras.",
   "admin.nav.plans": "Delade planer",
-  "admin.plans.intro":
-    "Det kunder har delat med varandra: ett namn och procent. Inte vem som delade, och aldrig ett belopp.",
   "admin.plans.shared": "Delade planer",
   "admin.plans.listed": "Listade för alla",
   "admin.plans.copies": "Antal kopieringar",
   "admin.plans.average": "Den genomsnittliga delade planen",
-  "admin.plans.average.note":
-    "Medelprocent per del över alla delade planer: vad kunderna siktar på.",
   "admin.plans.top": "Mest kopierade",
   "admin.plans.empty": "Inget delat ännu.",
   "admin.plans.isListed": "listad",

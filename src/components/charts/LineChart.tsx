@@ -60,7 +60,7 @@ export function LineChart({ points }: { points: ChartPoint[] }): React.JSX.Eleme
         strokeDasharray="5 4"
       />
       {labels ? (
-        <text x={2} y={averageLabelY} textAnchor="start" fontSize="0.75rem" fill="var(--muted)">
+        <text x={2} y={averageLabelY} textAnchor="start" fontSize={12} fill="var(--muted)">
           {t("chart.average", { amount: formatMoney(average, locale) })}
         </text>
       ) : null}
@@ -93,7 +93,7 @@ export function LineChart({ points }: { points: ChartPoint[] }): React.JSX.Eleme
           x={last.x}
           y={latestLabelY}
           textAnchor="end"
-          fontSize="0.8125rem"
+          fontSize={13}
           fontWeight={600}
           fill="var(--foreground)"
         >

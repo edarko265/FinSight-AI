@@ -20,7 +20,7 @@ export function AppHeader(): React.JSX.Element {
           <Logo className="size-8 md:hidden" />
           <span className="flex flex-col leading-tight">
             <span className="text-base font-semibold tracking-tight">{t("app.name")}</span>
-            <span className="text-sm">
+            <span className="text-xs">
               {overview ? (
                 t("app.asOf", { date: formatDay(overview.asOf, locale) })
               ) : overviewLoading ? (

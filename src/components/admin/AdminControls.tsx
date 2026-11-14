@@ -120,7 +120,6 @@ export function AdminControls({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted">{t("admin.controls.note")}</p>
 
       <ul className="grid gap-2 md:grid-cols-2">
         {FLAGS.map((flag) => (
@@ -128,7 +127,7 @@ export function AdminControls({
             <label className={row}>
               <span className="flex min-w-0 flex-col">
                 <span className="font-semibold">{t(`admin.flag.${flag}` as MessageKey)}</span>
-                <span className="text-sm text-muted">
+                <span className="text-xs text-muted">
                   {t(`admin.flag.${flag}.note` as MessageKey)}
                 </span>
               </span>
@@ -153,7 +152,7 @@ export function AdminControls({
       <div className={row}>
         <span className="flex flex-col">
           <span className="font-semibold">{t("admin.provider")}</span>
-          <span className="text-sm text-muted">
+          <span className="text-xs text-muted">
             {model ? t("admin.provider.current", { model }) : t("admin.ai.off")}
           </span>
         </span>
@@ -172,7 +171,7 @@ export function AdminControls({
       <div className={row}>
         <span className="flex flex-col">
           <span className="font-semibold">{t("admin.fee")}</span>
-          <span className="text-sm text-muted">
+          <span className="text-xs text-muted">
             {t("admin.fee.value", { fee: formatMoney(settings.advisorFeeCents, locale) })}
           </span>
         </span>
@@ -191,7 +190,7 @@ export function AdminControls({
       <div className={row}>
         <span className="flex flex-col">
           <span className="font-semibold">{t("admin.aiLimit")}</span>
-          <span className="text-sm text-muted">
+          <span className="text-xs text-muted">
             {settings.aiDailyRequestLimit > 0
               ? t("admin.aiLimit.value", {
                   used: requestsToday,
@@ -215,7 +214,7 @@ export function AdminControls({
       <div className={row}>
         <span className="flex flex-col">
           <span className="font-semibold">{t("admin.rules")}</span>
-          <span className="text-sm text-muted">
+          <span className="text-xs text-muted">
             {t("admin.rules.summary", {
               count: RULES.length,
             })}

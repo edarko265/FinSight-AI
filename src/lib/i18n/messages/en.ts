@@ -608,8 +608,6 @@ export const en = {
   "goals.edit.months": "Months",
   "views.rename": "Rename",
   "admin.announcements": "Announcements to customers",
-  "admin.announcements.note":
-    "Shown to every customer among their insights. Write in the language your customers read.",
   "admin.announcements.title": "Title",
   "admin.announcements.body": "Message",
   "admin.announcements.severity": "Type",
@@ -727,8 +725,6 @@ export const en = {
   "voice.call.end": "End call",
   "voice.call.failed": "The call could not be started.",
   "admin.controls": "Controls",
-  "admin.controls.note":
-    "Changes take effect within a few seconds, without a deploy. Every change is written to the audit log.",
   "admin.flag.ai": "AI coach",
   "admin.flag.ai.note": "Off: every customer gets basic mode and nothing is sent to an AI service.",
   "admin.flag.voice": "Voice",
@@ -770,8 +766,6 @@ export const en = {
   "admin.aiUsage.month": "Last 30 days",
   "admin.aiUsage.input": "Tokens sent",
   "admin.aiUsage.output": "Tokens received",
-  "admin.aiUsage.note":
-    "Tokens are what the AI provider bills for. Multiply by your provider's current prices for the cost.",
   "admin.aiUsage.empty": "No AI answers recorded yet.",
   "admin.workload": "Adviser workload",
   "admin.workload.open": "Open",
@@ -984,16 +978,12 @@ export const en = {
   "admin.chart.consent": "Consent choices",
   "admin.chart.tokens": "Tokens by model",
   "admin.chart.empty": "Nothing to chart yet.",
-  "admin.overview.intro":
-    "What customers are using the coach for, and what it costs. Open a tile to see more and to act.",
   "admin.notifications.devices": "{count} customers have notifications on",
   "admin.notifications.note":
     "Reminders go out every morning: a goal to put money towards, a bill due soon, a habit going the wrong way, a possible shortfall. Each customer gets one notification for the most important thing they have not been told about yet. The notification carries the headline only; amounts stay in the app.",
   "admin.notifications.send": "Send reminders now",
   "admin.notifications.sending": "Sending…",
   "admin.notifications.result": "{sent} reminders sent to {customers} customers",
-  "admin.notifications.announce":
-    "Announcements are also sent to every device when they are published.",
   "admin.menu": "Admin sections",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
@@ -1062,8 +1052,6 @@ export const en = {
   "admin.role.banker": "Personal banker",
   "admin.role.banker.note":
     "The same as an adviser, for staff who look after customers' everyday banking.",
-  "admin.team.intro":
-    "People who can sign in here besides the owner. Each has their own username, password and role.",
   "admin.team.add": "Add a team member",
   "admin.team.edit": "Edit team member",
   "admin.team.count": "Team members",
@@ -1089,8 +1077,6 @@ export const en = {
     "Note the password now: it is stored only as a hash and cannot be shown again.",
   "admin.team.note":
     "Moving someone to the recycle bin ends their access at once. Names and usernames are stored encrypted; passwords only as a salted hash.",
-  "admin.training.intro":
-    "When the coach has no answer, write the one it should have given. From then on it gives yours, word for word, to everyone who asks.",
   "admin.training.gaps": "What the coach could not answer",
   "admin.training.gaps.note":
     "By theme, over the last 30 days. Questions are sorted into a theme as they arrive and only the theme is counted: nobody's question is stored.",
@@ -1119,7 +1105,6 @@ export const en = {
   "admin.training.useExample": "Start from an example",
   "admin.training.note":
     "Taught answers are shown exactly as written and labelled as coming from the bank's team. They are used only when no calculation fits the question.",
-  "admin.trash.intro": "Everything staff delete waits here. Restore it, or delete it permanently.",
   "admin.trash.note": "Deleting permanently cannot be undone.",
   "admin.trash.confirm": "Delete all {count} items permanently?",
   "admin.trash.kind.announcement": "Announcement",
@@ -1284,14 +1269,10 @@ export const en = {
   "admin.flag.sharing": "Shared plans",
   "admin.flag.sharing.note": "Lets customers share plans as percentages and copy each other's.",
   "admin.nav.plans": "Shared plans",
-  "admin.plans.intro":
-    "What customers have shared with each other: a name and percentages. Not who shared it, and never an amount.",
   "admin.plans.shared": "Plans shared",
   "admin.plans.listed": "Listed for everyone",
   "admin.plans.copies": "Times copied",
   "admin.plans.average": "The average shared plan",
-  "admin.plans.average.note":
-    "The mean percentage per slice across all shared plans: what customers aim for.",
   "admin.plans.top": "Most copied",
   "admin.plans.empty": "Nothing shared yet.",
   "admin.plans.isListed": "listed",
