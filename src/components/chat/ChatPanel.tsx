@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { ChartView } from "@/components/charts/ChartView";
 import { ConsentSheet } from "@/components/chat/ConsentSheet";
@@ -75,13 +75,47 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [evidence, setEvidence] = useState<EvidenceRef | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+  const inputId = useId();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const asked = useRef(false);
 
   useEffect(() => {
     // Only follow the conversation; an empty chat stays at the top so the greeting is visible.
-    if (messages.length > 0 || pending) endRef.current?.scrollIntoView({ block: "end" });
+    const box = scrollRef.current;
+    if (!box || (messages.length === 0 && !pending)) return;
+    // Scroll the message box itself; scrollIntoView could also move the page behind the sheet.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.scrollTo({ top: box.scrollHeight, behavior: reduce ? "auto" : "smooth" });
   }, [messages, pending]);
+
+  // Grow the composer with its text up to about five lines, then let it scroll.
+  const fitInput = useCallback((): void => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.height = "auto";
+    // scrollHeight leaves out the borders, which border-box sizing counts.
+    const height = input.scrollHeight + (input.offsetHeight - input.clientHeight);
+    input.style.height = `${Math.min(height, 128)}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    fitInput();
+  }, [draft, voice.recording, fitInput]);
+
+  // Re-measure when the width changes (rotation, sheet resize); height writes are ignored.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    let width = input.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (input.clientWidth === width) return;
+      width = input.clientWidth;
+      fitInput();
+    });
+    observer.observe(input);
+    return () => observer.disconnect();
+  }, [fitInput]);
 
   useEffect(() => {
     onStatus?.({ pending, count: messages.length });
@@ -165,9 +199,12 @@ export function ChatPanel({
   const followUps =
     !pending && lastAssistant?.role === "assistant" ? (lastAssistant.followUps ?? []) : [];
 
+  const showCall = Boolean(me?.voiceAgentEnabled && me.aiConsent && !calling && !hideCallLink);
+  const showAdvisor = me?.advisorEnabled !== false;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <ol className="flex flex-col gap-3" aria-live="polite">
           <li className="max-w-[85%] self-start rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm shadow-sm">
             {intro ?? t("chat.intro")}
@@ -182,7 +219,7 @@ export function ChatPanel({
                     <button
                       type="button"
                       onClick={() => void send(t(key))}
-                      className="h-full w-full rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm font-medium"
+                      className="h-full min-h-11 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm font-medium"
                     >
                       {t(key)}
                     </button>
@@ -193,7 +230,7 @@ export function ChatPanel({
                 <button
                   type="button"
                   onClick={() => setShowAll(true)}
-                  className="mt-2 w-full rounded-full px-4 py-2 text-sm font-semibold text-accent"
+                  className="mt-2 min-h-11 w-full rounded-full px-4 py-2 text-sm font-semibold text-accent"
                 >
                   {t("chat.moreQuestions")}
                 </button>
@@ -233,7 +270,7 @@ export function ChatPanel({
                             ? voice.stopSpeaking()
                             : void voice.speak(message.id, message.text)
                         }
-                        className="flex items-center gap-1 font-medium text-accent"
+                        className="flex min-h-11 items-center gap-1 font-medium text-accent"
                       >
                         {voice.speakingId === message.id ? (
                           <span className="flex h-4 items-center gap-0.5" aria-hidden="true">
@@ -292,7 +329,7 @@ export function ChatPanel({
                     <button
                       type="button"
                       onClick={() => void send(suggestion)}
-                      className="rounded-full border border-border bg-surface px-3.5 py-2 text-left text-sm font-medium"
+                      className="min-h-11 rounded-full border border-border bg-surface px-3.5 py-2 text-left text-sm font-medium"
                     >
                       {suggestion}
                     </button>
@@ -320,10 +357,9 @@ export function ChatPanel({
             </li>
           ) : null}
         </ol>
-        <div ref={endRef} />
       </div>
 
-      <div className="border-t border-border bg-background px-4 pt-3 pb-3">
+      <div className="border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {calling ? (
           <VoiceCall
             onEnd={() => setCalling(false)}
@@ -337,44 +373,65 @@ export function ChatPanel({
           />
         ) : null}
 
-        <div className="mb-2 flex items-center justify-center gap-5 text-sm font-semibold text-accent">
-          {me?.voiceAgentEnabled && me.aiConsent && !calling && !hideCallLink ? (
-            <button
-              type="button"
-              onClick={() => setCalling(true)}
-              className="flex items-center gap-1.5"
-            >
-              <PhoneIcon className="size-4" />
-              {t("voice.call.start")}
-            </button>
-          ) : null}
-          {me?.advisorEnabled !== false ? <Link href="/advisor">{t("advisor.cta")} →</Link> : null}
-        </div>
+        {showCall || showAdvisor ? (
+          <div className="mb-2 flex items-center justify-center gap-5 text-sm font-semibold text-accent">
+            {showCall ? (
+              <button
+                type="button"
+                onClick={() => setCalling(true)}
+                className="inline-flex min-h-11 items-center gap-1.5"
+              >
+                <PhoneIcon className="size-4" />
+                {t("voice.call.start")}
+              </button>
+            ) : null}
+            {showAdvisor ? (
+              <Link href="/advisor" className="inline-flex min-h-11 items-center">
+                {t("advisor.cta")} →
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
 
         {voice.error === "mic" ? (
           <p className="mb-2 text-sm text-warning">{t("chat.micDenied")}</p>
         ) : null}
 
         <form
-          className="flex items-center gap-2"
+          className="flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             void send(draft);
           }}
         >
-          <label htmlFor="chat-input" className="sr-only">
+          <label htmlFor={inputId} className="sr-only">
             {placeholder ?? t("chat.placeholder")}
           </label>
-          <input
-            id="chat-input"
+          <textarea
+            id={inputId}
+            ref={inputRef}
+            rows={1}
             value={voice.recording ? "" : draft}
             onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              // Enter sends, Shift+Enter adds a line; Enter while composing (IME) confirms text.
+              if (
+                event.key !== "Enter" ||
+                event.shiftKey ||
+                event.nativeEvent.isComposing ||
+                event.nativeEvent.keyCode === 229
+              )
+                return;
+              event.preventDefault();
+              void send(draft);
+            }}
+            enterKeyHint="send"
             placeholder={
               voice.recording ? t("chat.listening") : (placeholder ?? t("chat.placeholder"))
             }
             autoComplete="off"
             disabled={voice.recording}
-            className="min-w-0 flex-1 rounded-full border border-border bg-surface px-4 py-3 text-base outline-none placeholder:text-sm focus-visible:ring-2 focus-visible:ring-accent"
+            className="max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl border border-border bg-surface px-4 py-2.5 text-base outline-none placeholder:text-sm focus-visible:ring-2 focus-visible:ring-accent"
           />
           {me?.voiceEnabled ? (
             <button
@@ -382,7 +439,7 @@ export function ChatPanel({
               onClick={() => void toggleRecording()}
               aria-label={t(voice.recording ? "chat.stop" : "chat.speak")}
               aria-pressed={voice.recording}
-              className={`relative rounded-full p-3 ${
+              className={`relative flex size-11 shrink-0 items-center justify-center rounded-full ${
                 voice.recording
                   ? "bg-accent text-surface"
                   : "border border-border bg-surface text-accent"
@@ -405,7 +462,7 @@ export function ChatPanel({
             type="submit"
             disabled={pending || draft.trim() === ""}
             aria-label={t("chat.send")}
-            className="rounded-full bg-primary p-3 text-on-primary disabled:opacity-40"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary disabled:opacity-40"
           >
             <SendIcon className="size-5" />
           </button>
