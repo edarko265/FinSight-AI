@@ -33,8 +33,8 @@ export default function AppLayout({ children }: LayoutProps<"/">): React.JSX.Ele
             <BottomNav />
             <NotificationPrompt />
           </div>
+          <ChatDock />
         </AppFrame>
-        <ChatDock />
       </ChatDockProvider>
     </OverviewProvider>
   );
