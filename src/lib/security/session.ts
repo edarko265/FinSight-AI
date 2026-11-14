@@ -12,7 +12,7 @@ import { secretsMatch } from "@/lib/security/compare";
  * Opaque server sessions. The browser holds a random token in an HttpOnly
  * cookie; the database holds only its SHA-256 hash.
  */
-export const SESSION_COOKIE = "fs_session";
+const SESSION_COOKIE = "fs_session";
 const SESSION_HOURS = 8;
 
 function hashToken(token: string): string {

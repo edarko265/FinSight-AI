@@ -15,7 +15,7 @@ import { secretsMatch } from "@/lib/security/compare";
  * read aggregate statistics and what customers chose to send an adviser; no
  * admin route can read a customer's data.
  */
-export const ADMIN_COOKIE = "fs_admin";
+const ADMIN_COOKIE = "fs_admin";
 const HOURS = 4;
 export const OWNER_ID = "owner";
 

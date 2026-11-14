@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DASHBOARD_CHANGED } from "@/components/chat/PinnableChat";
 import { createSaveQueue, type SaveQueue } from "@/components/dashboard/save-queue";
 import { useToast } from "@/components/providers/ToastProvider";
-import { api } from "@/lib/api-client";
+import { api, load, peek, remember } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
 import type { DashboardPayload, DashboardState, DashboardWidget } from "@/lib/contracts/chart";
 
@@ -45,8 +45,14 @@ export interface DashboardSave {
 /** Loads the dashboard and saves edits optimistically, with coalesced writes. */
 export function useDashboardSave(locale: string): DashboardSave {
   const toast = useToast();
-  const [payload, setPayload] = useState<DashboardPayload | null>(null);
-  const [state, setState] = useState<DashboardState | null>(null);
+  const path = `/api/dashboard?locale=${locale}`;
+  // What was shown last time is drawn at once, then brought up to date.
+  const [payload, setPayload] = useState<DashboardPayload | null>(
+    () => peek<DashboardPayload>(path) ?? null,
+  );
+  const [state, setState] = useState<DashboardState | null>(() =>
+    payload ? { activeId: payload.activeId, views: payload.views } : null,
+  );
   const [saving, setSaving] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [retried, setRetried] = useState(false);
@@ -59,6 +65,8 @@ export function useDashboardSave(locale: string): DashboardSave {
 
   const [queue] = useState<SaveQueue<DashboardState>>(() =>
     createSaveQueue<DashboardState, DashboardPayload>({
+      // Edits made before the fresh copy arrives start from what is on screen.
+      initial: state,
       save: (next) =>
         api<DashboardPayload>(`/api/dashboard?locale=${latest.current.locale}`, {
           method: "PUT",
@@ -68,7 +76,11 @@ export function useDashboardSave(locale: string): DashboardSave {
         setState(desired);
         setSaving(busy);
       },
-      onSaved: setPayload,
+      onSaved: (data) => {
+        // The saved answer is also the latest one to show on the next visit.
+        remember(`/api/dashboard?locale=${latest.current.locale}`, data);
+        setPayload(data);
+      },
       onFailed: (error) => {
         if (!isApiError(error, 401)) latest.current.toast.fail("common.saveFailed");
       },
@@ -80,7 +92,8 @@ export function useDashboardSave(locale: string): DashboardSave {
     for (;;) {
       await queue.idle();
       const version = queue.version();
-      const data = await api<DashboardPayload>(`/api/dashboard?locale=${locale}`);
+      // Shared with the request the app shell starts while this screen is still loading.
+      const data = await load<DashboardPayload>(`/api/dashboard?locale=${locale}`);
       if (!queue.busy() && version === queue.version()) return data;
     }
   }, [queue, locale]);

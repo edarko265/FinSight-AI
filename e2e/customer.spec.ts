@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { E2E_CUSTOMER, E2E_CUSTOMER_TIGHT, E2E_DEMO_PASSWORD, E2E_PORT } from "./env";
+import { totpCode } from "../src/lib/security/totp";
 import { expectAccessible, signIn } from "./support";
 
 test("signs in through the step-by-step form and accepts the terms", async ({ page }) => {
@@ -24,6 +25,36 @@ test("a wrong password is refused", async ({ page }) => {
     headers: { Origin: `http://localhost:${E2E_PORT}` },
   });
   expect(response.status()).toBe(401);
+});
+
+test("a customer with two-step sign-in is asked for the code, and gets in with it", async ({
+  page,
+}) => {
+  const headers = { Origin: `http://localhost:${E2E_PORT}` };
+  const twoStep = (data: Record<string, string>) =>
+    page.request.post("/api/security/totp", { data, headers });
+  await signIn(page, E2E_CUSTOMER_TIGHT);
+  const { secret } = (await (await twoStep({ action: "begin" })).json()) as { secret: string };
+  expect((await twoStep({ action: "confirm", code: totpCode(secret, Date.now()) })).ok()).toBe(
+    true,
+  );
+  try {
+    await page.context().clearCookies();
+    await page.goto("/login");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page.getByLabel("Customer ID").fill(E2E_CUSTOMER_TIGHT);
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByLabel("Password", { exact: true }).fill(E2E_DEMO_PASSWORD);
+    await page.getByRole("button", { name: "Sign in", exact: true }).last().click();
+    // The password was right, so the form gains a step for the code instead of showing an error.
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByLabel("Six-digit code").fill(totpCode(secret, Date.now()));
+    await page.getByRole("button", { name: "Sign in", exact: true }).last().click();
+    await page.waitForURL("**/dashboard");
+  } finally {
+    // Leave the customer as they were, so a second run can sign in without a code.
+    await twoStep({ action: "disable", code: totpCode(secret, Date.now()) });
+  }
 });
 
 test.describe("signed in", () => {
@@ -182,8 +213,22 @@ test.describe("signed in", () => {
     await expect(page.getByText(/Birthday dinner/)).toBeVisible();
     await expectAccessible(page);
 
+    // The amount can be changed afterwards.
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByLabel("Amount in euros").fill("175");
+    for (let step = 0; step < 3; step += 1)
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("−€175.00")).toBeVisible();
+
     // To the recycle bin, and it is gone from the list.
     await page.getByRole("button", { name: "Move to recycle bin" }).click();
     await expect(page.getByText(/Nothing recorded yet/)).toBeVisible();
+
+    // And back again from the bin.
+    await page.goto("/trash");
+    await page.getByRole("button", { name: "Restore" }).first().click();
+    await page.goto("/entries");
+    await expect(page.getByText(/Birthday dinner/)).toBeVisible();
   });
 });

@@ -65,7 +65,7 @@ const w = (
   query: { tool, input },
 });
 
-export function defaultState(): DashboardState {
+function defaultState(): DashboardState {
   return {
     activeId: "overview",
     views: [

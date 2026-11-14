@@ -10,7 +10,7 @@ import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { MicIcon, PhoneIcon, PlayIcon } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { api } from "@/lib/api-client";
+import { load } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
 import type { ActionWidget } from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
@@ -115,7 +115,8 @@ function useWidgetData<T>(path: string): {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    api<T>(path)
+    // Shared with anything else on the screen asking for the same thing at the same time.
+    load<T>(path)
       .then((result) => {
         if (cancelled) return;
         setData(result);

@@ -308,7 +308,7 @@ export function goalResult(ctx: CoachContext, plan: GoalPlan, created: boolean):
   };
 }
 
-export interface Achievement {
+interface Achievement {
   id: string;
   title: string;
   body: string;

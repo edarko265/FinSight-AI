@@ -79,8 +79,8 @@ export function Announcements(): React.JSX.Element {
 
   async function submit(): Promise<boolean> {
     const result = editingId
-      ? await adminCall<Result>(`/api/admin/announcements/${editingId}`, "PATCH", form)
-      : await adminCall<Result>("/api/admin/announcements", "POST", form);
+      ? await adminCall<Result>(`/api/admin/announcements/${editingId}`, "PATCH", toPayload(form))
+      : await adminCall<Result>("/api/admin/announcements", "POST", toPayload(form));
     if (!result) {
       toast.fail("common.saveFailed");
       return false;

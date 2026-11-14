@@ -6,10 +6,10 @@ import { z } from "zod";
  * cents.
  */
 
-export const VOUCHER_TIER_IDS = ["bronze", "silver", "gold", "platinum", "diamond"] as const;
+const VOUCHER_TIER_IDS = ["bronze", "silver", "gold", "platinum", "diamond"] as const;
 export type VoucherTierId = (typeof VOUCHER_TIER_IDS)[number];
 
-export const VOUCHER_KINDS = ["grocery", "fuel"] as const;
+const VOUCHER_KINDS = ["grocery", "fuel"] as const;
 export type VoucherKind = (typeof VOUCHER_KINDS)[number];
 
 /**

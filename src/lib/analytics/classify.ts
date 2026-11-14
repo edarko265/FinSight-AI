@@ -178,7 +178,7 @@ export function classify(tx: Transaction): Classification {
   return classifyByRules(tx);
 }
 
-export const OWN_CHOICE = "You set this yourself.";
+const OWN_CHOICE = "You set this yourself.";
 
 /** What the rules say, ignoring any correction. Kept so a correction can be shown and undone. */
 export function classifyByRules(tx: Transaction): Classification {

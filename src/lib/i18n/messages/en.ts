@@ -1838,6 +1838,7 @@ export const en = {
   "admin.audit.shared_plan.dismiss_reports": "Reports on a shared plan dismissed",
   "admin.audit.staff.two_step_on": "A member turned on two-step sign-in",
   "admin.audit.staff.two_step_off": "A member turned off two-step sign-in",
+  "widget.edit": "Edit widget",
   "widget.resize": "Change size",
   "widget.size.medium": "Medium",
   "widget.size.medium.note": "Two columns.",

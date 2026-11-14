@@ -76,7 +76,7 @@ export const TOOL_SCHEMAS = {
 export type ToolName = keyof typeof TOOL_SCHEMAS;
 export type ToolInput<T extends ToolName> = z.infer<(typeof TOOL_SCHEMAS)[T]>;
 
-export function isToolName(value: string): value is ToolName {
+function isToolName(value: string): value is ToolName {
   return value in TOOL_SCHEMAS;
 }
 

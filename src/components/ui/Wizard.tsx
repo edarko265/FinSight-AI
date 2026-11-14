@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -15,7 +15,7 @@ import {
   type DismissReason,
 } from "@/components/ui/TabSheet";
 
-export interface WizardStep {
+interface WizardStep {
   title: string;
   /** Tells the user what to enter on this step. */
   hint: string;
@@ -60,6 +60,8 @@ export function Wizard({
 }: WizardProps): React.JSX.Element {
   const { t } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // Its own id, so two forms on one screen are never announced with each other's title.
+  const titleId = useId();
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
@@ -110,7 +112,7 @@ export function Wizard({
         onCancel={(event) => {
           if (!dismissable) event.preventDefault();
         }}
-        aria-labelledby="wizard-title"
+        aria-labelledby={titleId}
         className={`${
           dismissable
             ? `${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H} md:h-fit`
@@ -118,7 +120,7 @@ export function Wizard({
         } flex-col bg-background p-0 text-foreground backdrop:bg-black/50 open:flex`}
       >
         <header className="flex items-center justify-between gap-3 px-5 pt-5">
-          <h2 id="wizard-title" className="text-base font-semibold">
+          <h2 id={titleId} className="text-base font-semibold">
             {title}
           </h2>
           {dismissable ? (

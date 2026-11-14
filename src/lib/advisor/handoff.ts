@@ -26,7 +26,7 @@ interface Details {
   feeCents: number;
 }
 
-export interface AdvisorMessage {
+interface AdvisorMessage {
   id: string;
   sender: "customer" | "advisor";
   text: string;

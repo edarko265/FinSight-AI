@@ -12,7 +12,7 @@ import { getEnv } from "@/lib/env";
 import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, type Locale } from "@/lib/i18n/config";
 import { getSessionCustomerRef } from "@/lib/security/session";
 
-export async function currentLocale(preferred?: unknown): Promise<Locale> {
+async function currentLocale(preferred?: unknown): Promise<Locale> {
   if (isLocale(preferred)) return preferred;
   const stored = (await cookies()).get(LOCALE_COOKIE)?.value;
   return isLocale(stored) ? stored : DEFAULT_LOCALE;

@@ -34,13 +34,13 @@ export const CHART_STYLES = [
 export type ChartStyle = (typeof CHART_STYLES)[number];
 
 /** Any chart drawn from a list of labelled amounts. */
-export interface PointsChartSpec {
+interface PointsChartSpec {
   kind: ChartStyle;
   points: ChartPoint[];
 }
 
 /** Where income went: one source split into destinations, drawn as a flow. */
-export interface FlowChartSpec {
+interface FlowChartSpec {
   kind: "flow";
   source: ChartPoint;
   points: ChartPoint[];
