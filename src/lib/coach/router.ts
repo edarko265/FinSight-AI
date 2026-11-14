@@ -40,7 +40,7 @@ const TARGET_WORDS: [TargetKey, RegExp][] = [
 const PATTERNS = {
   whatIf:
     /what if|reduce|cut\b|cut back|save if|less on|entä jos|vähen|jos säästä|tänk om|minska|dra ner|spara om/,
-  safe: /safe to|can i (spend|afford)|afford|how much can i|turvallis|voinko|paljonko voin|varaa|käytettäviss|tryggt|har jag råd|kan jag (lägga|spendera|använda)/,
+  safe: /\bsafe\b[^.?!]*\bspend|safe to|can i (spend|afford)|afford|how much can i|turvallis|voinko|paljonko voin|varaa|käytettäviss|tryggt|har jag råd|kan jag (lägga|spendera|använda)/,
   profile:
     /kind of spender|what kind|spender|habit|pattern|millainen|kuluttaja|tottumu|vilken sorts|konsument|vanor|mönster/,
   peers:
@@ -140,7 +140,7 @@ export function routeQuestion(ctx: CoachContext, question: string): ToolResult {
 }
 
 const GOAL_WORDS =
-  /\b(save|saving|goal|put aside|set aside)\b|säästä|säästö|tavoit|spara|sparmål|\bmål\b/;
+  /\b(save|saving|goals?|put aside|set aside)\b|säästä|säästö|tavoit|spara|sparmål|\bmål\b/;
 const AMOUNT = /(?:€\s*)?(\d[\d\s.,]*\d|\d)\s*(?:€|eur\w*|e\b)|€\s*(\d[\d\s.,]*\d|\d)/;
 
 /**

@@ -1,7 +1,9 @@
 import "server-only";
 
 import { askModel } from "@/lib/coach/llm";
+import { recordUsage } from "@/lib/admin/usage";
 import type { SessionContext } from "@/lib/coach/context";
+import { checkGrounding } from "@/lib/coach/grounding";
 import { goalsResult, setGoal } from "@/lib/coach/goals";
 import { detectGoal, routeQuestion } from "@/lib/coach/router";
 import type { ToolResult } from "@/lib/coach/tools";
@@ -55,16 +57,31 @@ export async function answerQuestion(
     if (answer) {
       const primary =
         [...answer.results].reverse().find((result) => result.card) ?? answer.results.at(-1);
-      if (primary) return { message: toMessage(primary, answer.text, "ai"), topic: primary.tool };
-      return {
-        message: {
-          id: `assistant-${crypto.randomUUID()}`,
-          role: "assistant",
-          text: answer.text,
-          mode: "ai",
-        },
-        topic: "conversation",
-      };
+      // The model may only repeat calculated figures. If its wording states an amount that no
+      // calculation produced, the wording is dropped in favour of the calculation's own sentence.
+      const grounded = checkGrounding(answer.text, answer.results).grounded;
+      if (!grounded) {
+        console.error("coach: unsupported amount in model text, using calculated wording");
+        await recordUsage("grounding", "corrected", ctx.locale, "ai");
+      }
+      if (primary) {
+        return {
+          message: toMessage(primary, grounded ? answer.text : primary.text, "ai"),
+          topic: primary.tool,
+        };
+      }
+      // With no calculation behind it, an answer that states personal amounts is not shown at all.
+      if (grounded) {
+        return {
+          message: {
+            id: `assistant-${crypto.randomUUID()}`,
+            role: "assistant",
+            text: answer.text,
+            mode: "ai",
+          },
+          topic: "conversation",
+        };
+      }
     }
   } catch (error) {
     console.error(

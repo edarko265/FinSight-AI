@@ -788,6 +788,8 @@ export const en = {
   "terms.changes.body":
     "The prototype is provided as it is and may change or be unavailable. If these terms change you will be asked to accept them again.",
   "settings.termsLink": "Terms of use",
+  "admin.audit.admin.sign_in_failed": "Failed admin sign-in",
+  "admin.grounding": "AI answers corrected",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
   "coach.statfin.title": "You and households in Finland",

@@ -778,6 +778,8 @@ export const sv: Record<MessageKey, string> = {
   "terms.changes.body":
     "Prototypen tillhandahålls i befintligt skick och kan ändras eller vara otillgänglig. Om villkoren ändras ombeds du godkänna dem igen.",
   "settings.termsLink": "Användarvillkor",
+  "admin.audit.admin.sign_in_failed": "Misslyckad admininloggning",
+  "admin.grounding": "Rättade AI-svar",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
   "coach.statfin.title": "Du och hushållen i Finland",

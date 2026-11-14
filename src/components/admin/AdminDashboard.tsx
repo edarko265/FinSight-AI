@@ -39,6 +39,7 @@ interface AdminPayload {
     voiceUses: number;
     widgetsPinned: number;
     advisorRequests: number;
+    groundingCorrections: number;
     unansweredThemes: { topic: string; count: number }[];
   };
   ai: {
@@ -198,7 +199,7 @@ export function AdminDashboard(): React.JSX.Element {
             <Stat label={t("admin.consent")} value={number(usage.consentAccepted)} />
             <Stat label={t("admin.goals")} value={number(usage.goalsSet)} />
             <Stat label={t("admin.advisor.stat")} value={number(usage.advisorRequests)} />
-            <Stat label={t("admin.withdrawn")} value={number(usage.consentWithdrawn)} />
+            <Stat label={t("admin.grounding")} value={number(usage.groundingCorrections)} />
             <Stat label={t("admin.sessions")} value={number(system.activeSessions)} />
           </div>
 

@@ -29,6 +29,7 @@ const schema = z.object({
   GEMINI_MODEL: optional,
   ELEVENLABS_API_KEY: optional,
   ELEVENLABS_AGENT_ID: optional,
+  ELEVENLABS_VOICE_ID: optional,
   CHAT_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
   CHAT_MAX_TOOL_STEPS: z.coerce.number().int().min(1).max(8).default(4),
 
@@ -38,6 +39,7 @@ const schema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .default("2026-09-15"),
   DEMO_LOGIN_PASSWORD: optional,
+  ADMIN_PASSWORD: optional,
 });
 
 export type Env = z.infer<typeof schema>;

@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { Logo } from "@/components/ui/icons";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
 
 export interface Overview {
@@ -92,7 +93,15 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   return (
     <OverviewContext.Provider value={value}>
       {/* Nothing of the customer's is shown until the terms are accepted. */}
-      {me && !me.termsAccepted ? (
+      {me === null ? (
+        <div
+          className="flex min-h-dvh flex-1 items-center justify-center"
+          role="status"
+          aria-label="FinSight-AI"
+        >
+          <Logo className="size-16 animate-pulse" />
+        </div>
+      ) : !me.termsAccepted ? (
         <OnboardingGate aiAvailable={me.aiEnabled} onDone={refresh} />
       ) : (
         children

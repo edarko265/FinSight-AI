@@ -9,6 +9,9 @@ import { synthesizeSpeech } from "@/lib/voice/elevenlabs";
 
 const body = z.object({ text: z.string().trim().min(1).max(1500), locale: z.string().optional() });
 
+/** The model or speech provider can take a while; allow for it on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: Request): Promise<Response> {
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
@@ -20,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!hasAiConsent(await readConsent(ctx.customerRef))) {
     return Response.json({ error: "consent_required" }, { status: 403 });
   }
-  if (!rateLimit(`tts:${ctx.customerRef}`, 30, 60_000)) {
+  if (!(await rateLimit(`tts:${ctx.customerRef}`, 30, 60_000))) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
   if (!(await getSettings()).features.voice) {

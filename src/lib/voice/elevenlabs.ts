@@ -21,7 +21,7 @@ function apiKey(): string {
 }
 
 async function voiceId(): Promise<string> {
-  const configured = process.env.ELEVENLABS_VOICE_ID?.trim();
+  const configured = getEnv().ELEVENLABS_VOICE_ID;
   if (configured) return configured;
   if (cachedVoiceId) return cachedVoiceId;
   const response = await fetch(`${API}/voices`, { headers: { "xi-api-key": apiKey() } });

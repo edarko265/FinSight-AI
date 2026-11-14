@@ -28,6 +28,9 @@ const body = z.object({
     .optional(),
 });
 
+/** The model or speech provider can take a while; allow for it on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: Request): Promise<Response> {
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
@@ -36,7 +39,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!ctx) return unauthorized();
   const blocked = await termsRequired(ctx);
   if (blocked) return blocked;
-  if (!rateLimit(`chat:${ctx.customerRef}`, 20, 60_000)) {
+  if (!(await rateLimit(`chat:${ctx.customerRef}`, 20, 60_000))) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
   const allowModel = hasAiConsent(await readConsent(ctx.customerRef));

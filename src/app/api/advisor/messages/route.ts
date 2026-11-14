@@ -13,7 +13,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!ctx) return unauthorized();
   const blocked = await termsRequired(ctx);
   if (blocked) return blocked;
-  if (!rateLimit(`advisor:${ctx.customerRef}`, 30, 60_000)) {
+  if (!(await rateLimit(`advisor:${ctx.customerRef}`, 30, 60_000))) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
   const updated = await customerReply(ctx.customerRef, parsed.data.text);

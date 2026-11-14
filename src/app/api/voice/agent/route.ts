@@ -23,7 +23,7 @@ export async function GET(): Promise<Response> {
   if (!hasAiConsent(await readConsent(ctx.customerRef))) {
     return Response.json({ error: "consent_required" }, { status: 403 });
   }
-  if (!rateLimit(`call:${ctx.customerRef}`, 6, 60_000)) {
+  if (!(await rateLimit(`call:${ctx.customerRef}`, 6, 60_000))) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
   const response = await fetch(

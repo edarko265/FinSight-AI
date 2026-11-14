@@ -20,9 +20,18 @@ function sign(expires: number): string {
     .digest("base64url");
 }
 
+const MIN_PRODUCTION_PASSWORD = 12;
+
+/** Constant-time check. In production a short admin password is refused outright. */
 export function adminPasswordMatches(submitted: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD?.trim();
+  const expected = getEnv().ADMIN_PASSWORD;
   if (!expected) return false;
+  if (process.env.NODE_ENV === "production" && expected.length < MIN_PRODUCTION_PASSWORD) {
+    console.error(
+      `admin: ADMIN_PASSWORD must be at least ${MIN_PRODUCTION_PASSWORD} characters in production`,
+    );
+    return false;
+  }
   const a = createHash("sha256").update(submitted).digest();
   const b = createHash("sha256").update(expected).digest();
   return timingSafeEqual(a, b);

@@ -67,16 +67,41 @@ export function passwordMatches(submitted: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-const attempts = new Map<string, { count: number; resetAt: number }>();
+const localAttempts = new Map<string, { count: number; resetAt: number }>();
 
-/** Simple in-memory limiter: `limit` attempts per `windowMs` per key. */
-export function rateLimit(key: string, limit: number, windowMs: number): boolean {
+function localLimit(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
-  const entry = attempts.get(key);
+  const entry = localAttempts.get(key);
   if (!entry || entry.resetAt < now) {
-    attempts.set(key, { count: 1, resetAt: now + windowMs });
+    localAttempts.set(key, { count: 1, resetAt: now + windowMs });
     return true;
   }
   entry.count += 1;
   return entry.count <= limit;
+}
+
+/**
+ * Allows `limit` requests per `windowMs` for a key. Counted in the database so
+ * the limit holds across server instances; the key is stored as a keyed hash.
+ * If the database cannot be reached, a per-instance counter is used instead,
+ * so a limit always applies.
+ */
+export async function rateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+  const hashed = createHash("sha256")
+    .update(`${getEnv().SESSION_SECRET}:limit:${key}`)
+    .digest("base64url");
+  try {
+    const db = await getDb();
+    const rows = await db.query<{ count: number }>(
+      `INSERT INTO rate_limits (key, window_start, count) VALUES ($1, now(), 1)
+       ON CONFLICT (key) DO UPDATE SET
+         count = CASE WHEN rate_limits.window_start < now() - ($2 * interval '1 millisecond') THEN 1 ELSE rate_limits.count + 1 END,
+         window_start = CASE WHEN rate_limits.window_start < now() - ($2 * interval '1 millisecond') THEN now() ELSE rate_limits.window_start END
+       RETURNING count`,
+      [hashed, windowMs],
+    );
+    return Number(rows[0]?.count ?? 1) <= limit;
+  } catch {
+    return localLimit(key, limit, windowMs);
+  }
 }

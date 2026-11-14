@@ -7,6 +7,9 @@ import { transcribeSpeech } from "@/lib/voice/elevenlabs";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
+/** The model or speech provider can take a while; allow for it on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: Request): Promise<Response> {
   const form = await request.formData().catch(() => null);
   const audio = form?.get("audio");
@@ -21,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!hasAiConsent(await readConsent(ctx.customerRef))) {
     return Response.json({ error: "consent_required" }, { status: 403 });
   }
-  if (!rateLimit(`stt:${ctx.customerRef}`, 20, 60_000)) {
+  if (!(await rateLimit(`stt:${ctx.customerRef}`, 20, 60_000))) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
   if (!(await getSettings()).features.voice) {

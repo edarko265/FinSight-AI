@@ -7,7 +7,7 @@ import { getDb } from "@/lib/db/client";
  * language, and whether AI was used: never who asked or what they typed.
  */
 export type UsageKind =
-  "question" | "consent" | "goal" | "voice" | "widget" | "advisor" | "unanswered";
+  "question" | "consent" | "goal" | "voice" | "widget" | "advisor" | "unanswered" | "grounding";
 
 export async function recordUsage(
   kind: UsageKind,
@@ -41,6 +41,8 @@ export interface UsageSummary {
   voiceUses: number;
   widgetsPinned: number;
   advisorRequests: number;
+  /** AI answers whose wording was replaced because it stated an amount no calculation produced. */
+  groundingCorrections: number;
   /** Questions the coach had no calculation for, by broad theme. */
   unansweredThemes: { topic: string; count: number }[];
 }
@@ -99,6 +101,7 @@ export async function usageSummary(): Promise<UsageSummary> {
     voiceUses: kinds.get("voice") ?? 0,
     widgetsPinned: kinds.get("widget") ?? 0,
     advisorRequests: kinds.get("advisor") ?? 0,
+    groundingCorrections: kinds.get("grounding") ?? 0,
     unansweredThemes: list(themes, "topic"),
   };
 }

@@ -780,6 +780,8 @@ export const fi: Record<MessageKey, string> = {
   "terms.changes.body":
     "Prototyyppi tarjotaan sellaisenaan, ja se voi muuttua tai olla poissa käytöstä. Jos ehdot muuttuvat, sinua pyydetään hyväksymään ne uudelleen.",
   "settings.termsLink": "Käyttöehdot",
+  "admin.audit.admin.sign_in_failed": "Epäonnistunut ylläpidon kirjautuminen",
+  "admin.grounding": "Korjatut tekoälyvastaukset",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
   "coach.statfin.title": "Sinä ja suomalaiset kotitaloudet",
