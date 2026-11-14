@@ -242,6 +242,23 @@ dialog[open] {
   animation: fs-rise 0.24s ease-out both;
 }
 
+@keyframes fs-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.fs-shimmer {
+  background-color: var(--border);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--foreground) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: fs-shimmer 1.6s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fs-rise,
   .fs-pop,
@@ -253,6 +270,10 @@ dialog[open] {
   .fs-wave,
   .fs-breathe,
   .fs-spin,
+  .fs-shimmer,
+  .animate-pulse,
+  .animate-ping,
+  .animate-spin,
   dialog[open] {
     animation: none;
   }
