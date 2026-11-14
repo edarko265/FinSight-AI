@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -55,7 +55,11 @@ export function CorrectionWizard({
   const label = (prefix: string, value: string): string =>
     hasMessage(`${prefix}.${value}`) ? t(`${prefix}.${value}` as MessageKey) : value;
 
+  // Set once the transaction undo went through, so a retry only repeats the kind undo.
+  const transactionUndone = useRef<string | null>(null);
+
   function close(): void {
+    transactionUndone.current = null;
     setBasket(null);
     setNecessity(null);
     setScope("transaction");
@@ -78,10 +82,15 @@ export function CorrectionWizard({
   // A correction made for the whole kind is undone together with the transaction's own.
   const undo = useAsyncAction(
     async (current: CorrectionTarget) => {
-      await api("/api/corrections", {
-        method: "POST",
-        json: { action: "undo", scope: "transaction", key: current.key },
-      });
+      if (transactionUndone.current !== current.key) {
+        await api("/api/corrections", {
+          method: "POST",
+          json: { action: "undo", scope: "transaction", key: current.key },
+        });
+        transactionUndone.current = current.key;
+        // The list must show this undo even if the kind undo below fails.
+        onDone();
+      }
       await api("/api/corrections", {
         method: "POST",
         json: { action: "undo", scope: "kind", key: current.kindKey },

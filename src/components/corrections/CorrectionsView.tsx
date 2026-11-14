@@ -57,7 +57,13 @@ type BillMode = "amount" | "skip";
 export function CorrectionsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const { data, failed, retry: reload } = useLoad(() => api<Payload>("/api/corrections"));
+  const {
+    data,
+    failed,
+    retry: reload,
+    setData,
+    headingRef,
+  } = useLoad(() => api<Payload>("/api/corrections"));
   const [bill, setBill] = useState<Payload["bills"][number] | null>(null);
   const [mode, setMode] = useState<BillMode>("amount");
   const [euros, setEuros] = useState("");
@@ -81,13 +87,41 @@ export function CorrectionsView(): React.JSX.Element {
     return true;
   }
 
+  // The undone item leaves the list at once, so it cannot be undone twice before the reload lands.
+  function undone(scope: "kind" | "transaction" | "bill", key: string): void {
+    setData((current) =>
+      current
+        ? {
+            transactions: current.transactions.filter(
+              (item) => scope !== "transaction" || item.key !== key,
+            ),
+            kinds: current.kinds.filter((item) => scope !== "kind" || item.key !== key),
+            bills: current.bills.map((item) =>
+              scope === "bill" && item.category === key ? { ...item, adjustment: null } : item,
+            ),
+          }
+        : null,
+    );
+    reload();
+  }
+
   const undoAll = useAsyncAction(
     () => api("/api/corrections", { method: "POST", json: { action: "undo_all" } }),
     { successKey: "toast.restored" },
   );
   async function runUndoAll(): Promise<void> {
     const result = await undoAll.run();
-    if (result.ok) reload();
+    if (!result.ok) return;
+    setData((current) =>
+      current
+        ? {
+            transactions: [],
+            kinds: [],
+            bills: current.bills.map((item) => ({ ...item, adjustment: null })),
+          }
+        : null,
+    );
+    reload();
   }
 
   const amount = Number(euros.replace(",", "."));
@@ -102,7 +136,13 @@ export function CorrectionsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <InfoTip lead={<h1 className="text-xl font-semibold">{t("corrections.title")}</h1>}>
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("corrections.title")}
+            </h1>
+          }
+        >
           {t("corrections.intro")}
         </InfoTip>
       </div>
@@ -136,7 +176,7 @@ export function CorrectionsView(): React.JSX.Element {
             <p className="text-sm">
               {t("corrections.now")}: <span className="font-medium">{pair(item.override)}</span>
             </p>
-            <UndoButton scope="kind" itemKey={item.key} onDone={reload} />
+            <UndoButton scope="kind" itemKey={item.key} onDone={() => undone("kind", item.key)} />
           </article>
         ))}
         {data?.transactions.map((item) => (
@@ -151,7 +191,11 @@ export function CorrectionsView(): React.JSX.Element {
             <p className="text-sm">
               {t("corrections.now")}: <span className="font-medium">{pair(item.override)}</span>
             </p>
-            <UndoButton scope="transaction" itemKey={item.key} onDone={reload} />
+            <UndoButton
+              scope="transaction"
+              itemKey={item.key}
+              onDone={() => undone("transaction", item.key)}
+            />
           </article>
         ))}
         <InfoTip>{t("corrections.how")}</InfoTip>
@@ -204,7 +248,12 @@ export function CorrectionsView(): React.JSX.Element {
                 {t("common.edit")}
               </button>
               {item.adjustment ? (
-                <UndoButton scope="bill" itemKey={item.category} onDone={reload} muted />
+                <UndoButton
+                  scope="bill"
+                  itemKey={item.category}
+                  onDone={() => undone("bill", item.category)}
+                  muted
+                />
               ) : null}
             </div>
           </article>

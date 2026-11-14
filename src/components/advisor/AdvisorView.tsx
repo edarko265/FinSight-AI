@@ -51,6 +51,8 @@ export function AdvisorView(): React.JSX.Element {
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const retried = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +64,11 @@ export function AdvisorView(): React.JSX.Element {
           loaded = true;
           setData(payload);
           setFailed(false);
+          if (retried.current) {
+            retried.current = false;
+            const active = document.activeElement;
+            if (!active || active === document.body) headingRef.current?.focus();
+          }
         })
         .catch((error: unknown) => {
           // Polling stays quiet once there is something to show.
@@ -104,7 +111,7 @@ export function AdvisorView(): React.JSX.Element {
     const result = await create.run(data);
     if (!result.ok) return false;
     setOpen(false);
-    setData({ ...data, request: result.value });
+    setData((current) => current && { ...current, request: result.value });
     return true;
   }
 
@@ -116,7 +123,7 @@ export function AdvisorView(): React.JSX.Element {
     const result = await reply.run(text);
     if (!result.ok) return;
     setDraft("");
-    setData({ ...data, request: result.value });
+    setData((current) => current && { ...current, request: result.value });
   }
 
   const request = data?.request;
@@ -199,12 +206,26 @@ export function AdvisorView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <InfoTip lead={<h1 className="text-xl font-semibold">{t("advisor.title")}</h1>}>
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("advisor.title")}
+            </h1>
+          }
+        >
           {t("advisor.intro")}
         </InfoTip>
       </div>
 
-      {failed && !data ? <LoadError onRetry={() => setTick((value) => value + 1)} /> : null}
+      {failed && !data ? (
+        <LoadError
+          onRetry={() => {
+            retried.current = true;
+            setFailed(false);
+            setTick((value) => value + 1);
+          }}
+        />
+      ) : null}
       {!data && !failed ? (
         <LoadingRegion className="flex flex-col gap-3">
           <Skeleton className="h-12 w-full rounded-2xl" />

@@ -35,6 +35,7 @@ export function InsightsView(): React.JSX.Element {
     failed,
     retry,
     setData: setInsights,
+    headingRef,
   } = useLoad(() => api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`), locale);
   const insights = data?.insights ?? null;
 
@@ -58,7 +59,9 @@ export function InsightsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">{t("insights.title")}</h1>
+        <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+          {t("insights.title")}
+        </h1>
         {unread ? (
           <button
             type="button"
@@ -75,7 +78,7 @@ export function InsightsView(): React.JSX.Element {
         ) : null}
       </div>
 
-      {failed && !insights ? <LoadError onRetry={retry} /> : null}
+      {failed ? <LoadError onRetry={retry} /> : null}
       {!insights && !failed ? (
         <LoadingRegion>
           <SkeletonList rows={4} />

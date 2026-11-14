@@ -77,7 +77,7 @@ const STEPS = [
  */
 export function MortgageView(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const { data, failed, retry } = useLoad(() => api<Payload>("/api/mortgage"));
+  const { data, failed, retry, headingRef } = useLoad(() => api<Payload>("/api/mortgage"));
 
   const money = (cents: number): string => formatMoney(cents, locale);
   const text = (prefix: string, value: string): string =>
@@ -110,7 +110,13 @@ export function MortgageView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <InfoTip lead={<h1 className="text-xl font-semibold">{t("mortgage.title")}</h1>}>
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("mortgage.title")}
+            </h1>
+          }
+        >
           {t("mortgage.intro")}
         </InfoTip>
       </div>

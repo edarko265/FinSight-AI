@@ -14,6 +14,8 @@ import { api } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
 import { DEMO_PERSONAS } from "@/lib/demo/personas";
 
+const NAVIGATION_TIMEOUT_MS = 10_000;
+
 /** The sign-in page: a welcome with one button, which opens a two-step sign-in. */
 export function LoginForm({ demoPassword }: { demoPassword: string | null }): React.JSX.Element {
   const { t } = usePreferences();
@@ -46,7 +48,14 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
     setNavigating(true);
     router.replace("/dashboard");
     // Stay pending until the page changes, so the button is not re-enabled mid-navigation.
-    return new Promise<boolean>(() => undefined);
+    // If it never does, give the button back with an error instead of leaving it dead.
+    return new Promise<boolean>((resolve) => {
+      window.setTimeout(() => {
+        setNavigating(false);
+        setError("login.unavailable");
+        resolve(false);
+      }, NAVIGATION_TIMEOUT_MS);
+    });
   }
 
   return (

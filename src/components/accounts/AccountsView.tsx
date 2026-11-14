@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useLoad } from "@/components/shared/useLoad";
 import {
   Suggestions,
   Wizard,
@@ -49,9 +50,7 @@ export function AccountsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const { refresh } = useOverview();
-  const [data, setData] = useState<Payload | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [tick, setTick] = useState(0);
+  const { data, failed, retry, setData, headingRef } = useLoad(() => api<Payload>("/api/accounts"));
   const [open, setOpen] = useState(false);
   const [bank, setBank] = useState<Bank>("aurora");
   const [kind, setKind] = useState<Kind>("everyday");
@@ -60,27 +59,28 @@ export function AccountsView(): React.JSX.Element {
   const [renaming, setRenaming] = useState<Account | null>(null);
   const [error, setError] = useState<MessageKey | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    api<Payload>("/api/accounts")
-      .then((payload) => {
-        if (cancelled) return;
-        setData(payload);
-        setFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tick]);
-
   // The balance and estimates elsewhere in the app change with what is linked.
   const reload = useCallback(() => {
-    setTick((value) => value + 1);
+    retry();
     refresh();
-  }, [refresh]);
+  }, [retry, refresh]);
+  // A row shows its change at once, so it cannot be acted on again before the reload lands.
+  const change = useCallback(
+    (id: string, update: Partial<Account> | null): void => {
+      setData((current) =>
+        current
+          ? {
+              ...current,
+              accounts: current.accounts.flatMap((account) =>
+                account.id !== id ? [account] : update ? [{ ...account, ...update }] : [],
+              ),
+            }
+          : null,
+      );
+      reload();
+    },
+    [setData, reload],
+  );
   const money = (cents: number): string => formatMoney(cents, locale);
 
   async function send(payload: Record<string, unknown>, message: MessageKey): Promise<boolean> {
@@ -116,7 +116,13 @@ export function AccountsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <InfoTip lead={<h1 className="text-xl font-semibold">{t("accounts.title")}</h1>}>
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("accounts.title")}
+            </h1>
+          }
+        >
           {t("accounts.intro")}
         </InfoTip>
       </div>
@@ -146,7 +152,7 @@ export function AccountsView(): React.JSX.Element {
                   setNickname(account.nickname ?? "");
                   setRenaming(account);
                 }}
-                onChanged={reload}
+                onChanged={change}
               />
             ))}
           </ul>
@@ -352,7 +358,7 @@ function AccountRow({
 }: {
   account: Account;
   onRename: () => void;
-  onChanged: () => void;
+  onChanged: (id: string, update: Partial<Account> | null) => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
   const include = useAsyncAction(
@@ -372,13 +378,13 @@ function AccountRow({
   async function toggle(included: boolean): Promise<void> {
     if (busy) return;
     const result = await include.run(included);
-    if (result.ok) onChanged();
+    if (result.ok) onChanged(account.id, { included });
   }
 
   async function moveToBin(): Promise<void> {
     if (busy) return;
     const result = await unlink.run();
-    if (result.ok) onChanged();
+    if (result.ok) onChanged(account.id, null);
   }
 
   return (

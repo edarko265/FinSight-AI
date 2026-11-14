@@ -140,6 +140,8 @@ export function PlansView(): React.JSX.Element {
     data,
     failed,
     retry: reload,
+    setData,
+    headingRef,
   } = useLoad(() => api<Payload>(`/api/plans?locale=${locale}`), locale);
 
   // Make or edit
@@ -195,6 +197,20 @@ export function PlansView(): React.JSX.Element {
     };
   }, [codeOpen, cleanCode]);
 
+  // The plan changes at once, so its buttons cannot be pressed again before the reload lands.
+  function changePlan(id: string, update: Partial<Plan> | null): void {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            plans: current.plans.flatMap((plan) =>
+              plan.id !== id ? [plan] : update ? [{ ...plan, ...update }] : [],
+            ),
+          }
+        : null,
+    );
+    reload();
+  }
   const money = (cents: number): string => formatMoney(cents, locale);
 
   function openMake(): void {
@@ -323,7 +339,13 @@ export function PlansView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <InfoTip lead={<h1 className="text-xl font-semibold">{t("plans.title")}</h1>}>
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("plans.title")}
+            </h1>
+          }
+        >
           {t("plans.intro")}
         </InfoTip>
       </div>
@@ -423,18 +445,20 @@ export function PlansView(): React.JSX.Element {
                     {plan.shareCode ? (
                       <PlanActionButton
                         payload={{ action: "unshare", id: plan.id }}
+                        onChanged={() =>
+                          changePlan(plan.id, { shareCode: undefined, shareListed: undefined })
+                        }
                         successKey="toast.planUnshared"
                         pendingKey="common.saving"
                         labelKey="plans.stopSharing"
-                        onDone={reload}
                       />
                     ) : null}
                     <PlanActionButton
                       payload={{ action: "delete", id: plan.id }}
+                      onChanged={() => changePlan(plan.id, null)}
                       successKey="toast.movedToBin"
                       pendingKey="common.removing"
                       labelKey="common.moveToBin"
-                      onDone={reload}
                     />
                   </div>
                 </article>
@@ -799,13 +823,13 @@ function PlanActionButton({
   successKey,
   pendingKey,
   labelKey,
-  onDone,
+  onChanged,
 }: {
   payload: Record<string, unknown>;
   successKey: MessageKey;
   pendingKey: MessageKey;
   labelKey: MessageKey;
-  onDone: () => void;
+  onChanged: () => void;
 }): React.JSX.Element {
   const { t } = usePreferences();
   const action = useAsyncAction(() => api("/api/plans", { method: "POST", json: payload }), {
@@ -814,7 +838,7 @@ function PlanActionButton({
 
   async function onClick(): Promise<void> {
     const result = await action.run();
-    if (result.ok) onDone();
+    if (result.ok) onChanged();
   }
 
   return (
