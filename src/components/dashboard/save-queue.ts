@@ -40,6 +40,7 @@ export function createSaveQueue<S, R>(options: SaveQueueOptions<S, R>): SaveQueu
   let inFlight = false;
   let dirty = false;
   let counter = 0;
+  let unreported: { response: R } | null = null;
   let current: Waiter[] = [];
   let later: Waiter[] = [];
   let idlers: Array<() => void> = [];
@@ -67,26 +68,42 @@ export function createSaveQueue<S, R>(options: SaveQueueOptions<S, R>): SaveQueu
         confirmed = snapshot;
         for (const resolve of batch) resolve(true);
         if (dirty) {
+          // Kept in case the follow-up fails: the confirmed state then needs this response.
+          unreported = { response };
           current = later;
           later = [];
           start();
           return;
         }
+        unreported = null;
         inFlight = false;
-        emit();
-        options.onSaved?.(response);
-        settleIdle();
+        try {
+          emit();
+          options.onSaved?.(response);
+        } catch (callbackError) {
+          console.error("save queue callback failed", callbackError);
+        } finally {
+          settleIdle();
+        }
       },
       (error: unknown) => {
         const all = [...batch, ...later];
+        const pendingResponse = unreported;
         later = [];
         dirty = false;
         inFlight = false;
+        unreported = null;
         desired = confirmed;
-        emit();
-        options.onFailed?.(error);
-        for (const resolve of all) resolve(false);
-        settleIdle();
+        try {
+          emit();
+          if (pendingResponse) options.onSaved?.(pendingResponse.response);
+          options.onFailed?.(error);
+        } catch (callbackError) {
+          console.error("save queue callback failed", callbackError);
+        } finally {
+          for (const resolve of all) resolve(false);
+          settleIdle();
+        }
       },
     );
   }

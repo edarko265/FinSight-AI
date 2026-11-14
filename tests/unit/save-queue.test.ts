@@ -95,7 +95,7 @@ describe("createSaveQueue", () => {
   });
 
   it("keeps the first batch confirmed when only the follow-up save fails", async () => {
-    const { queue, calls } = setup();
+    const { queue, calls, onSaved, onFailed } = setup();
     const first = queue.change((s) => [...s, 1]);
     const second = queue.change((s) => [...s, 2]);
     calls[0]?.d.resolve("a");
@@ -104,6 +104,60 @@ describe("createSaveQueue", () => {
     calls[1]?.d.reject(new Error("boom"));
     expect(await second).toBe(false);
     expect(queue.desired()).toEqual([1]);
+    // The confirmed state needs its own response, handed over before the failure is reported.
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(onSaved).toHaveBeenCalledWith("a");
+    expect(onSaved.mock.invocationCallOrder[0]).toBeLessThan(
+      onFailed.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("resolves idle() after a failure", async () => {
+    const { queue, calls } = setup();
+    const done = queue.change((s) => [...s, 1]);
+    const idle = vi.fn();
+    void queue.idle().then(idle);
+    calls[0]?.d.reject(new Error("boom"));
+    expect(await done).toBe(false);
+    await flush();
+    expect(idle).toHaveBeenCalled();
+  });
+
+  it("does not lose a change made after a refused reset", async () => {
+    const { queue, calls } = setup();
+    const first = queue.change((s) => [...s, 1]);
+    expect(queue.reset([42])).toBe(false);
+    const second = queue.change((s) => [...s, 2]);
+    calls[0]?.d.resolve("a");
+    await first;
+    await flush();
+    expect(calls[1]?.state).toEqual([1, 2]);
+    calls[1]?.d.resolve("b");
+    expect(await second).toBe(true);
+  });
+
+  it("still resolves waiters and clears busy when a callback throws", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const calls: Array<ReturnType<typeof deferred<string>>> = [];
+    const queue = createSaveQueue<number[], string>({
+      save: () => {
+        const d = deferred<string>();
+        calls.push(d);
+        return d.promise;
+      },
+      onSaved: () => {
+        throw new Error("callback");
+      },
+    });
+    queue.reset([]);
+    const done = queue.change((s) => [...s, 1]);
+    calls[0]?.resolve("a");
+    expect(await done).toBe(true);
+    await flush();
+    expect(queue.busy()).toBe(false);
+    await queue.idle();
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
   });
 
   it("refuses to adopt server state while busy and idle() waits for the end", async () => {

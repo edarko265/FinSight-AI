@@ -87,8 +87,7 @@ export function useDashboardSave(locale: string): DashboardSave {
 
   const adopt = useCallback(
     (data: DashboardPayload): void => {
-      setPayload(data);
-      queue.reset({ activeId: data.activeId, views: data.views });
+      if (queue.reset({ activeId: data.activeId, views: data.views })) setPayload(data);
     },
     [queue],
   );
