@@ -3,6 +3,9 @@
 A three-minute walkthrough for judges, and a longer one for showing colleagues. The figures and the typed questions have been run against the real dataset. The spoken
 Finnish question in the voice call has not been tried with a real voice yet: rehearse it.
 
+A 50-second film of the same story is at [`media/finsight-demo.mp4`](media/finsight-demo.mp4),
+useful as a backup if the network fails on stage.
+
 ## Before you start
 
 - Sign-in page open at `/login` on a phone, or a browser window at phone width.

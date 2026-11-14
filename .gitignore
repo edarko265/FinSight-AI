@@ -67,3 +67,8 @@ tmp/
 # ---- Local-only working documents ----
 /docs/local/
 ~$*
+
+# Demo video: full-quality renders and HyperFrames working files stay local
+/video/renders/
+/video/.hyperframes/
+/video/node_modules/
