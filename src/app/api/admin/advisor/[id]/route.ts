@@ -1,0 +1,44 @@
+import { z } from "zod";
+
+import { currentStaff, refuse } from "@/lib/admin/auth";
+import { audit } from "@/lib/admin/settings";
+import { advisorReply, advisorThread, setRequestState } from "@/lib/advisor/handoff";
+
+export async function GET(
+  _request: Request,
+  context: RouteContext<"/api/admin/advisor/[id]">,
+): Promise<Response> {
+  const refused = await refuse("staff");
+  if (refused) return refused;
+  const { id } = await context.params;
+  const thread = await advisorThread(id);
+  return thread
+    ? Response.json({ thread })
+    : Response.json({ error: "not_found" }, { status: 404 });
+}
+
+const body = z.union([
+  z.object({ text: z.string().trim().min(1).max(2000) }),
+  z.object({ action: z.enum(["close", "reopen", "trash", "restore", "purge"]) }),
+]);
+
+export async function POST(
+  request: Request,
+  context: RouteContext<"/api/admin/advisor/[id]">,
+): Promise<Response> {
+  const refused = await refuse("staff");
+  if (refused) return refused;
+  const parsed = body.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
+  const { id } = await context.params;
+  if ("action" in parsed.data) {
+    await setRequestState(id, parsed.data.action);
+    await audit(`adviser_request.${parsed.data.action}`);
+  } else if (
+    !(await advisorReply(id, parsed.data.text, (await currentStaff())?.name || undefined))
+  ) {
+    return Response.json({ error: "not_found" }, { status: 404 });
+  }
+  if ("text" in parsed.data) await audit("adviser_request.reply");
+  return Response.json({ thread: await advisorThread(id) });
+}
