@@ -48,22 +48,24 @@ The figures above are for the demo date, 15 September 2026.
 
 Work through these after the three-minute flow.
 
+1. **My month in 30 seconds.** From the dashboard. Tap through, or switch on the speaker and
+   let it read itself.
 1. **First sign-in.** Sign in as a customer nobody has used, for example `CUST00123`. Show
    the terms, the privacy step and the AI choice. Choose "Not now" and show that the coach
    still answers.
-2. **Can I afford this?** As `CUST02226`, tap the button on the balance card, enter 300.
+1. **Can I afford this?** As `CUST02226`, tap the button on the balance card, enter 300.
    The answer says it would leave them short, and by how much.
-3. **Views.** Dashboard → _Three baskets_ → change the period to 6 months → **Save as new
+1. **Views.** Dashboard → _Three baskets_ → change the period to 6 months → **Save as new
    view**. Delete a widget, then restore it from Settings → Recycle bin.
-4. **Peers.** Ask "How do my restaurant costs compare with people my age?" Point at the
+1. **Peers.** Ask "How do my restaurant costs compare with people my age?" Point at the
    Statistics Finland note under the chart.
-5. **Languages and accessibility.** Settings → Svenska, Dark, Extra large.
-6. **Talk to a person.** Coach → **Talk to a person** → request investment advice. In the
+1. **Languages and accessibility.** Settings → Svenska, Dark, Extra large.
+1. **Talk to a person.** Coach → **Talk to a person** → request investment advice. In the
    admin tab, open the request under _Human help requests_ and reply. The reply appears on
    the phone.
-7. **Admin.** Change the adviser fee, publish an announcement and watch it arrive under
+1. **Admin.** Change the adviser fee, publish an announcement and watch it arrive under
    Insights, then read the audit log.
-8. **The trust story.** Run `pnpm db:check`, then show a row of `customer_ledgers` in the
+1. **The trust story.** Run `pnpm db:check`, then show a row of `customer_ledgers` in the
    database console: nothing readable.
 
 ## Questions you may get

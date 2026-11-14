@@ -30,17 +30,18 @@ terms change, the sheet appears again.
 
 ## 3. Dashboard
 
-| Part                                                | What it does                                                                                             |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Banner**                                          | The most important unread insight, for example a possible shortfall                                      |
-| **Balance card**                                    | Recorded balance, and the amount that is safe to spend over the next 7 days (or the estimated shortfall) |
-| **Can I afford this?**                              | Enter a price and a time span; the coach answers with what would be left                                 |
-| **Views**                                           | Named sets of widgets. Three to start with: _Overview_, _Three baskets_, _Everyday spending_             |
-| **Period**                                          | Last month, this month, 3, 6 or 12 months. Every widget in the view follows it                           |
-| **Widgets**                                         | Charts with a plain-language summary and a note on where the numbers come from                           |
-| **Chart type**                                      | Each widget has a Bars / Line / Pie switch; the choice is saved with the view                            |
-| **New widget**                                      | Opens the coach; describe what you want to see and pin the result                                        |
-| **Save as new view / Rename / Move to recycle bin** | Manage views                                                                                             |
+| Part                                                | What it does                                                                                                                                                                                                      |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Banner**                                          | The most important unread insight, for example a possible shortfall                                                                                                                                               |
+| **Balance card**                                    | Recorded balance, and the amount that is safe to spend over the next 7 days (or the estimated shortfall)                                                                                                          |
+| **Can I afford this?**                              | Enter a price and a time span; the coach answers with what would be left                                                                                                                                          |
+| **My month in 30 seconds**                          | A full-screen story of last month: where income went, the three baskets, spending by category, the trend, what could be freed up, and what is safe to spend. Tap through it, hold to pause, or have it read aloud |
+| **Views**                                           | Named sets of widgets. Three to start with: _Overview_, _Three baskets_, _Everyday spending_                                                                                                                      |
+| **Period**                                          | Last month, this month, 3, 6 or 12 months. Every widget in the view follows it                                                                                                                                    |
+| **Widgets**                                         | Charts with a plain-language summary and a note on where the numbers come from                                                                                                                                    |
+| **Chart type**                                      | Each widget has a Bars / Line / Pie switch; the choice is saved with the view                                                                                                                                     |
+| **New widget**                                      | Opens the coach; describe what you want to see and pin the result                                                                                                                                                 |
+| **Save as new view / Rename / Move to recycle bin** | Manage views                                                                                                                                                                                                      |
 
 The customer decides what is on the dashboard and how it is drawn. Nothing is fixed by the
 bank.

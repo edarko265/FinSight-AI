@@ -53,25 +53,26 @@ suggestions and listed in the answer.
 
 Added during the build, at the team's request.
 
-| Feature                                                                   | Status                                                                        |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| English, Finnish and Swedish throughout                                   | ✅ Finnish and Swedish need a native review                                   |
-| Light, dark and system themes; four text sizes                            | ✅                                                                            |
-| Realtime voice call, spoken questions, spoken answers                     | ✅ Connects and greets; not yet tried with a real voice in Finnish or Swedish |
-| Customer-chosen chart types; saved dashboard views; period filter         | ✅                                                                            |
-| Money-flow diagram                                                        | ✅                                                                            |
-| Goals from conversation and from a form; funding plan                     | ✅                                                                            |
-| Recommendations with a monthly value                                      | ✅                                                                            |
-| Rewards and example coupons                                               | ✅                                                                            |
-| Peer benchmarks and Statistics Finland context                            | ✅                                                                            |
-| Insights with badges and a banner                                         | ✅                                                                            |
-| "Can I afford this?"                                                      | ✅                                                                            |
-| Hand-over to a human adviser with a booked call                           | ✅                                                                            |
-| Admin: usage, AI usage, controls, announcements, adviser queue, audit log | ✅                                                                            |
-| Terms and privacy at first sign-in; AI consent; export and erasure        | ✅                                                                            |
-| Recycle bin, restore and permanent delete for everything creatable        | ✅                                                                            |
-| Step-by-step forms with hints and suggestions; confirmations              | ✅                                                                            |
-| App icon and home-screen install                                          | ✅ Not yet installed on a real phone                                          |
+| Feature                                                                   | Status                                                                                                |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| English, Finnish and Swedish throughout                                   | ✅ Finnish and Swedish need a native review                                                           |
+| Light, dark and system themes; four text sizes                            | ✅                                                                                                    |
+| Realtime voice call, spoken questions, spoken answers                     | ✅ Connects and greets in English and Finnish; a spoken question has not been tried with a real voice |
+| Customer-chosen chart types; saved dashboard views; period filter         | ✅                                                                                                    |
+| Money-flow diagram                                                        | ✅                                                                                                    |
+| Goals from conversation and from a form; funding plan                     | ✅                                                                                                    |
+| Recommendations with a monthly value                                      | ✅                                                                                                    |
+| Rewards and example coupons                                               | ✅                                                                                                    |
+| Peer benchmarks and Statistics Finland context                            | ✅                                                                                                    |
+| Insights with badges and a banner                                         | ✅                                                                                                    |
+| "Can I afford this?"                                                      | ✅                                                                                                    |
+| "My month in 30 seconds" story, with narration                            | ✅                                                                                                    |
+| Hand-over to a human adviser with a booked call                           | ✅                                                                                                    |
+| Admin: usage, AI usage, controls, announcements, adviser queue, audit log | ✅                                                                                                    |
+| Terms and privacy at first sign-in; AI consent; export and erasure        | ✅                                                                                                    |
+| Recycle bin, restore and permanent delete for everything creatable        | ✅                                                                                                    |
+| Step-by-step forms with hints and suggestions; confirmations              | ✅                                                                                                    |
+| App icon and home-screen install                                          | ✅ Not yet installed on a real phone                                                                  |
 
 ## What is left
 

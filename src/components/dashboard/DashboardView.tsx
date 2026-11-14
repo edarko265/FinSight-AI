@@ -143,6 +143,24 @@ export function DashboardView(): React.JSX.Element {
         ) : null}
       </section>
 
+      <Link
+        href="/story"
+        className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-semibold"
+      >
+        <span className="flex items-center gap-3">
+          <span
+            className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+            aria-hidden="true"
+          >
+            ▶
+          </span>
+          {t("story.cta")}
+        </span>
+        <span className="text-accent" aria-hidden="true">
+          →
+        </span>
+      </Link>
+
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">{t("dashboard.title")}</h1>
         <button

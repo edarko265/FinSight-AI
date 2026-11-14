@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows
   call screen and live captions.
 - **Dashboard.** Widgets pinned from conversation, saved as named views with a period
   filter, drawn as bars, line or pie at the customer's choice.
+- **Month story.** "My month in 30 seconds": a tap-through, narrated recap of last month.
 - **Goals and rewards.** Funding plans, recommendations with a monthly value, points, levels
   and example coupons.
 - **Benchmarks.** Age-group percentiles from the dataset and Statistics Finland 2022.
