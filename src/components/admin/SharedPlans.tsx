@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { adminCall } from "@/components/admin/admin-api";
+import { adminCall, requireResult } from "@/components/admin/admin-api";
+import { LoadState } from "@/components/admin/LoadState";
 import { Bars, Panel, Stat } from "@/components/admin/parts";
+import { RowButton } from "@/components/admin/RowButton";
+import { useAdminLoad } from "@/components/admin/use-admin-load";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 const SLICES = ["bills", "essentials", "everyday", "saving", "investing"] as const;
@@ -27,31 +29,8 @@ type Result = { plans: SharedPlan[] };
  */
 export function SharedPlans(): React.JSX.Element {
   const { t } = usePreferences();
-  const toast = useToast();
-  const [plans, setPlans] = useState<SharedPlan[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void adminCall<Result>("/api/admin/plans").then((result) => {
-      if (cancelled) return;
-      if (result) setPlans(result.plans);
-      else setFailed(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function remove(code: string): Promise<void> {
-    const result = await adminCall<Result>("/api/admin/plans", "DELETE", { code });
-    if (!result) {
-      toast.fail();
-      return;
-    }
-    setPlans(result.plans);
-    toast.notify("toast.updated");
-  }
+  const { data, failed, reload, setData } = useAdminLoad<Result>("/api/admin/plans");
+  const plans = data?.plans ?? null;
 
   const all = plans ?? [];
   const average = (key: (typeof SLICES)[number]): number =>
@@ -61,76 +40,99 @@ export function SharedPlans(): React.JSX.Element {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("admin.plans.shared")} value={String(all.length)} />
-        <Stat
-          label={t("admin.plans.listed")}
-          value={String(all.filter((plan) => plan.listed).length)}
-        />
-        <Stat
-          label={t("admin.plans.copies")}
-          value={String(all.reduce((sum, plan) => sum + plan.copies, 0))}
-        />
-      </div>
-      <div className="grid gap-5 md:grid-cols-2">
-        <Panel title={t("admin.plans.average")}>
-          <Bars
-            share={false}
-            rows={SLICES.map((key) => ({
-              label: t(`plan.slice.${key}` as MessageKey),
-              count: average(key),
-              note: `${average(key)} %`,
-            }))}
-          />
-          <p className="text-xs text-muted">{t("admin.plans.average.note")}</p>
-        </Panel>
-        <Panel title={t("admin.plans.top")}>
-          <Bars
-            share={false}
-            rows={[...all]
-              .sort((a, b) => b.copies - a.copies)
-              .slice(0, 6)
-              .map((plan) => ({ label: `${plan.name} (${plan.code})`, count: plan.copies }))}
-          />
-        </Panel>
-      </div>
+      {plans ? (
+        <>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Stat label={t("admin.plans.shared")} value={String(all.length)} />
+            <Stat
+              label={t("admin.plans.listed")}
+              value={String(all.filter((plan) => plan.listed).length)}
+            />
+            <Stat
+              label={t("admin.plans.copies")}
+              value={String(all.reduce((sum, plan) => sum + plan.copies, 0))}
+            />
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            <Panel title={t("admin.plans.average")}>
+              <Bars
+                share={false}
+                rows={SLICES.map((key) => ({
+                  label: t(`plan.slice.${key}` as MessageKey),
+                  count: average(key),
+                  note: `${average(key)} %`,
+                }))}
+              />
+              <p className="text-xs text-muted">{t("admin.plans.average.note")}</p>
+            </Panel>
+            <Panel title={t("admin.plans.top")}>
+              <Bars
+                share={false}
+                rows={[...all]
+                  .sort((a, b) => b.copies - a.copies)
+                  .slice(0, 6)
+                  .map((plan) => ({ label: `${plan.name} (${plan.code})`, count: plan.copies }))}
+              />
+            </Panel>
+          </div>
+        </>
+      ) : null}
       <Panel title={t("admin.nav.plans")}>
-        {failed ? <p className="text-sm text-warning">{t("admin.loadFailed")}</p> : null}
+        <LoadState show={!plans} failed={failed} onRetry={reload} />
         {plans && plans.length === 0 ? (
           <p className="text-sm text-muted">{t("admin.plans.empty")}</p>
         ) : null}
         <ul className="flex flex-col gap-2">
           {all.map((plan) => (
-            <li
-              key={plan.code}
-              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm"
-            >
-              <span className="min-w-0">
-                <span className="font-semibold">{plan.name}</span>
-                <span className="text-muted">
-                  {" · "}
-                  {t(plan.listed ? "admin.plans.isListed" : "admin.plans.codeOnly")}
-                  {" · "}
-                  {t("plans.copies", { count: plan.copies })}
-                </span>
-                <span className="block text-muted tabular-nums">
-                  {SLICES.map(
-                    (key) => `${t(`plan.slice.${key}` as MessageKey)} ${plan.split[key]} %`,
-                  ).join(" · ")}
-                </span>
-              </span>
-              <button
-                type="button"
-                className="font-semibold text-warning"
-                onClick={() => void remove(plan.code)}
-              >
-                {t("admin.plans.remove")}
-              </button>
-            </li>
+            <PlanRow key={plan.code} plan={plan} onChange={(next) => setData({ plans: next })} />
           ))}
         </ul>
         <p className="text-xs text-muted">{t("admin.plans.note")}</p>
       </Panel>
     </>
+  );
+}
+
+function PlanRow({
+  plan,
+  onChange,
+}: {
+  plan: SharedPlan;
+  onChange: (plans: SharedPlan[]) => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const toast = useToast();
+  const { run, pending } = useAsyncAction(async (): Promise<void> => {
+    const result = requireResult(
+      await adminCall<Result>("/api/admin/plans", "DELETE", { code: plan.code }),
+    );
+    onChange(result.plans);
+    toast.notify("toast.updated");
+  });
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm">
+      <span className="min-w-0">
+        <span className="font-semibold">{plan.name}</span>
+        <span className="text-muted">
+          {" · "}
+          {t(plan.listed ? "admin.plans.isListed" : "admin.plans.codeOnly")}
+          {" · "}
+          {t("plans.copies", { count: plan.copies })}
+        </span>
+        <span className="block text-muted tabular-nums">
+          {SLICES.map((key) => `${t(`plan.slice.${key}` as MessageKey)} ${plan.split[key]} %`).join(
+            " · ",
+          )}
+        </span>
+      </span>
+      <RowButton
+        pending={pending}
+        pendingLabel={t("common.removing")}
+        className="min-h-11 font-semibold text-warning"
+        onClick={() => void run()}
+      >
+        {t("admin.plans.remove")}
+      </RowButton>
+    </li>
   );
 }

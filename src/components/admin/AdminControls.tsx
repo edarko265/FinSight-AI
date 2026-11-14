@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 
+import { assertSignedIn } from "@/components/admin/admin-api";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -64,20 +66,28 @@ export function AdminControls({
   const [rules, setRules] = useState(settings.rewards);
   const [provider, setProvider] = useState<ProviderChoice>(settings.aiProvider);
 
-  async function save(next: AppSettings): Promise<void> {
-    const response = await fetch("/api/admin/settings", {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    if (!response.ok) {
-      toast.fail();
-      return;
-    }
-    onSaved(((await response.json()) as { settings: AppSettings }).settings);
-    toast.notify("toast.updated");
-    setEditing(null);
+  const saver = useAsyncAction(
+    async (next: AppSettings): Promise<void> => {
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      assertSignedIn(response);
+      if (!response.ok) throw new Error("settings failed");
+      onSaved(((await response.json()) as { settings: AppSettings }).settings);
+      setEditing(null);
+    },
+    { successKey: "toast.updated", errorKey: "common.saveFailed" },
+  );
+
+  /** True when saved; false keeps a wizard open on its last step. */
+  async function save(next: AppSettings): Promise<boolean> {
+    const result = await saver.run(next);
+    // A run dropped because a save is still pending says nothing by itself, so say so.
+    if (!result.ok && result.dropped) toast.fail("common.saveFailed");
+    return result.ok;
   }
 
   const feeEuros = Number(fee.replace(",", "."));
@@ -125,13 +135,15 @@ export function AdminControls({
               <input
                 type="checkbox"
                 checked={settings.features[flag]}
+                aria-disabled={saver.pending}
                 onChange={(event) =>
+                  !saver.pending &&
                   void save({
                     ...settings,
                     features: { ...settings.features, [flag]: event.target.checked },
                   })
                 }
-                className="size-5 shrink-0 accent-(--accent)"
+                className="size-5 shrink-0 accent-(--accent) aria-disabled:opacity-60"
               />
             </label>
           </li>
