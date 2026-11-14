@@ -16,7 +16,7 @@ export const TAB_SHEET_POSITION =
   "fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-50 m-0 mx-auto w-full max-w-md rounded-t-3xl md:inset-y-0 md:right-0 md:left-20 md:my-auto md:max-w-lg md:rounded-3xl lg:left-60";
 /** Largest height that still fits between the status bar and the tab bar. */
 export const TAB_SHEET_MAX_H =
-  "max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-var(--bottom-nav-h)-0.5rem)]";
+  "max-h-[calc(100dvh-var(--safe-top)-env(safe-area-inset-bottom)-var(--bottom-nav-h)-0.5rem)]";
 
 /** Why a sheet is being closed; callers use it to tell a decision from a mere dismissal. */
 export type DismissReason = "navigation" | "escape" | "backdrop" | "close";

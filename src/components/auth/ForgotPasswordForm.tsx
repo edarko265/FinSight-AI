@@ -19,7 +19,7 @@ export function ForgotPasswordForm(): React.JSX.Element {
   const [sent, setSent] = useState(false);
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-8">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 pt-[calc(var(--safe-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)]">
       <header className="flex flex-col items-center gap-3 pt-8 text-center">
         <Logo className="size-14" />
         <div>

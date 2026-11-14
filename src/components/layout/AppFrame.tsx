@@ -19,7 +19,11 @@ export function AppFrame({ children }: { children: React.ReactNode }): React.JSX
     const fit = (): void => {
       // While the customer has zoomed in, the visible area is a detail of the page, not its size.
       if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
-      const height = viewport?.height ?? window.innerHeight;
+      const visible = viewport?.height ?? window.innerHeight;
+      // From the home screen some iPhones report the page shorter than the screen it fills
+      // (see SafeArea). Unless a keyboard is taking the space, the whole screen is ours.
+      const screen = Number.parseFloat(root.style.getPropertyValue("--screen-height")) || 0;
+      const height = screen > visible && screen - visible < 120 ? screen : visible;
       const top = viewport?.offsetTop ?? 0;
       root.style.setProperty("--app-height", `${Math.round(height)}px`);
       root.style.setProperty("--app-top", `${Math.round(top)}px`);
