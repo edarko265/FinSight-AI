@@ -5,6 +5,8 @@ import {
   daysBetween,
   inPeriod,
   lastCompletedMonth,
+  monthToDate,
+  parts,
 } from "@/lib/analytics/periods";
 import { detectRegularBills } from "@/lib/analytics/recurrence";
 import { basketBreakdown, recordedBalance, summariseSpending } from "@/lib/analytics/spending";
@@ -176,6 +178,53 @@ export function buildInsights(ctx: CoachContext): Insight[] {
       }),
       ask: t("chat.suggest.safe"),
     });
+  }
+
+  // A habit going the wrong way: this month so far against the same number of days in the
+  // three months before. Looks only at spending the customer chooses.
+  const today = parts(ctx.asOf).day;
+  if (today >= 7) {
+    const soFar = monthToDate(ctx.asOf);
+    const pace = new Map<string, { now: number; before: number }>();
+    for (const tx of txs) {
+      if (!isConsumption(tx) || classify(tx).necessity !== "discretionary") continue;
+      const entry = pace.get(tx.category) ?? { now: 0, before: 0 };
+      if (inPeriod(tx.date, soFar)) entry.now -= tx.amountCents;
+      else if (
+        previous.concat(last).some((month) => inPeriod(tx.date, month)) &&
+        parts(tx.date).day <= today
+      ) {
+        entry.before -= tx.amountCents;
+      }
+      pace.set(tx.category, entry);
+    }
+    const months = previous.length + 1;
+    const ahead = [...pace.entries()]
+      .map(([category, value]) => ({
+        category,
+        now: value.now,
+        usual: Math.round(value.before / months),
+      }))
+      .filter(
+        (entry) =>
+          entry.usual > 0 &&
+          entry.now - entry.usual >= SPIKE_MIN_CENTS &&
+          entry.now >= entry.usual * 1.25,
+      )
+      .sort((a, b) => b.now / b.usual - a.now / a.usual)[0];
+    if (ahead) {
+      insights.push({
+        id: `pace-${ahead.category}-${ctx.asOf.slice(0, 7)}`,
+        severity: "warning",
+        title: t("insight.pace.title", { category: label(ahead.category) }),
+        body: t("insight.pace.body", {
+          amount: money(ahead.now),
+          usual: money(ahead.usual),
+          day: today,
+        }),
+        ask: t("chat.suggest.whatif"),
+      });
+    }
   }
 
   // Free-choice category well above people of the same age.

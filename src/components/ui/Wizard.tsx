@@ -20,7 +20,7 @@ interface WizardProps {
   steps: WizardStep[];
   finishLabel: string;
   onClose: () => void;
-  onFinish: () => Promise<void> | void;
+  onFinish: () => Promise<void | boolean> | void | boolean;
   /** Shown above the buttons, for example when saving failed. */
   error?: string | null;
   /** False for a step the user must complete, such as accepting terms: no close button, no Escape. */
@@ -73,8 +73,8 @@ export function Wizard({
     }
     setBusy(true);
     try {
-      await onFinish();
-      setIndex(0);
+      // Returning false means the save was refused: stay on this step so nothing typed is lost.
+      if ((await onFinish()) !== false) setIndex(0);
     } finally {
       setBusy(false);
     }

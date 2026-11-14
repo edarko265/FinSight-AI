@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { OverviewSection } from "@/components/admin/sections";
 
-export const metadata: Metadata = { title: "Admin · FinSight-AI" };
+export const metadata: Metadata = { title: "Admin · Overview · FinSight-AI" };
 
-export default function AdminPage(): React.JSX.Element {
-  return <AdminDashboard />;
+/** Renders once the admin shell has loaded the figures; nothing here is prerendered. */
+export const instant = false;
+
+export default function AdminOverviewPage(): React.JSX.Element {
+  return <OverviewSection />;
 }

@@ -7,6 +7,7 @@ import {
   listSubscriptions,
   pushPublicKey,
   pushToCustomer,
+  rememberPushLocale,
   removeSubscription,
 } from "@/lib/push/push";
 
@@ -42,6 +43,7 @@ export async function POST(request: Request): Promise<Response> {
     endpoint: parsed.data.endpoint,
     keys: parsed.data.keys,
   });
+  await rememberPushLocale(ctx.customerRef, ctx.locale);
   await pushToCustomer(ctx.customerRef, {
     title: translate(ctx.locale, "notify.welcome.title"),
     body: translate(ctx.locale, "notify.welcome.body"),

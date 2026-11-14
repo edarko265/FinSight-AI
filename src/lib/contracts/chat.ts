@@ -28,8 +28,8 @@ export type AssistantMessage = {
   /** A short teaching note that goes with the answer. */
   lesson?: string;
   followUps?: string[];
-  /** Whether a language model wrote the text, or the built-in templates did. */
-  mode?: "ai" | "basic";
+  /** Who wrote the text: a language model, the built-in templates, or the bank's staff. */
+  mode?: "ai" | "basic" | "team";
 };
 
 export type ChatMessage = { id: string; role: "user"; text: string } | AssistantMessage;

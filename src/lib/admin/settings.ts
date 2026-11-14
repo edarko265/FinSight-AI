@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
 
+import { currentStaff, OWNER_ID } from "@/lib/admin/auth";
+import { listStaff } from "@/lib/admin/staff";
 import { getDb } from "@/lib/db/client";
 
 /**
@@ -115,27 +117,45 @@ export async function saveSettings(next: AppSettings): Promise<AppSettings> {
 }
 
 /** Records a staff action. Details describe the change, never a customer. */
-export async function audit(action: string, detail = ""): Promise<void> {
+export async function audit(action: string, detail = "", actor?: string): Promise<void> {
   try {
     const db = await getDb();
-    await db.query("INSERT INTO admin_audit (id, action, detail) VALUES ($1, $2, $3)", [
+    const who = actor ?? (await currentStaff().catch(() => null))?.id ?? "";
+    await db.query("INSERT INTO admin_audit (id, action, detail, actor) VALUES ($1, $2, $3, $4)", [
       randomUUID(),
       action.slice(0, 60),
       detail.slice(0, 300),
+      who.slice(0, 60),
     ]);
   } catch (error) {
     console.error("audit: could not record:", error instanceof Error ? error.name : "error");
   }
 }
 
-export async function auditLog(): Promise<
-  { id: string; at: string; action: string; detail: string }[]
-> {
+export interface AuditEntry {
+  id: string;
+  at: string;
+  action: string;
+  detail: string;
+  /** "owner", a staff member's name, or empty when nobody was signed in. */
+  actor: string;
+}
+
+export async function auditLog(): Promise<AuditEntry[]> {
   const db = await getDb();
-  const rows = await db.query<{ id: string; at: string | Date; action: string; detail: string }>(
-    "SELECT id, at, action, detail FROM admin_audit ORDER BY at DESC LIMIT 60",
-  );
-  return rows.map((row) => ({ ...row, at: new Date(row.at).toISOString() }));
+  const rows = await db.query<{
+    id: string;
+    at: string | Date;
+    action: string;
+    detail: string;
+    actor: string;
+  }>("SELECT id, at, action, detail, actor FROM admin_audit ORDER BY at DESC LIMIT 100");
+  const names = new Map((await listStaff()).map((member) => [member.id, member.name]));
+  return rows.map((row) => ({
+    ...row,
+    at: new Date(row.at).toISOString(),
+    actor: row.actor === OWNER_ID ? OWNER_ID : (names.get(row.actor) ?? ""),
+  }));
 }
 
 // ---- AI consumption ----

@@ -269,3 +269,104 @@ describe("announcements", () => {
     expect(await a.listAnnouncements()).toEqual([]);
   });
 });
+
+describe("staff accounts", () => {
+  it("sign in with their own password, and lose access in the recycle bin", async () => {
+    const staff = await import("@/lib/admin/staff");
+    expect(
+      await staff.createStaff({
+        name: "Aino Virtanen",
+        username: "Aino.Virtanen",
+        role: "adviser",
+        password: "correct-horse-1",
+      }),
+    ).toBe(true);
+    // The same username again is refused, whatever its capitalisation.
+    expect(
+      await staff.createStaff({
+        name: "Someone Else",
+        username: "aino.virtanen",
+        role: "admin",
+        password: "another-pass-2",
+      }),
+    ).toBe(false);
+
+    const member = await staff.verifyStaff("aino.virtanen", "correct-horse-1");
+    expect(member).toMatchObject({ name: "Aino Virtanen", role: "adviser" });
+    expect(await staff.verifyStaff("aino.virtanen", "wrong-password")).toBeNull();
+    expect(await staff.verifyStaff("nobody", "correct-horse-1")).toBeNull();
+
+    await staff.updateStaff(member!.id, {
+      name: "Aino V.",
+      role: "banker",
+      password: "new-password-3",
+    });
+    expect(await staff.verifyStaff("aino.virtanen", "correct-horse-1")).toBeNull();
+    expect(await staff.verifyStaff("aino.virtanen", "new-password-3")).toMatchObject({
+      name: "Aino V.",
+      role: "banker",
+    });
+
+    await staff.setStaffState(member!.id, "trash");
+    expect(await staff.verifyStaff("aino.virtanen", "new-password-3")).toBeNull();
+    expect(await staff.activeStaff(member!.id)).toBeNull();
+    await staff.setStaffState(member!.id, "restore");
+    expect(await staff.activeStaff(member!.id)).not.toBeNull();
+    await staff.setStaffState(member!.id, "trash");
+    await staff.setStaffState(member!.id, "purge");
+    expect(await staff.listStaff()).toEqual([]);
+  });
+
+  it("stores no name, username or password in readable form", async () => {
+    const staff = await import("@/lib/admin/staff");
+    await staff.createStaff({
+      name: "Readable Name",
+      username: "readable.user",
+      role: "admin",
+      password: "readable-secret-9",
+    });
+    const rows = await db.query<Record<string, unknown>>("SELECT * FROM staff_users");
+    const stored = JSON.stringify(rows);
+    for (const secret of ["Readable Name", "readable.user", "readable-secret-9", '"admin"']) {
+      expect(stored).not.toContain(secret);
+    }
+    const [member] = await staff.listStaff();
+    await staff.setStaffState(member!.id, "trash");
+    await staff.setStaffState(member!.id, "purge");
+  });
+});
+
+describe("taught answers", () => {
+  it("are given for a matching question, in the customer's language, and counted", async () => {
+    const taught = await import("@/lib/coach/taught");
+    await taught.createTaught({
+      theme: "loans",
+      keywords: [],
+      answers: { en: "General loan answer", fi: "Yleinen lainavastaus", sv: "" },
+    });
+    await taught.createTaught({
+      theme: "loans",
+      keywords: ["student loan", "opintolaina"],
+      answers: { en: "Student loan answer", fi: "", sv: "" },
+    });
+
+    expect(await taught.findTaught("Can I get a mortgage?", "en")).toBe("General loan answer");
+    expect(await taught.findTaught("Saanko asuntolainaa?", "fi")).toBe("Yleinen lainavastaus");
+    // No Swedish text was written, so English is used.
+    expect(await taught.findTaught("Kan jag få bolån?", "sv")).toBe("General loan answer");
+    // The more specific answer wins when its keyword appears.
+    expect(await taught.findTaught("How do I repay my student loan?", "en")).toBe(
+      "Student loan answer",
+    );
+    expect(await taught.findTaught("What is the weather?", "en")).toBeNull();
+
+    const all = await taught.listTaught();
+    expect(all.reduce((sum, answer) => sum + answer.uses, 0)).toBe(4);
+
+    // In the recycle bin an answer is no longer given.
+    for (const answer of all) await taught.setTaughtState(answer.id, "trash");
+    expect(await taught.findTaught("Can I get a mortgage?", "en")).toBeNull();
+    for (const answer of all) await taught.setTaughtState(answer.id, "purge");
+    expect(await taught.listTaught()).toEqual([]);
+  });
+});

@@ -113,3 +113,35 @@ export async function pushToEveryone(payload: PushPayload): Promise<number> {
   }
   return reached;
 }
+
+const LOCALE_KIND = "push_locale";
+const SENT_KIND = "push_sent";
+
+/** Remembers which language a customer's notifications should be written in. */
+export async function rememberPushLocale(customerRef: string, locale: string): Promise<void> {
+  await writeState(customerRef, LOCALE_KIND, locale);
+}
+
+export async function pushLocale(customerRef: string): Promise<string | null> {
+  return readState<string>(customerRef, LOCALE_KIND);
+}
+
+/** Which reminders have already been sent to a customer, so none is sent twice. */
+export async function alreadySent(customerRef: string): Promise<Set<string>> {
+  return new Set((await readState<string[]>(customerRef, SENT_KIND)) ?? []);
+}
+
+export async function markSent(customerRef: string, ids: string[]): Promise<void> {
+  const all = [...(await alreadySent(customerRef)), ...ids];
+  await writeState(customerRef, SENT_KIND, all.slice(-200));
+}
+
+/** The customers who have at least one device with notifications on. */
+export async function customersWithDevices(): Promise<string[]> {
+  const db = await getDb();
+  const rows = await db.query<{ customer_ref: string }>(
+    "SELECT customer_ref FROM customer_state WHERE kind = $1",
+    [KIND],
+  );
+  return rows.map((row) => row.customer_ref);
+}

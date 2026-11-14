@@ -33,3 +33,8 @@ export function customerKey(ref: string): DataKey {
 export function serviceKey(purpose: string): DataKey {
   return deriveCustomerKey(keyRing().master, `service:${purpose}`);
 }
+
+/** Keyed digest of a staff username: the only form in which it is looked up. */
+export function staffIndex(username: string): string {
+  return blindIndex(username.trim().toLowerCase(), keyRing().indexKey, "staff.username");
+}

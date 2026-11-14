@@ -871,6 +871,48 @@ export const en = {
   "notify.insight.body": "You have {count} unread insights.",
   "admin.audit.announcement.push": "Announcement sent to devices",
   "chat.moreQuestions": "More questions",
+  "insight.pace.title": "{category} is running ahead of your usual pace",
+  "insight.pace.body":
+    "{amount} so far this month. By day {day} you have usually spent about {usual}.",
+  "insight.goal.title": "Time to put money towards {name}",
+  "insight.goal.body.fits":
+    "{monthly} this month keeps you on plan. You usually have about {room} left over.",
+  "insight.goal.body.stretch":
+    "{monthly} this month keeps you on plan. That is more than the {room} you usually have left, so a small trim will be needed.",
+  "insight.goal.body.hard":
+    "The plan needs {monthly} a month and you usually have about {room} left. Giving it more time would make it reachable.",
+  "notify.reminder.body": "Open FinSight-AI to see the details.",
+  "admin.audit.reminders.run": "Reminders sent now",
+  "admin.audit.reminders.scheduled": "Scheduled reminders sent",
+  "admin.nav.overview": "Overview",
+  "admin.nav.usage": "Usage",
+  "admin.nav.ai": "AI",
+  "admin.nav.advisers": "Advisers",
+  "admin.nav.announcements": "Announcements",
+  "admin.nav.notifications": "Notifications",
+  "admin.nav.controls": "Controls",
+  "admin.nav.system": "System",
+  "admin.open": "Open",
+  "admin.chart.daily": "Questions per day",
+  "admin.chart.aiDaily": "AI answers per day",
+  "admin.chart.mode": "AI and basic mode",
+  "admin.chart.mode.ai": "AI coach",
+  "admin.chart.mode.basic": "Basic mode",
+  "admin.chart.reach": "Announcement reach",
+  "admin.chart.consent": "Consent choices",
+  "admin.chart.tokens": "Tokens by model",
+  "admin.chart.empty": "Nothing to chart yet.",
+  "admin.overview.intro":
+    "What customers are using the coach for, and what it costs. Open a tile to see more and to act.",
+  "admin.notifications.devices": "{count} customers have notifications on",
+  "admin.notifications.note":
+    "Reminders go out every morning: a goal to put money towards, a bill due soon, a habit going the wrong way, a possible shortfall. Each customer gets one notification for the most important thing they have not been told about yet. The notification carries the headline only; amounts stay in the app.",
+  "admin.notifications.send": "Send reminders now",
+  "admin.notifications.sending": "Sending…",
+  "admin.notifications.result": "{sent} reminders sent to {customers} customers",
+  "admin.notifications.announce":
+    "Announcements are also sent to every device when they are published.",
+  "admin.menu": "Admin sections",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
   "coach.statfin.title": "You and households in Finland",
@@ -878,6 +920,185 @@ export const en = {
     "Across Finland, households in the {band} age group spent about {average} a month per adult on {category} ({year}). You average {value}.",
   "coach.statfin.basis":
     "Statistics Finland, household budget survey {year}, per consumption unit. One account is not a whole household and the categories differ slightly, so read this as context, not a ranking.",
+  "admin.attention": "Needs attention",
+  "admin.attention.none": "Nothing is waiting for anyone right now.",
+  "admin.attention.replies": "Adviser requests waiting for a reply: {count}",
+  "admin.attention.replies.action": "Reply",
+  "admin.attention.gap": "{theme}: the coach had no answer ({count} in 30 days)",
+  "admin.attention.gap.action": "Teach an answer",
+  "admin.attention.limit": "AI answers today: {used} of the daily limit of {limit}",
+  "admin.attention.limit.action": "Change the limit",
+  "admin.attention.grounding":
+    "AI answers corrected for stating an amount no calculation produced: {count}",
+  "admin.chart.total": "Total",
+  "admin.chart.average": "Daily average",
+  "admin.chart.peak": "Busiest day",
+  "admin.chart.hint": "Point at or tap a day to see its number. Arrow keys also work.",
+  "admin.chart.mode.team": "Answer taught by staff",
+  "admin.chart.mode.note":
+    "AI: the model chose the calculation and wrote the wording. Basic mode: keywords chose it. Taught: the coach gave an answer staff wrote.",
+  "admin.download": "Download CSV",
+  "admin.forbidden.title": "This section is for administrators",
+  "admin.forbidden.body": "Your role does not include it. Ask an administrator if you need access.",
+  "admin.limit": "Daily AI limit",
+  "admin.limit.today": "AI answers used today",
+  "admin.loadFailed": "Could not load this. Check the connection and try again.",
+  "admin.loadFailed.stale":
+    "Could not refresh. The figures below are from the last successful load.",
+  "admin.retry": "Try again",
+  "admin.refresh": "Refresh",
+  "admin.refreshing": "Refreshing…",
+  "admin.updated": "Updated {time}",
+  "admin.signedInAs": "Signed in as",
+  "admin.login.who": "Who is signing in?",
+  "admin.login.whoHint":
+    "Enter your staff username. Leave it empty to sign in as the owner with the installation password.",
+  "admin.login.username": "Username",
+  "admin.login.usernamePlaceholder": "For example aino.virtanen",
+  "admin.login.staffHint": "Enter the password for your staff account.",
+  "admin.nav.team": "Team",
+  "admin.nav.training": "Teach the coach",
+  "admin.nav.trash": "Recycle bin",
+  "admin.note.limit": "Daily limit {limit}",
+  "admin.note.noLimit": "No daily limit set",
+  "admin.note.of": "{part} of {whole}",
+  "admin.note.open": "{count} open in total",
+  "admin.note.perDay": "About {count} a day",
+  "admin.note.tokens": "{count} tokens",
+  "admin.note.withdrawn": "{count} withdrawn",
+  "admin.questions.unit": "Questions",
+  "admin.requests.unit": "Requests",
+  "admin.role.owner": "Owner",
+  "admin.role.owner.note":
+    "Signs in with the installation password. Can do everything and cannot be removed.",
+  "admin.role.admin": "Administrator",
+  "admin.role.admin.note":
+    "Everything: settings, announcements, the team, AI usage and the audit log.",
+  "admin.role.adviser": "Adviser",
+  "admin.role.adviser.note":
+    "Answers customers who asked for a person, teaches the coach, and sees the statistics.",
+  "admin.role.banker": "Personal banker",
+  "admin.role.banker.note":
+    "The same as an adviser, for staff who look after customers' everyday banking.",
+  "admin.team.intro":
+    "People who can sign in here besides the owner. Each has their own username, password and role.",
+  "admin.team.add": "Add a team member",
+  "admin.team.edit": "Edit team member",
+  "admin.team.count": "Team members",
+  "admin.team.members": "Members",
+  "admin.team.empty": "No team members yet. Only the owner can sign in.",
+  "admin.team.you": "you",
+  "admin.team.name": "Name",
+  "admin.team.nameHint": "The name colleagues will see in the audit log.",
+  "admin.team.usernameHint":
+    "What they type to sign in. 3 to 40 lower-case letters, digits, dots or dashes. It cannot be changed later.",
+  "admin.team.taken":
+    "That username is already in use, possibly by someone in the recycle bin. Choose another.",
+  "admin.team.role": "Role",
+  "admin.team.roleHint": "The role decides which sections they can open.",
+  "admin.team.roles": "What each role can do",
+  "admin.team.passwordHint":
+    "At least 10 characters. Tap the suggestion for a strong one, then pass it on in person.",
+  "admin.team.passwordKeep":
+    "Leave empty to keep the current password, or enter a new one of at least 10 characters.",
+  "admin.team.passwordUnchanged": "Unchanged",
+  "admin.team.generate": "Suggest a strong password",
+  "admin.team.reviewHint":
+    "Note the password now: it is stored only as a hash and cannot be shown again.",
+  "admin.team.note":
+    "Moving someone to the recycle bin ends their access at once. Names and usernames are stored encrypted; passwords only as a salted hash.",
+  "admin.training.intro":
+    "When the coach has no answer, write the one it should have given. From then on it gives yours, word for word, to everyone who asks.",
+  "admin.training.gaps": "What the coach could not answer",
+  "admin.training.gaps.note":
+    "By theme, over the last 30 days. Questions are sorted into a theme as they arrive and only the theme is counted: nobody's question is stored.",
+  "admin.training.asked": "{count} in the last 30 days",
+  "admin.training.covered": "Answer taught",
+  "admin.training.teach": "Teach an answer",
+  "admin.training.taught": "Answers you have taught",
+  "admin.training.new": "Teach a new answer",
+  "admin.training.edit": "Edit taught answer",
+  "admin.training.empty": "Nothing taught yet.",
+  "admin.training.uses": "Times given: {count}",
+  "admin.training.wholeTheme": "Any question on this theme",
+  "admin.training.keywords": "Words in the question",
+  "admin.training.step.theme": "Theme",
+  "admin.training.step.themeHint": "Which kind of question is this answer for?",
+  "admin.training.step.keywords": "When should it be used?",
+  "admin.training.step.keywordsHint":
+    "Leave empty to answer any question on the theme. Or list words, separated by commas, so it is used only when one of them appears. Include the Finnish and Swedish words too.",
+  "admin.training.answer.en": "Answer in English",
+  "admin.training.answer.fi": "Answer in Finnish",
+  "admin.training.answer.sv": "Answer in Swedish",
+  "admin.training.answer.hint":
+    "Write what the coach should say. Keep it general: it is shown to every customer who asks, so no personal figures.",
+  "admin.training.answer.optional":
+    "Optional. Without it, customers using this language get the English answer.",
+  "admin.training.useExample": "Start from an example",
+  "admin.training.note":
+    "Taught answers are shown exactly as written and labelled as coming from the bank's team. They are used only when no calculation fits the question.",
+  "admin.trash.intro": "Everything staff delete waits here. Restore it, or delete it permanently.",
+  "admin.trash.note": "Deleting permanently cannot be undone.",
+  "admin.trash.confirm": "Delete all {count} items permanently?",
+  "admin.trash.kind.announcement": "Announcement",
+  "admin.trash.kind.request": "Adviser request",
+  "admin.trash.kind.staff": "Team member",
+  "admin.trash.kind.training": "Taught answer",
+  "admin.audit.staff.create": "Team member added",
+  "admin.audit.staff.edit": "Team member edited",
+  "admin.audit.staff.trash": "Team member moved to the bin",
+  "admin.audit.staff.restore": "Team member restored",
+  "admin.audit.staff.purge": "Team member deleted permanently",
+  "admin.audit.training.create": "Answer taught to the coach",
+  "admin.audit.training.edit": "Taught answer edited",
+  "admin.audit.training.trash": "Taught answer moved to the bin",
+  "admin.audit.training.restore": "Taught answer restored",
+  "admin.audit.training.purge": "Taught answer deleted permanently",
+  "chat.modeTeam": "Answer from the bank's team",
+  "admin.training.words.loans":
+    "loan, mortgage, interest, laina, asuntolaina, korko, lån, bolån, ränta",
+  "admin.training.example.loans":
+    "I can't work out loan offers from your account data. As a rule of thumb, housing costs including loan payments should leave room for your bills, everyday spending and a buffer. For an offer based on your situation, use Talk to a person and an adviser will go through it with you.",
+  "admin.training.words.investing":
+    "invest, fund, etf, stocks, sijoittaminen, rahasto, osake, investera, fond, aktie",
+  "admin.training.example.investing":
+    "I don't give investment advice, and I can't tell you what to buy. What I can show is how much you usually have left each month, which is a sensible starting point for a monthly amount. For advice on funds, ask for an adviser under Talk to a person and choose investment advice.",
+  "admin.training.words.insurance":
+    "insurance, home insurance, travel insurance, vakuutus, kotivakuutus, matkavakuutus, försäkring, hemförsäkring",
+  "admin.training.example.insurance":
+    "I can show what you pay for insurance if it appears among your regular bills, but I can't compare policies. An adviser can: use Talk to a person.",
+  "admin.training.words.cards":
+    "card, refund, dispute, lost card, kortti, hyvitys, reklamaatio, kort, återbetalning, reklamation",
+  "admin.training.example.cards":
+    "For a lost or stolen card, block it straight away in the bank's app or through the card blocking service. For a payment you don't recognise or a refund that has not arrived, contact customer service: I can show you the transaction, but I can't change it.",
+  "admin.training.words.taxes":
+    "tax, tax return, deduction, vero, veroilmoitus, vähennys, skatt, deklaration, avdrag",
+  "admin.training.example.taxes":
+    "I can't give tax advice. Your tax card, return and deductions are handled in the Tax Administration's MyTax service. I can show how much you spent in a category over a year if that helps you fill something in.",
+  "admin.training.words.pension": "pension, retire, eläke, eläkkeelle, pension, pensionär",
+  "admin.training.example.pension":
+    "I can't estimate your pension: that comes from your earnings record, which your pension provider holds. I can show what your months cost today, which is the figure to compare a pension estimate with.",
+  "admin.training.words.benefits":
+    "benefit, allowance, kela, housing allowance, tuki, asumistuki, bidrag, bostadsbidrag",
+  "admin.training.example.benefits":
+    "Benefits are decided by Kela, and I can't tell whether you qualify. I can show your income and housing costs by month, which are the figures an application usually asks for.",
+  "admin.training.words.account":
+    "password, sign in, locked, salasana, kirjautuminen, lukittu, lösenord, logga in, låst",
+  "admin.training.example.account":
+    "For a forgotten password, use Forgot password on the sign-in page. If your account is locked or something looks wrong with it, contact customer service: I can't change account settings from here.",
+  "admin.training.words.budgeting": "budget, plan, 50/30/20, budjetti, suunnitelma, budget, plan",
+  "admin.training.example.budgeting":
+    "A simple way to start: look at your three baskets (regular bills, irregular essentials, everyday spending), then decide one amount to move to savings on payday. Ask me to explain your three baskets and I will show yours.",
+  "admin.training.words.other":
+    "opening hours, branch, contact, aukioloajat, konttori, yhteystiedot, öppettider, kontor, kontakt",
+  "admin.training.example.other":
+    "I can only answer questions about your own money in this app. For anything else, customer service can help, or use Talk to a person to reach an adviser.",
+  "error.title": "Something went wrong",
+  "error.body":
+    "This page could not be shown. Your data is safe. Try again, or go back to the start.",
+  "error.home": "Back to the start",
+  "notFound.title": "This page does not exist",
+  "notFound.body": "The address may be mistyped, or the page may have moved.",
 } as const;
 
 export type MessageKey = keyof typeof en;

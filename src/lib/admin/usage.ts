@@ -94,7 +94,8 @@ export async function usageSummary(): Promise<UsageSummary> {
     daily: [...days.entries()]
       .map(([day, count]) => ({ day, count }))
       .sort((a, b) => a.day.localeCompare(b.day)),
-    unanswered: topics.get("none") ?? 0,
+    // Every question with no calculation behind it, not only the ones nothing matched at all.
+    unanswered: [...themes.values()].reduce((total, value) => total + value, 0),
     consentAccepted: kinds.get("consent:accepted") ?? 0,
     consentWithdrawn: kinds.get("consent:withdrawn") ?? 0,
     goalsSet: kinds.get("goal") ?? 0,

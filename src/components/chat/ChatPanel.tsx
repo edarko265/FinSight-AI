@@ -166,7 +166,15 @@ export function ChatPanel({
                   <p>{message.text}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                     {message.mode ? (
-                      <span>{t(message.mode === "ai" ? "chat.modeAi" : "chat.modeBasic")}</span>
+                      <span>
+                        {t(
+                          message.mode === "ai"
+                            ? "chat.modeAi"
+                            : message.mode === "team"
+                              ? "chat.modeTeam"
+                              : "chat.modeBasic",
+                        )}
+                      </span>
                     ) : null}
                     {me?.voiceEnabled ? (
                       <button

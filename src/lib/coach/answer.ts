@@ -1,15 +1,25 @@
 import "server-only";
 
 import { askModel } from "@/lib/coach/llm";
+import { OUTSIDE_THEMES, themeOf } from "@/lib/admin/themes";
 import { recordUsage } from "@/lib/admin/usage";
 import type { SessionContext } from "@/lib/coach/context";
 import { checkGrounding } from "@/lib/coach/grounding";
 import { goalsResult, setGoal } from "@/lib/coach/goals";
 import { detectGoal, routeQuestion } from "@/lib/coach/router";
+import { findTaught } from "@/lib/coach/taught";
 import type { ToolResult } from "@/lib/coach/tools";
 import type { AssistantMessage } from "@/lib/contracts/chat";
 
 const MAX_QUESTION = 4000;
+
+/** An answer written by the bank's staff, shown exactly as they approved it. */
+function taughtMessage(text: string): CoachAnswer {
+  return {
+    message: { id: `assistant-${crypto.randomUUID()}`, role: "assistant", text, mode: "team" },
+    topic: "taught",
+  };
+}
 
 function toMessage(result: ToolResult, text: string, mode: "ai" | "basic"): AssistantMessage {
   return {
@@ -51,6 +61,13 @@ export async function answerQuestion(
   options: { allowModel: boolean } = { allowModel: true },
 ): Promise<CoachAnswer> {
   const question = rawQuestion.trim().slice(0, MAX_QUESTION);
+  // A subject no calculation covers (loans, insurance, taxes): if staff have taught an answer,
+  // theirs is given before a keyword or the model can reach for a calculation that only looks
+  // related, such as housing costs for a mortgage question.
+  if (OUTSIDE_THEMES.has(themeOf(question))) {
+    const taught = await findTaught(question, ctx.locale);
+    if (taught) return taughtMessage(taught);
+  }
   try {
     // Without the user's consent nothing is sent to a language model.
     const answer = options.allowModel ? await askModel(ctx, question, history) : null;
@@ -70,6 +87,10 @@ export async function answerQuestion(
           topic: primary.tool,
         };
       }
+      // No calculation applies. If staff have taught an answer for this, theirs is given
+      // rather than the model's own general wording.
+      const taught = await findTaught(question, ctx.locale);
+      if (taught) return taughtMessage(taught);
       // With no calculation behind it, an answer that states personal amounts is not shown at all.
       if (grounded) {
         return {
@@ -90,5 +111,9 @@ export async function answerQuestion(
     );
   }
   const result = await basicAnswer(ctx, question);
+  if (result.tool === "none") {
+    const taught = await findTaught(question, ctx.locale);
+    if (taught) return taughtMessage(taught);
+  }
   return { message: toMessage(result, result.text, "basic"), topic: result.tool };
 }

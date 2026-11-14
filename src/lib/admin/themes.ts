@@ -30,3 +30,15 @@ export function themeOf(question: string): string {
   const text = question.toLowerCase();
   return THEMES.find(([, pattern]) => pattern.test(text))?.[0] ?? "other";
 }
+
+/** Subjects the coach cannot calculate from account data, whatever calculation a keyword or the model reached for. */
+export const OUTSIDE_THEMES: ReadonlySet<string> = new Set([
+  "loans",
+  "investing",
+  "insurance",
+  "cards",
+  "taxes",
+  "pension",
+  "benefits",
+  "account",
+]);

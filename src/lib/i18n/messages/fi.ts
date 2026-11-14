@@ -864,6 +864,48 @@ export const fi: Record<MessageKey, string> = {
   "notify.insight.body": "Sinulla on {count} lukematonta havaintoa.",
   "admin.audit.announcement.push": "Tiedote lähetetty laitteisiin",
   "chat.moreQuestions": "Lisää kysymyksiä",
+  "insight.pace.title": "{category} etenee tavallista tahtiasi nopeammin",
+  "insight.pace.body":
+    "{amount} tässä kuussa tähän mennessä. Päivään {day} mennessä olet yleensä käyttänyt noin {usual}.",
+  "insight.goal.title": "Aika laittaa rahaa tavoitteeseen {name}",
+  "insight.goal.body.fits":
+    "{monthly} tässä kuussa pitää sinut suunnitelmassa. Sinulle jää yleensä noin {room} yli.",
+  "insight.goal.body.stretch":
+    "{monthly} tässä kuussa pitää sinut suunnitelmassa. Se on enemmän kuin tavallisesti yli jäävä {room}, joten pieni karsinta on tarpeen.",
+  "insight.goal.body.hard":
+    "Suunnitelma vaatii {monthly} kuussa, ja sinulle jää yleensä noin {room}. Pidempi aika tekisi siitä saavutettavan.",
+  "notify.reminder.body": "Avaa FinSight-AI nähdäksesi tiedot.",
+  "admin.audit.reminders.run": "Muistutukset lähetetty nyt",
+  "admin.audit.reminders.scheduled": "Ajastetut muistutukset lähetetty",
+  "admin.nav.overview": "Yleiskuva",
+  "admin.nav.usage": "Käyttö",
+  "admin.nav.ai": "Tekoäly",
+  "admin.nav.advisers": "Neuvojat",
+  "admin.nav.announcements": "Tiedotteet",
+  "admin.nav.notifications": "Ilmoitukset",
+  "admin.nav.controls": "Hallinta",
+  "admin.nav.system": "Järjestelmä",
+  "admin.open": "Avaa",
+  "admin.chart.daily": "Kysymykset päivittäin",
+  "admin.chart.aiDaily": "Tekoälyvastaukset päivittäin",
+  "admin.chart.mode": "Tekoäly ja perustila",
+  "admin.chart.mode.ai": "Tekoälyvalmentaja",
+  "admin.chart.mode.basic": "Perustila",
+  "admin.chart.reach": "Tiedotteiden tavoittavuus",
+  "admin.chart.consent": "Suostumusvalinnat",
+  "admin.chart.tokens": "Tokenit malleittain",
+  "admin.chart.empty": "Ei vielä kaavioitavaa.",
+  "admin.overview.intro":
+    "Mihin asiakkaat käyttävät valmentajaa ja mitä se maksaa. Avaa ruutu nähdäksesi lisää ja toimiaksesi.",
+  "admin.notifications.devices": "{count} asiakkaalla on ilmoitukset päällä",
+  "admin.notifications.note":
+    "Muistutukset lähtevät joka aamu: tavoite, johon laittaa rahaa, pian erääntyvä lasku, väärään suuntaan menevä tottumus tai mahdollinen vaje. Kukin asiakas saa yhden ilmoituksen tärkeimmästä asiasta, josta hänelle ei ole vielä kerrottu. Ilmoituksessa on vain otsikko; summat pysyvät sovelluksessa.",
+  "admin.notifications.send": "Lähetä muistutukset nyt",
+  "admin.notifications.sending": "Lähetetään…",
+  "admin.notifications.result": "{sent} muistutusta lähetetty {customers} asiakkaalle",
+  "admin.notifications.announce":
+    "Tiedotteet lähetetään myös jokaiseen laitteeseen, kun ne julkaistaan.",
+  "admin.menu": "Hallinnan osiot",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
   "coach.statfin.title": "Sinä ja suomalaiset kotitaloudet",
@@ -871,4 +913,184 @@ export const fi: Record<MessageKey, string> = {
     "Suomessa ikäryhmän {band} kotitaloudet käyttivät noin {average} kuussa aikuista kohti luokkaan {category} ({year}). Sinun keskiarvosi on {value}.",
   "coach.statfin.basis":
     "Tilastokeskus, kulutustutkimus {year}, kulutusyksikköä kohti. Yksi tili ei ole koko kotitalous ja luokat eroavat hieman, joten tämä on taustatietoa, ei sijoitus.",
+  "admin.attention": "Vaatii huomiota",
+  "admin.attention.none": "Mikään ei odota toimenpiteitä juuri nyt.",
+  "admin.attention.replies": "Vastausta odottavia neuvojapyyntöjä: {count}",
+  "admin.attention.replies.action": "Vastaa",
+  "admin.attention.gap": "{theme}: valmentajalla ei ollut vastausta ({count} kertaa 30 päivässä)",
+  "admin.attention.gap.action": "Opeta vastaus",
+  "admin.attention.limit": "Tekoälyvastauksia tänään: {used} päivärajasta {limit}",
+  "admin.attention.limit.action": "Muuta rajaa",
+  "admin.attention.grounding":
+    "Korjattuja tekoälyvastauksia, joissa oli summa, jota mikään laskelma ei tuottanut: {count}",
+  "admin.chart.total": "Yhteensä",
+  "admin.chart.average": "Keskimäärin päivässä",
+  "admin.chart.peak": "Vilkkain päivä",
+  "admin.chart.hint":
+    "Osoita tai napauta päivää nähdäksesi sen luvun. Myös nuolinäppäimet toimivat.",
+  "admin.chart.mode.team": "Henkilökunnan opettama vastaus",
+  "admin.chart.mode.note":
+    "Tekoäly: malli valitsi laskelman ja kirjoitti sanamuodon. Perustila: avainsanat valitsivat sen. Opetettu: valmentaja antoi henkilökunnan kirjoittaman vastauksen.",
+  "admin.download": "Lataa CSV",
+  "admin.forbidden.title": "Tämä osio on ylläpitäjille",
+  "admin.forbidden.body":
+    "Roolisi ei sisällä sitä. Pyydä ylläpitäjältä käyttöoikeutta tarvittaessa.",
+  "admin.limit": "Tekoälyn päiväraja",
+  "admin.limit.today": "Tänään käytetyt tekoälyvastaukset",
+  "admin.loadFailed": "Lataus epäonnistui. Tarkista yhteys ja yritä uudelleen.",
+  "admin.loadFailed.stale":
+    "Päivitys epäonnistui. Alla olevat luvut ovat viimeisimmästä onnistuneesta latauksesta.",
+  "admin.retry": "Yritä uudelleen",
+  "admin.refresh": "Päivitä",
+  "admin.refreshing": "Päivitetään…",
+  "admin.updated": "Päivitetty {time}",
+  "admin.signedInAs": "Kirjautuneena:",
+  "admin.login.who": "Kuka kirjautuu?",
+  "admin.login.whoHint":
+    "Anna henkilökunnan käyttäjätunnuksesi. Jätä tyhjäksi, jos kirjaudut omistajana asennuksen salasanalla.",
+  "admin.login.username": "Käyttäjätunnus",
+  "admin.login.usernamePlaceholder": "Esimerkiksi aino.virtanen",
+  "admin.login.staffHint": "Anna henkilökuntatilisi salasana.",
+  "admin.nav.team": "Tiimi",
+  "admin.nav.training": "Opeta valmentajaa",
+  "admin.nav.trash": "Roskakori",
+  "admin.note.limit": "Päiväraja {limit}",
+  "admin.note.noLimit": "Päivärajaa ei ole asetettu",
+  "admin.note.of": "{part} / {whole}",
+  "admin.note.open": "{count} avoinna yhteensä",
+  "admin.note.perDay": "Noin {count} päivässä",
+  "admin.note.tokens": "{count} tokenia",
+  "admin.note.withdrawn": "{count} peruttu",
+  "admin.questions.unit": "Kysymyksiä",
+  "admin.requests.unit": "Pyyntöjä",
+  "admin.role.owner": "Omistaja",
+  "admin.role.owner.note":
+    "Kirjautuu asennuksen salasanalla. Voi tehdä kaiken, eikä häntä voi poistaa.",
+  "admin.role.admin": "Ylläpitäjä",
+  "admin.role.admin.note": "Kaikki: asetukset, tiedotteet, tiimi, tekoälyn käyttö ja lokit.",
+  "admin.role.adviser": "Neuvoja",
+  "admin.role.adviser.note":
+    "Vastaa asiakkaille, jotka pyysivät henkilöä, opettaa valmentajaa ja näkee tilastot.",
+  "admin.role.banker": "Henkilökohtainen pankkineuvoja",
+  "admin.role.banker.note":
+    "Sama kuin neuvoja; asiakkaiden arjen pankkiasioita hoitavalle henkilökunnalle.",
+  "admin.team.intro":
+    "Henkilöt, jotka voivat kirjautua tänne omistajan lisäksi. Jokaisella on oma käyttäjätunnus, salasana ja rooli.",
+  "admin.team.add": "Lisää tiimin jäsen",
+  "admin.team.edit": "Muokkaa tiimin jäsentä",
+  "admin.team.count": "Tiimin jäseniä",
+  "admin.team.members": "Jäsenet",
+  "admin.team.empty": "Ei vielä tiimin jäseniä. Vain omistaja voi kirjautua.",
+  "admin.team.you": "sinä",
+  "admin.team.name": "Nimi",
+  "admin.team.nameHint": "Nimi, jonka kollegat näkevät lokissa.",
+  "admin.team.usernameHint":
+    "Tällä kirjaudutaan. 3–40 pientä kirjainta, numeroa, pistettä tai viivaa. Sitä ei voi muuttaa myöhemmin.",
+  "admin.team.taken":
+    "Käyttäjätunnus on jo käytössä, mahdollisesti roskakorissa olevalla henkilöllä. Valitse toinen.",
+  "admin.team.role": "Rooli",
+  "admin.team.roleHint": "Rooli määrää, mitkä osiot hän voi avata.",
+  "admin.team.roles": "Mitä kukin rooli voi tehdä",
+  "admin.team.passwordHint":
+    "Vähintään 10 merkkiä. Napauta ehdotusta saadaksesi vahvan salasanan ja kerro se henkilökohtaisesti.",
+  "admin.team.passwordKeep":
+    "Jätä tyhjäksi säilyttääksesi nykyisen salasanan tai anna uusi, vähintään 10 merkkiä.",
+  "admin.team.passwordUnchanged": "Ei muutosta",
+  "admin.team.generate": "Ehdota vahvaa salasanaa",
+  "admin.team.reviewHint":
+    "Kirjoita salasana nyt muistiin: se tallennetaan vain tiivisteenä eikä sitä voi näyttää uudelleen.",
+  "admin.team.note":
+    "Roskakoriin siirtäminen päättää käyttöoikeuden heti. Nimet ja käyttäjätunnukset tallennetaan salattuina, salasanat vain suolattuna tiivisteenä.",
+  "admin.training.intro":
+    "Kun valmentajalla ei ole vastausta, kirjoita vastaus, joka sen olisi pitänyt antaa. Sen jälkeen se antaa sinun vastauksesi sanasta sanaan kaikille kysyjille.",
+  "admin.training.gaps": "Mihin valmentaja ei osannut vastata",
+  "admin.training.gaps.note":
+    "Teemoittain viimeisten 30 päivän ajalta. Kysymykset lajitellaan teemaan saapuessaan ja vain teema lasketaan: kenenkään kysymystä ei tallenneta.",
+  "admin.training.asked": "{count} viimeisten 30 päivän aikana",
+  "admin.training.covered": "Vastaus opetettu",
+  "admin.training.teach": "Opeta vastaus",
+  "admin.training.taught": "Opettamasi vastaukset",
+  "admin.training.new": "Opeta uusi vastaus",
+  "admin.training.edit": "Muokkaa opetettua vastausta",
+  "admin.training.empty": "Ei vielä opetettuja vastauksia.",
+  "admin.training.uses": "Annettu kertoja: {count}",
+  "admin.training.wholeTheme": "Mikä tahansa tämän teeman kysymys",
+  "admin.training.keywords": "Kysymyksen sanat",
+  "admin.training.step.theme": "Teema",
+  "admin.training.step.themeHint": "Minkä tyyppiseen kysymykseen tämä vastaus on?",
+  "admin.training.step.keywords": "Milloin sitä käytetään?",
+  "admin.training.step.keywordsHint":
+    "Jätä tyhjäksi vastataksesi mihin tahansa teeman kysymykseen. Tai luettele sanoja pilkuilla erotettuna, jolloin vastausta käytetään vain jonkin niistä esiintyessä. Lisää myös ruotsin- ja englanninkieliset sanat.",
+  "admin.training.answer.en": "Vastaus englanniksi",
+  "admin.training.answer.fi": "Vastaus suomeksi",
+  "admin.training.answer.sv": "Vastaus ruotsiksi",
+  "admin.training.answer.hint":
+    "Kirjoita, mitä valmentajan pitäisi sanoa. Pidä se yleisenä: se näytetään kaikille kysyjille, joten ei henkilökohtaisia lukuja.",
+  "admin.training.answer.optional":
+    "Valinnainen. Ilman sitä tämän kielen käyttäjät saavat englanninkielisen vastauksen.",
+  "admin.training.useExample": "Aloita esimerkistä",
+  "admin.training.note":
+    "Opetetut vastaukset näytetään täsmälleen kirjoitettuina ja merkitään pankin tiimiltä tuleviksi. Niitä käytetään vain, kun mikään laskelma ei sovi kysymykseen.",
+  "admin.trash.intro":
+    "Kaikki henkilökunnan poistama odottaa täällä. Palauta se tai poista pysyvästi.",
+  "admin.trash.note": "Pysyvää poistoa ei voi perua.",
+  "admin.trash.confirm": "Poistetaanko kaikki {count} kohdetta pysyvästi?",
+  "admin.trash.kind.announcement": "Tiedote",
+  "admin.trash.kind.request": "Neuvojapyyntö",
+  "admin.trash.kind.staff": "Tiimin jäsen",
+  "admin.trash.kind.training": "Opetettu vastaus",
+  "admin.audit.staff.create": "Tiimin jäsen lisätty",
+  "admin.audit.staff.edit": "Tiimin jäsentä muokattu",
+  "admin.audit.staff.trash": "Tiimin jäsen siirretty roskakoriin",
+  "admin.audit.staff.restore": "Tiimin jäsen palautettu",
+  "admin.audit.staff.purge": "Tiimin jäsen poistettu pysyvästi",
+  "admin.audit.training.create": "Valmentajalle opetettu vastaus",
+  "admin.audit.training.edit": "Opetettua vastausta muokattu",
+  "admin.audit.training.trash": "Opetettu vastaus siirretty roskakoriin",
+  "admin.audit.training.restore": "Opetettu vastaus palautettu",
+  "admin.audit.training.purge": "Opetettu vastaus poistettu pysyvästi",
+  "chat.modeTeam": "Vastaus pankin tiimiltä",
+  "admin.training.words.loans":
+    "loan, mortgage, interest, laina, asuntolaina, korko, lån, bolån, ränta",
+  "admin.training.example.loans":
+    "En voi laskea lainatarjouksia tilitiedoistasi. Nyrkkisääntönä asumiskulujen lainanlyhennyksineen pitäisi jättää tilaa laskuille, arjen menoille ja puskurille. Jos haluat tilanteeseesi perustuvan tarjouksen, valitse Keskustele henkilön kanssa, niin neuvoja käy asian kanssasi läpi.",
+  "admin.training.words.investing":
+    "invest, fund, etf, stocks, sijoittaminen, rahasto, osake, investera, fond, aktie",
+  "admin.training.example.investing":
+    "En anna sijoitusneuvontaa enkä voi kertoa, mitä ostaa. Voin näyttää, paljonko sinulle yleensä jää kuukaudessa, mikä on järkevä lähtökohta kuukausisummalle. Rahastoneuvontaa saat pyytämällä neuvojaa kohdasta Keskustele henkilön kanssa ja valitsemalla sijoitusneuvonnan.",
+  "admin.training.words.insurance":
+    "insurance, home insurance, travel insurance, vakuutus, kotivakuutus, matkavakuutus, försäkring, hemförsäkring",
+  "admin.training.example.insurance":
+    "Voin näyttää, mitä maksat vakuutuksista, jos ne näkyvät säännöllisissä laskuissasi, mutta en voi vertailla vakuutuksia. Neuvoja voi: valitse Keskustele henkilön kanssa.",
+  "admin.training.words.cards":
+    "card, refund, dispute, lost card, kortti, hyvitys, reklamaatio, kort, återbetalning, reklamation",
+  "admin.training.example.cards":
+    "Jos kortti on kadonnut tai varastettu, sulje se heti pankin sovelluksessa tai sulkupalvelussa. Jos et tunnista maksua tai hyvitys ei ole saapunut, ota yhteys asiakaspalveluun: voin näyttää tapahtuman, mutta en voi muuttaa sitä.",
+  "admin.training.words.taxes":
+    "tax, tax return, deduction, vero, veroilmoitus, vähennys, skatt, deklaration, avdrag",
+  "admin.training.example.taxes":
+    "En voi antaa veroneuvontaa. Verokortti, veroilmoitus ja vähennykset hoidetaan Verohallinnon OmaVero-palvelussa. Voin näyttää, paljonko käytit johonkin luokkaan vuoden aikana, jos siitä on apua.",
+  "admin.training.words.pension": "pension, retire, eläke, eläkkeelle, pension, pensionär",
+  "admin.training.example.pension":
+    "En voi arvioida eläkettäsi: se perustuu ansiorekisteriisi, joka on eläkelaitoksellasi. Voin näyttää, mitä kuukautesi nyt maksavat, ja siihen eläkearviota kannattaa verrata.",
+  "admin.training.words.benefits":
+    "benefit, allowance, kela, housing allowance, tuki, asumistuki, bidrag, bostadsbidrag",
+  "admin.training.example.benefits":
+    "Etuuksista päättää Kela, enkä voi kertoa, oletko oikeutettu niihin. Voin näyttää tulosi ja asumiskulusi kuukausittain; niitä hakemuksessa yleensä kysytään.",
+  "admin.training.words.account":
+    "password, sign in, locked, salasana, kirjautuminen, lukittu, lösenord, logga in, låst",
+  "admin.training.example.account":
+    "Jos unohdit salasanan, valitse kirjautumissivulla Unohtuiko salasana. Jos tilisi on lukittu tai jokin näyttää väärältä, ota yhteys asiakaspalveluun: en voi muuttaa tilin asetuksia täältä.",
+  "admin.training.words.budgeting": "budget, plan, 50/30/20, budjetti, suunnitelma, budget, plan",
+  "admin.training.example.budgeting":
+    "Yksinkertainen tapa aloittaa: katso kolmea koriasi (säännölliset laskut, epäsäännölliset välttämättömät menot, arjen menot) ja päätä yksi summa, jonka siirrät säästöön palkkapäivänä. Pyydä minua selittämään kolme koriasi, niin näytän omasi.",
+  "admin.training.words.other":
+    "opening hours, branch, contact, aukioloajat, konttori, yhteystiedot, öppettider, kontor, kontakt",
+  "admin.training.example.other":
+    "Voin vastata vain omaa rahankäyttöäsi koskeviin kysymyksiin tässä sovelluksessa. Muissa asioissa asiakaspalvelu auttaa, tai tavoitat neuvojan kohdasta Keskustele henkilön kanssa.",
+  "error.title": "Jokin meni vikaan",
+  "error.body": "Sivua ei voitu näyttää. Tietosi ovat turvassa. Yritä uudelleen tai palaa alkuun.",
+  "error.home": "Takaisin alkuun",
+  "notFound.title": "Tätä sivua ei ole",
+  "notFound.body": "Osoite voi olla väärin kirjoitettu tai sivu on siirretty.",
 };

@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 import { createAnnouncement, listAnnouncements } from "@/lib/admin/announcements";
-import { isAdmin } from "@/lib/admin/auth";
+import { refuse } from "@/lib/admin/auth";
 import { pushToEveryone } from "@/lib/push/push";
 import { audit } from "@/lib/admin/settings";
-
-const unauthorized = (): Response => Response.json({ error: "unauthorized" }, { status: 401 });
 
 const announcementSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -14,12 +12,14 @@ const announcementSchema = z.object({
 });
 
 export async function GET(): Promise<Response> {
-  if (!(await isAdmin())) return unauthorized();
+  const refused = await refuse("manager");
+  if (refused) return refused;
   return Response.json({ announcements: await listAnnouncements() });
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!(await isAdmin())) return unauthorized();
+  const refused = await refuse("manager");
+  if (refused) return refused;
   const parsed = announcementSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   await createAnnouncement(parsed.data);

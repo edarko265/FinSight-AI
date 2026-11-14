@@ -1,4 +1,4 @@
-import { isAdmin } from "@/lib/admin/auth";
+import { refuse } from "@/lib/admin/auth";
 import {
   audit,
   getSettings,
@@ -27,7 +27,8 @@ function describe(before: AppSettings, after: AppSettings): string {
 }
 
 export async function PUT(request: Request): Promise<Response> {
-  if (!(await isAdmin())) return Response.json({ error: "unauthorized" }, { status: 401 });
+  const refused = await refuse("manager");
+  if (refused) return refused;
   const parsed = settingsSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const before = await getSettings();

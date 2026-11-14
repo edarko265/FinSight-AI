@@ -1,16 +1,15 @@
 import { z } from "zod";
 
-import { isAdmin } from "@/lib/admin/auth";
+import { refuse } from "@/lib/admin/auth";
 import { audit } from "@/lib/admin/settings";
 import { advisorReply, advisorThread, setRequestState } from "@/lib/advisor/handoff";
-
-const unauthorized = (): Response => Response.json({ error: "unauthorized" }, { status: 401 });
 
 export async function GET(
   _request: Request,
   context: RouteContext<"/api/admin/advisor/[id]">,
 ): Promise<Response> {
-  if (!(await isAdmin())) return unauthorized();
+  const refused = await refuse("staff");
+  if (refused) return refused;
   const { id } = await context.params;
   const thread = await advisorThread(id);
   return thread
@@ -27,7 +26,8 @@ export async function POST(
   request: Request,
   context: RouteContext<"/api/admin/advisor/[id]">,
 ): Promise<Response> {
-  if (!(await isAdmin())) return unauthorized();
+  const refused = await refuse("staff");
+  if (refused) return refused;
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const { id } = await context.params;

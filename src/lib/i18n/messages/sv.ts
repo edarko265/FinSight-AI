@@ -862,6 +862,47 @@ export const sv: Record<MessageKey, string> = {
   "notify.insight.body": "Du har {count} olästa insikter.",
   "admin.audit.announcement.push": "Meddelande skickat till enheter",
   "chat.moreQuestions": "Fler frågor",
+  "insight.pace.title": "{category} ligger före din vanliga takt",
+  "insight.pace.body":
+    "{amount} hittills den här månaden. Vid dag {day} brukar du ha lagt ungefär {usual}.",
+  "insight.goal.title": "Dags att lägga undan till {name}",
+  "insight.goal.body.fits":
+    "{monthly} den här månaden håller dig enligt plan. Du brukar ha ungefär {room} över.",
+  "insight.goal.body.stretch":
+    "{monthly} den här månaden håller dig enligt plan. Det är mer än de {room} du brukar ha över, så en liten minskning behövs.",
+  "insight.goal.body.hard":
+    "Planen kräver {monthly} i månaden och du brukar ha ungefär {room} över. Mer tid skulle göra den nåbar.",
+  "notify.reminder.body": "Öppna FinSight-AI för att se detaljerna.",
+  "admin.audit.reminders.run": "Påminnelser skickade nu",
+  "admin.audit.reminders.scheduled": "Schemalagda påminnelser skickade",
+  "admin.nav.overview": "Översikt",
+  "admin.nav.usage": "Användning",
+  "admin.nav.ai": "AI",
+  "admin.nav.advisers": "Rådgivare",
+  "admin.nav.announcements": "Meddelanden",
+  "admin.nav.notifications": "Aviseringar",
+  "admin.nav.controls": "Styrning",
+  "admin.nav.system": "System",
+  "admin.open": "Öppna",
+  "admin.chart.daily": "Frågor per dag",
+  "admin.chart.aiDaily": "AI-svar per dag",
+  "admin.chart.mode": "AI och grundläge",
+  "admin.chart.mode.ai": "AI-coach",
+  "admin.chart.mode.basic": "Grundläge",
+  "admin.chart.reach": "Meddelandenas räckvidd",
+  "admin.chart.consent": "Samtyckesval",
+  "admin.chart.tokens": "Tokens per modell",
+  "admin.chart.empty": "Inget att visa än.",
+  "admin.overview.intro":
+    "Vad kunderna använder coachen till, och vad det kostar. Öppna en ruta för att se mer och agera.",
+  "admin.notifications.devices": "{count} kunder har aviseringar på",
+  "admin.notifications.note":
+    "Påminnelser går ut varje morgon: ett mål att lägga undan till, en räkning som snart förfaller, en vana som går åt fel håll, ett möjligt underskott. Varje kund får en avisering om det viktigaste som hen inte har fått veta än. Aviseringen innehåller bara rubriken; beloppen stannar i appen.",
+  "admin.notifications.send": "Skicka påminnelser nu",
+  "admin.notifications.sending": "Skickar…",
+  "admin.notifications.result": "{sent} påminnelser skickade till {customers} kunder",
+  "admin.notifications.announce": "Meddelanden skickas också till alla enheter när de publiceras.",
+  "admin.menu": "Adminsektioner",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
   "coach.statfin.title": "Du och hushållen i Finland",
@@ -869,4 +910,183 @@ export const sv: Record<MessageKey, string> = {
     "I Finland lade hushåll i åldersgruppen {band} ungefär {average} i månaden per vuxen på {category} ({year}). Ditt snitt är {value}.",
   "coach.statfin.basis":
     "Statistikcentralen, konsumtionsundersökningen {year}, per konsumtionsenhet. Ett konto är inte ett helt hushåll och kategorierna skiljer sig något, så läs detta som sammanhang, inte som en rangordning.",
+  "admin.attention": "Kräver uppmärksamhet",
+  "admin.attention.none": "Inget väntar på åtgärd just nu.",
+  "admin.attention.replies": "Rådgivarförfrågningar som väntar på svar: {count}",
+  "admin.attention.replies.action": "Svara",
+  "admin.attention.gap": "{theme}: coachen saknade svar ({count} på 30 dagar)",
+  "admin.attention.gap.action": "Lär ut ett svar",
+  "admin.attention.limit": "AI-svar i dag: {used} av dagsgränsen {limit}",
+  "admin.attention.limit.action": "Ändra gränsen",
+  "admin.attention.grounding":
+    "AI-svar som korrigerats för ett belopp som ingen beräkning gav: {count}",
+  "admin.chart.total": "Totalt",
+  "admin.chart.average": "Snitt per dag",
+  "admin.chart.peak": "Mest aktiva dag",
+  "admin.chart.hint":
+    "Peka eller tryck på en dag för att se dess siffra. Piltangenterna fungerar också.",
+  "admin.chart.mode.team": "Svar som personalen lärt ut",
+  "admin.chart.mode.note":
+    "AI: modellen valde beräkningen och skrev texten. Grundläge: nyckelord valde den. Inlärt: coachen gav ett svar som personalen skrivit.",
+  "admin.download": "Ladda ner CSV",
+  "admin.forbidden.title": "Det här avsnittet är för administratörer",
+  "admin.forbidden.body": "Din roll omfattar det inte. Be en administratör om du behöver åtkomst.",
+  "admin.limit": "Daglig AI-gräns",
+  "admin.limit.today": "AI-svar använda i dag",
+  "admin.loadFailed": "Det gick inte att ladda. Kontrollera anslutningen och försök igen.",
+  "admin.loadFailed.stale":
+    "Det gick inte att uppdatera. Siffrorna nedan är från den senaste lyckade laddningen.",
+  "admin.retry": "Försök igen",
+  "admin.refresh": "Uppdatera",
+  "admin.refreshing": "Uppdaterar…",
+  "admin.updated": "Uppdaterad {time}",
+  "admin.signedInAs": "Inloggad som",
+  "admin.login.who": "Vem loggar in?",
+  "admin.login.whoHint":
+    "Ange ditt användarnamn. Lämna tomt för att logga in som ägare med installationens lösenord.",
+  "admin.login.username": "Användarnamn",
+  "admin.login.usernamePlaceholder": "Till exempel aino.virtanen",
+  "admin.login.staffHint": "Ange lösenordet för ditt personalkonto.",
+  "admin.nav.team": "Team",
+  "admin.nav.training": "Lär coachen",
+  "admin.nav.trash": "Papperskorg",
+  "admin.note.limit": "Dagsgräns {limit}",
+  "admin.note.noLimit": "Ingen dagsgräns satt",
+  "admin.note.of": "{part} av {whole}",
+  "admin.note.open": "{count} öppna totalt",
+  "admin.note.perDay": "Cirka {count} per dag",
+  "admin.note.tokens": "{count} token",
+  "admin.note.withdrawn": "{count} återkallade",
+  "admin.questions.unit": "Frågor",
+  "admin.requests.unit": "Förfrågningar",
+  "admin.role.owner": "Ägare",
+  "admin.role.owner.note":
+    "Loggar in med installationens lösenord. Kan göra allt och kan inte tas bort.",
+  "admin.role.admin": "Administratör",
+  "admin.role.admin.note": "Allt: inställningar, meddelanden, teamet, AI-användning och loggen.",
+  "admin.role.adviser": "Rådgivare",
+  "admin.role.adviser.note":
+    "Svarar kunder som bett om en person, lär coachen och ser statistiken.",
+  "admin.role.banker": "Personlig bankrådgivare",
+  "admin.role.banker.note":
+    "Samma som rådgivare, för personal som sköter kundernas vardagsärenden.",
+  "admin.team.intro":
+    "Personer som kan logga in här utöver ägaren. Var och en har eget användarnamn, lösenord och roll.",
+  "admin.team.add": "Lägg till en teammedlem",
+  "admin.team.edit": "Redigera teammedlem",
+  "admin.team.count": "Teammedlemmar",
+  "admin.team.members": "Medlemmar",
+  "admin.team.empty": "Inga teammedlemmar ännu. Bara ägaren kan logga in.",
+  "admin.team.you": "du",
+  "admin.team.name": "Namn",
+  "admin.team.nameHint": "Namnet som kollegor ser i loggen.",
+  "admin.team.usernameHint":
+    "Det de skriver för att logga in. 3–40 små bokstäver, siffror, punkter eller streck. Kan inte ändras senare.",
+  "admin.team.taken":
+    "Användarnamnet används redan, kanske av någon i papperskorgen. Välj ett annat.",
+  "admin.team.role": "Roll",
+  "admin.team.roleHint": "Rollen avgör vilka avsnitt de kan öppna.",
+  "admin.team.roles": "Vad varje roll kan göra",
+  "admin.team.passwordHint":
+    "Minst 10 tecken. Tryck på förslaget för ett starkt lösenord och lämna det personligen.",
+  "admin.team.passwordKeep":
+    "Lämna tomt för att behålla lösenordet, eller ange ett nytt på minst 10 tecken.",
+  "admin.team.passwordUnchanged": "Oförändrat",
+  "admin.team.generate": "Föreslå ett starkt lösenord",
+  "admin.team.reviewHint":
+    "Anteckna lösenordet nu: det sparas bara som hash och kan inte visas igen.",
+  "admin.team.note":
+    "Att flytta någon till papperskorgen avslutar åtkomsten direkt. Namn och användarnamn lagras krypterade; lösenord bara som saltad hash.",
+  "admin.training.intro":
+    "När coachen saknar svar, skriv det svar den borde ha gett. Därefter ger den ditt svar ordagrant till alla som frågar.",
+  "admin.training.gaps": "Det coachen inte kunde besvara",
+  "admin.training.gaps.note":
+    "Per tema de senaste 30 dagarna. Frågor sorteras i ett tema när de kommer in och bara temat räknas: ingens fråga sparas.",
+  "admin.training.asked": "{count} de senaste 30 dagarna",
+  "admin.training.covered": "Svar inlärt",
+  "admin.training.teach": "Lär ut ett svar",
+  "admin.training.taught": "Svar ni har lärt ut",
+  "admin.training.new": "Lär ut ett nytt svar",
+  "admin.training.edit": "Redigera inlärt svar",
+  "admin.training.empty": "Inget inlärt ännu.",
+  "admin.training.uses": "Antal gånger givet: {count}",
+  "admin.training.wholeTheme": "Alla frågor inom temat",
+  "admin.training.keywords": "Ord i frågan",
+  "admin.training.step.theme": "Tema",
+  "admin.training.step.themeHint": "Vilken typ av fråga gäller svaret?",
+  "admin.training.step.keywords": "När ska det användas?",
+  "admin.training.step.keywordsHint":
+    "Lämna tomt för att svara på alla frågor inom temat. Eller ange ord, åtskilda med komma, så används det bara när något av dem förekommer. Ta med finska och engelska ord också.",
+  "admin.training.answer.en": "Svar på engelska",
+  "admin.training.answer.fi": "Svar på finska",
+  "admin.training.answer.sv": "Svar på svenska",
+  "admin.training.answer.hint":
+    "Skriv vad coachen ska säga. Håll det allmänt: det visas för alla som frågar, så inga personliga siffror.",
+  "admin.training.answer.optional":
+    "Valfritt. Utan det får kunder med det här språket det engelska svaret.",
+  "admin.training.useExample": "Börja från ett exempel",
+  "admin.training.note":
+    "Inlärda svar visas exakt som de skrivits och märks som svar från bankens team. De används bara när ingen beräkning passar frågan.",
+  "admin.trash.intro": "Allt personalen raderar väntar här. Återställ det eller radera permanent.",
+  "admin.trash.note": "Permanent radering kan inte ångras.",
+  "admin.trash.confirm": "Radera alla {count} objekt permanent?",
+  "admin.trash.kind.announcement": "Meddelande",
+  "admin.trash.kind.request": "Rådgivarförfrågan",
+  "admin.trash.kind.staff": "Teammedlem",
+  "admin.trash.kind.training": "Inlärt svar",
+  "admin.audit.staff.create": "Teammedlem tillagd",
+  "admin.audit.staff.edit": "Teammedlem redigerad",
+  "admin.audit.staff.trash": "Teammedlem flyttad till papperskorgen",
+  "admin.audit.staff.restore": "Teammedlem återställd",
+  "admin.audit.staff.purge": "Teammedlem raderad permanent",
+  "admin.audit.training.create": "Svar inlärt till coachen",
+  "admin.audit.training.edit": "Inlärt svar redigerat",
+  "admin.audit.training.trash": "Inlärt svar flyttat till papperskorgen",
+  "admin.audit.training.restore": "Inlärt svar återställt",
+  "admin.audit.training.purge": "Inlärt svar raderat permanent",
+  "chat.modeTeam": "Svar från bankens team",
+  "admin.training.words.loans":
+    "loan, mortgage, interest, laina, asuntolaina, korko, lån, bolån, ränta",
+  "admin.training.example.loans":
+    "Jag kan inte räkna fram låneerbjudanden från dina kontouppgifter. En tumregel är att boendekostnader inklusive amorteringar ska lämna utrymme för räkningar, vardagsutgifter och en buffert. Vill du ha ett erbjudande utifrån din situation, välj Prata med en person så går en rådgivare igenom det med dig.",
+  "admin.training.words.investing":
+    "invest, fund, etf, stocks, sijoittaminen, rahasto, osake, investera, fond, aktie",
+  "admin.training.example.investing":
+    "Jag ger inte investeringsråd och kan inte säga vad du ska köpa. Jag kan visa hur mycket du brukar ha kvar varje månad, vilket är en rimlig utgångspunkt för ett månadsbelopp. För råd om fonder, be om en rådgivare under Prata med en person och välj investeringsrådgivning.",
+  "admin.training.words.insurance":
+    "insurance, home insurance, travel insurance, vakuutus, kotivakuutus, matkavakuutus, försäkring, hemförsäkring",
+  "admin.training.example.insurance":
+    "Jag kan visa vad du betalar för försäkringar om de finns bland dina regelbundna räkningar, men jag kan inte jämföra försäkringar. Det kan en rådgivare: välj Prata med en person.",
+  "admin.training.words.cards":
+    "card, refund, dispute, lost card, kortti, hyvitys, reklamaatio, kort, återbetalning, reklamation",
+  "admin.training.example.cards":
+    "Om kortet är borttappat eller stulet, spärra det direkt i bankens app eller via spärrtjänsten. För en betalning du inte känner igen eller en återbetalning som inte kommit, kontakta kundtjänst: jag kan visa transaktionen men inte ändra den.",
+  "admin.training.words.taxes":
+    "tax, tax return, deduction, vero, veroilmoitus, vähennys, skatt, deklaration, avdrag",
+  "admin.training.example.taxes":
+    "Jag kan inte ge skatterådgivning. Skattekort, deklaration och avdrag sköts i Skatteförvaltningens MinSkatt. Jag kan visa hur mycket du lagt i en kategori under ett år om det hjälper.",
+  "admin.training.words.pension": "pension, retire, eläke, eläkkeelle, pension, pensionär",
+  "admin.training.example.pension":
+    "Jag kan inte uppskatta din pension: den bygger på ditt intjänandeutdrag, som din pensionsanstalt har. Jag kan visa vad dina månader kostar i dag, vilket är siffran att jämföra en pensionsprognos med.",
+  "admin.training.words.benefits":
+    "benefit, allowance, kela, housing allowance, tuki, asumistuki, bidrag, bostadsbidrag",
+  "admin.training.example.benefits":
+    "Förmåner beslutas av FPA, och jag kan inte säga om du har rätt till dem. Jag kan visa dina inkomster och boendekostnader per månad, vilket är vad en ansökan brukar fråga efter.",
+  "admin.training.words.account":
+    "password, sign in, locked, salasana, kirjautuminen, lukittu, lösenord, logga in, låst",
+  "admin.training.example.account":
+    "Har du glömt lösenordet, välj Glömt lösenordet på inloggningssidan. Om kontot är låst eller något ser fel ut, kontakta kundtjänst: jag kan inte ändra kontoinställningar härifrån.",
+  "admin.training.words.budgeting": "budget, plan, 50/30/20, budjetti, suunnitelma, budget, plan",
+  "admin.training.example.budgeting":
+    "Ett enkelt sätt att börja: titta på dina tre korgar (regelbundna räkningar, oregelbundna nödvändiga utgifter, vardagsutgifter) och bestäm ett belopp att flytta till sparande på lönedagen. Be mig förklara dina tre korgar så visar jag dina.",
+  "admin.training.words.other":
+    "opening hours, branch, contact, aukioloajat, konttori, yhteystiedot, öppettider, kontor, kontakt",
+  "admin.training.example.other":
+    "Jag kan bara svara på frågor om dina egna pengar i den här appen. För annat hjälper kundtjänst, eller välj Prata med en person för att nå en rådgivare.",
+  "error.title": "Något gick fel",
+  "error.body":
+    "Sidan kunde inte visas. Dina uppgifter är trygga. Försök igen eller gå tillbaka till början.",
+  "error.home": "Tillbaka till början",
+  "notFound.title": "Sidan finns inte",
+  "notFound.body": "Adressen kan vara felskriven eller så har sidan flyttats.",
 };

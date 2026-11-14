@@ -45,6 +45,8 @@ const schema = z.object({
   /** Web Push keys for device notifications. Generate with: npx web-push generate-vapid-keys */
   VAPID_PUBLIC_KEY: optional,
   VAPID_PRIVATE_KEY: optional,
+  /** Shared secret the scheduler sends when it triggers the reminder job. */
+  CRON_SECRET: optional,
 });
 
 export type Env = z.infer<typeof schema>;
