@@ -82,7 +82,8 @@ function applyLocally(before: DashboardPayload, next: DashboardState): Dashboard
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
-  const { overview, overviewLoading, overviewFailed, refresh } = useOverview();
+  const { overview, overviewLoading, overviewFailed, refresh, setDashboardBalanceVisible } =
+    useOverview();
   const { dashboard, saving, loadFailed, retried, retry, update } = useDashboardSave(locale);
   const [overviewRetried, setOverviewRetried] = useState(false);
   const [banner, setBanner] = useState<InsightItem | null>(null);
@@ -96,6 +97,21 @@ export function DashboardView(): React.JSX.Element {
   const [entryDraft, setEntryDraft] = useState<EntryDraft | null>(null);
   // Counts recorded income and expenses, so the charts and the banner are fetched again.
   const [recorded, setRecorded] = useState(0);
+  const balanceRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const balance = balanceRef.current;
+    if (!balance || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setDashboardBalanceVisible(entry?.isIntersecting ?? true),
+      { threshold: 0.1 },
+    );
+    observer.observe(balance);
+    return () => {
+      observer.disconnect();
+      setDashboardBalanceVisible(true);
+    };
+  }, [setDashboardBalanceVisible]);
 
   useEffect(() => {
     let cancelled = false;
@@ -210,7 +226,7 @@ export function DashboardView(): React.JSX.Element {
         </FocusedRegion>
       ) : null}
 
-      <section className="rounded-2xl bg-brand p-5 text-on-brand">
+      <section ref={balanceRef} className="rounded-2xl bg-brand p-5 text-on-brand">
         <p className="text-sm opacity-80">{t("dashboard.balance")}</p>
         <div className="mt-1 text-3xl font-semibold tabular-nums">
           {overview ? (
@@ -405,12 +421,10 @@ export function DashboardView(): React.JSX.Element {
         </p>
       ) : dashboard === null ? null : (
         <div className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:gap-4 xl:grid-cols-3">
-          {dashboard.cards.map((widget, index, all) => (
+          {dashboard.cards.map((widget) => (
             <WidgetCard
               key={widget.id}
               widget={widget}
-              first={index === 0}
-              last={index === all.length - 1}
               over={overId === widget.id}
               dragged={dragId === widget.id}
               onDragStart={setDragId}
@@ -419,10 +433,6 @@ export function DashboardView(): React.JSX.Element {
                 if (dragId && overId) reorder(dragId, overId);
                 setDragId(null);
                 setOverId(null);
-              }}
-              onMove={(id, by) => {
-                const neighbour = all[index + by];
-                if (neighbour) reorder(id, neighbour.id);
               }}
               onResize={(id, size) => void changeWidget(id, (item) => ({ ...item, size }))}
               onCollapse={(id, collapsed) =>

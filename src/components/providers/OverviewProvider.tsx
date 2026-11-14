@@ -47,6 +47,9 @@ interface OverviewValue {
   overviewLoading: boolean;
   /** True when the overview could not be loaded and there is none to show. */
   overviewFailed: boolean;
+  /** Dashboard card visibility, so the header can keep its balance available while scrolling. */
+  dashboardBalanceVisible: boolean;
+  setDashboardBalanceVisible: (visible: boolean) => void;
   refresh: () => void;
 }
 
@@ -55,6 +58,8 @@ const OverviewContext = createContext<OverviewValue>({
   me: null,
   overviewLoading: false,
   overviewFailed: false,
+  dashboardBalanceVisible: true,
+  setDashboardBalanceVisible: () => undefined,
   refresh: () => undefined,
 });
 
@@ -67,6 +72,7 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   const [overviewFailed, setOverviewFailed] = useState(false);
   const [meFailed, setMeFailed] = useState(false);
   const [meRetried, setMeRetried] = useState(false);
+  const [dashboardBalanceVisible, setDashboardBalanceVisible] = useState(true);
   const [tick, setTick] = useState(0);
 
   // Asked for alongside the account state, not after it: if the terms are still to be
@@ -143,9 +149,11 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
       me,
       overviewLoading,
       overviewFailed: overview === null && overviewFailed,
+      dashboardBalanceVisible,
+      setDashboardBalanceVisible,
       refresh,
     }),
-    [overview, me, overviewLoading, overviewFailed, refresh],
+    [overview, me, overviewLoading, overviewFailed, dashboardBalanceVisible, refresh],
   );
   return (
     <OverviewContext.Provider value={value}>

@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 
+import { showHeaderBalance } from "@/components/dashboard/balance-visibility";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { BellIcon, Logo } from "@/components/ui/icons";
+import { Logo } from "@/components/ui/icons";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { formatDay } from "@/lib/i18n/config";
+import { formatDay, formatMoney } from "@/lib/i18n/config";
 
 export function AppHeader(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const { overview, overviewLoading } = useOverview();
-  const unread = overview?.unreadInsights ?? 0;
+  const { overview, overviewLoading, dashboardBalanceVisible } = useOverview();
 
   return (
     <header className="shrink-0 bg-brand px-4 pt-[env(safe-area-inset-top)] text-on-brand">
@@ -33,21 +33,17 @@ export function AppHeader(): React.JSX.Element {
           </span>
         </Link>
         <div className="flex items-center gap-2">
+          {overview && showHeaderBalance(dashboardBalanceVisible) ? (
+            <span
+              aria-label={t("dashboard.balance")}
+              className="rounded-full bg-white/15 px-2.5 py-1 text-sm font-semibold tabular-nums"
+            >
+              {formatMoney(overview.balanceCents, locale)}
+            </span>
+          ) : null}
           <span className="rounded-full bg-primary px-2.5 py-1 text-center text-xs leading-tight font-semibold text-on-primary">
             {t("app.synthetic")}
           </span>
-          <Link
-            href="/insights"
-            aria-label={unread > 0 ? `${t("nav.insights")} (${unread})` : t("nav.insights")}
-            className="relative -m-1 rounded-full p-1"
-          >
-            <BellIcon className="size-6" />
-            {unread > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-on-primary">
-                {unread}
-              </span>
-            ) : null}
-          </Link>
         </div>
       </div>
     </header>

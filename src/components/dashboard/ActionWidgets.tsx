@@ -156,7 +156,7 @@ function GoalsWidget(): React.JSX.Element {
     <div className="flex flex-col gap-3">
       {goals.length === 0 ? <p className="text-sm text-muted">{t("goals.empty")}</p> : null}
       <ul className="flex flex-col gap-3">
-        {goals.slice(0, 4).map(({ goal, roomCents, fit }) => {
+        {goals.slice(0, 3).map(({ goal, roomCents, fit }) => {
           const covered = Math.min(
             100,
             Math.round((roomCents / Math.max(1, goal.monthlyCents)) * 100),
@@ -186,9 +186,6 @@ function GoalsWidget(): React.JSX.Element {
           );
         })}
       </ul>
-      <Link href="/goals" className="text-sm font-semibold text-accent">
-        {t("nav.goals")} →
-      </Link>
     </div>
   );
 }
@@ -215,7 +212,7 @@ function InsightsWidget(): React.JSX.Element {
         <p className="text-sm text-muted">{t("widget.insights.none")}</p>
       ) : null}
       <ul className="flex flex-col gap-2 text-sm">
-        {insights.slice(0, 4).map((insight) => (
+        {insights.slice(0, 3).map((insight) => (
           <li key={insight.id} className="flex items-start gap-2">
             <span
               className={`mt-1.5 size-2 shrink-0 rounded-full ${
@@ -231,9 +228,6 @@ function InsightsWidget(): React.JSX.Element {
           </li>
         ))}
       </ul>
-      <Link href="/insights" className="text-sm font-semibold text-accent">
-        {t("insights.title")} →
-      </Link>
     </div>
   );
 }

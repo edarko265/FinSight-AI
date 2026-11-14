@@ -86,10 +86,16 @@ function isSelfExplaining(chart: ChartSpec): boolean {
 
 /**
  * A chart is never the only carrier of the numbers: unless the marks are labelled with their
- * amounts, every chart is paired with an always-visible values list, readable without colour and
- * by screen readers.
+ * amounts, every chart is paired with a values list, readable without colour and by screen
+ * readers. Compact widgets keep that list screen-reader-only to avoid repeating the chart.
  */
-function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
+function Values({
+  chart,
+  className = "",
+}: {
+  chart: ChartSpec;
+  className?: string;
+}): React.JSX.Element {
   const { locale } = usePreferences();
   const keyed = KEYED.has(chart.kind);
   const percents = SHARES.has(chart.kind)
@@ -98,7 +104,7 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
   const lastIndex = chart.points.length - 1;
 
   return (
-    <ul className="mt-3 grid grid-cols-1 gap-1.5 text-sm">
+    <ul className={`mt-3 grid grid-cols-1 gap-1.5 text-sm ${className}`}>
       {chart.points.map((point, index) => (
         <li key={`${index}-${point.label}`} className="flex items-baseline justify-between gap-3">
           <span className="flex min-w-0 items-baseline gap-2 break-words">
@@ -125,12 +131,21 @@ function Values({ chart }: { chart: ChartSpec }): React.JSX.Element {
   );
 }
 
-export function ChartView({ card }: { card: ChartCard }): React.JSX.Element {
+export function ChartView({
+  card,
+  compact = false,
+}: {
+  card: ChartCard;
+  /** Keep the full value list available to assistive technology without repeating it in compact widgets. */
+  compact?: boolean;
+}): React.JSX.Element {
   return (
     <figure aria-label={card.title}>
       <ChartPlot chart={card.chart} />
       <figcaption className="sr-only">{card.summary}</figcaption>
-      {isSelfExplaining(card.chart) ? null : <Values chart={card.chart} />}
+      {isSelfExplaining(card.chart) ? null : (
+        <Values chart={card.chart} className={compact ? "sr-only" : ""} />
+      )}
     </figure>
   );
 }
