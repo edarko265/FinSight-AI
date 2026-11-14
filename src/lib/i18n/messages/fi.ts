@@ -106,8 +106,10 @@ export const fi: Record<MessageKey, string> = {
   "dashboard.cancel": "Peruuta",
   "dashboard.noChart": "En saanut tästä kaaviota. Kokeile nimetä luokka tai ajanjakso.",
 
-  "chart.showValues": "Näytä luvut",
   "evidence.title": "Vastauksen taustalla olevat tapahtumat",
+  "chart.average": "Keskiarvo {amount}",
+  "chart.caption.columns":
+    "Viimeisin kuukausi on tummempi; katkoviiva on kuukausikeskiarvo, {average}.",
   "evidence.count": "{count} tapahtumaa",
   "evidence.empty": "Ei vastaavia tapahtumia tässä datassa ja tällä jaksolla.",
   "evidence.close": "Sulje",
@@ -511,7 +513,7 @@ export const fi: Record<MessageKey, string> = {
   "info.show": "Lisätietoa",
   "info.hide": "Piilota lisätiedot",
   "chart.help.bar":
-    "Jokainen palkki on yksi jakso. Korkeampi palkki tarkoittaa enemmän rahaa, ja tumma palkki on viimeisin. Summat on lueteltu kaavion alla.",
+    "Pidempi tai korkeampi palkki tarkoittaa enemmän rahaa. Tummempi palkki on suurin erä tai kuukausikaaviossa viimeisin kuukausi. Summat on kirjoitettu näkyviin kaavion yhteyteen.",
   "chart.help.hbar":
     "Jokainen rivi on yksi kohde, ja pidempi palkki tarkoittaa enemmän rahaa. Värit vastaavat kaavion alla olevaa luetteloa.",
   "chart.help.line":

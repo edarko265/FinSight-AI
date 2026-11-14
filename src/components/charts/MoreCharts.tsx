@@ -7,6 +7,7 @@ import {
   fitLabel,
 } from "@/components/charts/chart-palette";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { RankedBars } from "@/components/charts/BarChart";
 import { useChartLabels } from "@/components/charts/chart-labels";
 import type { ChartPoint } from "@/lib/contracts/chart";
 import { formatMoney } from "@/lib/i18n/config";
@@ -32,30 +33,9 @@ function useTip(): (point: ChartPoint, total?: number) => string {
     }`;
 }
 
-/** Rows: the readable choice when names are long. */
+/** Rows: the readable choice when names are long. Each row keeps its series colour. */
 export function HBarChart({ points }: Props): React.JSX.Element {
-  const labels = useChartLabels();
-  const tip = useTip();
-  const data = positive(points);
-  const max = Math.max(1, ...data.map((point) => point.valueCents));
-  return (
-    <ul className="flex flex-col gap-2" aria-hidden="true">
-      {data.map((point, index) => (
-        <li key={point.label} title={tip(point)} className="flex flex-col gap-1">
-          {labels ? <span className="truncate text-xs text-muted">{point.label}</span> : null}
-          <span className="h-3 w-full overflow-hidden rounded-full bg-border">
-            <span
-              className="fs-grow-x block h-full rounded-full"
-              style={{
-                width: `${Math.max((point.valueCents / max) * 100, 1)}%`,
-                background: chartColor(index),
-              }}
-            />
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
+  return <RankedBars points={positive(points)} keyed />;
 }
 
 const W = 300;

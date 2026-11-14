@@ -7,6 +7,11 @@ export const CHART_COLORS: readonly string[] = [
   "var(--chart-5)",
 ];
 
+/** The one item that matters: the largest row, or the latest month. */
+export const CHART_EMPHASIS = "var(--chart-1)";
+/** The rest of the items: calmer, but still above 3:1 against the card in light and dark. */
+export const CHART_REST = "color-mix(in srgb, var(--chart-1) 58%, var(--surface))";
+
 export function chartColor(index: number): string {
   return CHART_COLORS[index % CHART_COLORS.length] ?? "var(--chart-1)";
 }
