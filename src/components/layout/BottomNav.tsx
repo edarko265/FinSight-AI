@@ -49,17 +49,17 @@ export function BottomNav(): React.JSX.Element {
   return (
     <nav
       aria-label="Main"
-      className="shrink-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="box-border h-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] shrink-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid h-full grid-cols-5">
         {ITEMS.map(({ href, label, Icon }) => {
           const active = pathname.startsWith(href);
           return (
-            <li key={href}>
+            <li key={href} className="min-h-0">
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-1 px-0 py-2 text-xs font-medium tracking-tight ${
+                className={`flex h-full flex-col items-center justify-center gap-1 px-0 py-1 text-xs font-medium tracking-tight ${
                   active ? "text-accent" : "text-muted"
                 }`}
               >

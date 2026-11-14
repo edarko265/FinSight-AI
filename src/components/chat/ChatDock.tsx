@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { PinnableChat } from "@/components/chat/PinnableChat";
@@ -21,8 +21,10 @@ import {
 const HIDDEN_ON = ["/chat", "/story"];
 
 const HALF =
-  "inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+3.5rem)] h-[50dvh] rounded-t-2xl border-t border-border shadow-2xl md:inset-x-auto md:right-6 md:bottom-6 md:h-[min(36rem,70dvh)] md:w-96 md:rounded-2xl md:border";
-const FULL = "inset-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]";
+  "inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] h-[50dvh] rounded-t-2xl border-t border-border shadow-2xl md:inset-x-auto md:right-6 md:bottom-6 md:h-[min(36rem,70dvh)] md:w-96 md:rounded-2xl md:border";
+/** Full mode stops above the tab bar on phones; at md the tab bar is hidden, so it reaches the edge. */
+const FULL =
+  "inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] pt-[env(safe-area-inset-top)] md:bottom-0 md:pt-0";
 /** Closed sheets stay mounted but slide out of view and out of the tab order. */
 const CLOSED = "invisible translate-y-full pointer-events-none";
 const SWIPE_PX = 60;
@@ -44,12 +46,25 @@ export function ChatDock(): React.JSX.Element | null {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const wasOpen = useRef(false);
 
+  const lastPath = useRef(pathname);
+  const navigated = useRef(false);
+
+  // Moving to another page (e.g. with a tab) closes the sheet so the page is visible.
+  useEffect(() => {
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
+    navigated.current = mode !== "closed";
+    close();
+  }, [pathname, mode, close]);
+
   const hidden = HIDDEN_ON.some((path) => pathname.startsWith(path));
   const shown = mode !== "closed" && !hidden;
 
   useEffect(() => {
     if (shown && !wasOpen.current) panelRef.current?.focus();
-    if (!shown && wasOpen.current) buttonRef.current?.focus();
+    // After navigating, focus stays where the user put it (the tab link).
+    if (!shown && wasOpen.current && !navigated.current) buttonRef.current?.focus();
+    if (shown) navigated.current = false;
     wasOpen.current = shown;
   }, [shown]);
 
@@ -89,33 +104,6 @@ export function ChatDock(): React.JSX.Element | null {
     }
   };
 
-  // In full mode the dialog is modal, so Tab must not leave it.
-  const trapTab = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
-    if (event.key !== "Tab" || mode !== "full") return;
-    const items = Array.from(
-      event.currentTarget.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])',
-      ),
-    ).filter(
-      (el) =>
-        !el.closest("[inert],[hidden]") && (el.checkVisibility?.() ?? el.offsetParent !== null),
-    );
-    if (items.length === 0) return;
-    const first = items[0];
-    const last = items[items.length - 1];
-    const active = document.activeElement;
-    if (!event.currentTarget.contains(active)) {
-      event.preventDefault();
-      first.focus();
-    } else if (event.shiftKey && (active === first || active === event.currentTarget)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
   if (hidden) return null;
   const full = mode === "full";
   const canCall = Boolean(me?.voiceAgentEnabled && me.aiConsent);
@@ -124,7 +112,7 @@ export function ChatDock(): React.JSX.Element | null {
   return (
     <>
       {mode === "closed" ? (
-        <div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] z-30 md:right-6 md:bottom-6">
+        <div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h)+1rem)] z-30 md:right-6 md:bottom-6">
           <button
             ref={buttonRef}
             type="button"
@@ -151,17 +139,16 @@ export function ChatDock(): React.JSX.Element | null {
       ) : null}
 
       {shown && !full ? (
-        <div aria-hidden="true" onClick={close} className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+3.5rem)] z-40 bg-black/30 md:hidden" />
+        <div aria-hidden="true" onClick={close} className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 bg-black/30 md:hidden" />
       ) : null}
 
       {mounted ? (
         <div
           ref={panelRef}
           role="dialog"
-          aria-modal={full}
+          aria-modal="false"
           aria-label={t("nav.chat")}
           tabIndex={-1}
-          onKeyDown={trapTab}
           className={`fixed z-40 flex flex-col overflow-hidden bg-background outline-none transition-[transform,visibility] duration-300 motion-reduce:transition-none ${
             shown ? "" : CLOSED
           } ${full ? FULL : HALF}`}
