@@ -12,13 +12,13 @@ import { readState, writeState } from "@/lib/data/repository";
  * the provider below issues a made-up code and every screen says so. The
  * interface is what the real connection would implement.
  */
-export interface BonusProvider {
+interface BonusProvider {
   id: string;
   simulated: boolean;
   issue(couponId: string): Promise<{ code: string }>;
 }
 
-export const simulatedBonus: BonusProvider = {
+const simulatedBonus: BonusProvider = {
   id: "simulated",
   simulated: true,
   async issue() {
@@ -26,7 +26,7 @@ export const simulatedBonus: BonusProvider = {
   },
 };
 
-export const bonusProvider = (): BonusProvider => simulatedBonus;
+const bonusProvider = (): BonusProvider => simulatedBonus;
 
 export interface Redemption {
   id: string;
@@ -39,7 +39,7 @@ export interface Redemption {
 
 const KIND = "redemptions";
 
-export async function listRedemptions(ref: string): Promise<Redemption[]> {
+async function listRedemptions(ref: string): Promise<Redemption[]> {
   return (await readState<Redemption[]>(ref, KIND)) ?? [];
 }
 

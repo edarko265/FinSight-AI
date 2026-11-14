@@ -127,7 +127,7 @@ export async function setTaughtState(
  * 3. The text is given in the customer's language, falling back to English,
  *    then to whichever language staff wrote.
  */
-export function pickTaught(
+function pickTaught(
   candidates: TaughtAnswer[],
   question: string,
   locale: string,

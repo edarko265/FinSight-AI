@@ -22,14 +22,11 @@ import { CountUp } from "@/components/ui/CountUp";
 import { PlayIcon, PlusIcon } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
-import { api } from "@/lib/api-client";
+import { load } from "@/lib/api-client";
 import {
   CUSTOM_PERIOD,
   VIEW_PERIODS,
   type DashboardView as SavedView,
-  type DashboardPayload,
-  type DashboardState,
-  type DashboardWidget,
   type SavedWidget,
   type ViewPeriod,
   type WidgetQuery,
@@ -48,35 +45,6 @@ interface InsightItem {
 /** A fresh ID for something the customer just created. */
 function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
-}
-
-/**
- * The dashboard as it will look once a change is saved, worked out from what is
- * already on screen: order, size, minimised state and chart type. Anything that
- * needs a new calculation (another view, another period, a new widget) waits
- * for the server.
- */
-function applyLocally(before: DashboardPayload, next: DashboardState): DashboardPayload {
-  const was = before.views.find((view) => view.id === before.activeId);
-  const now = next.views.find((view) => view.id === next.activeId);
-  if (!was || !now || was.id !== now.id || was.period !== now.period) return before;
-  const drawn = new Map(before.cards.map((card) => [card.id, card]));
-  const cards: DashboardWidget[] = [];
-  for (const widget of now.widgets) {
-    const card = drawn.get(widget.id);
-    if (!card) continue;
-    const style = widget.query.chart;
-    cards.push({
-      ...card,
-      size: widget.size ?? "small",
-      collapsed: widget.collapsed ?? false,
-      card:
-        card.card && style && card.card.chart.kind !== style
-          ? { ...card.card, chart: { kind: style, points: card.card.chart.points } }
-          : card.card,
-    });
-  }
-  return { ...next, cards };
 }
 
 export function DashboardView(): React.JSX.Element {
@@ -115,7 +83,8 @@ export function DashboardView(): React.JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
-    api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
+    // Shared with the insights widget, which asks for the same list.
+    load<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
       .then((data) => {
         if (!cancelled) setBanner(data.insights.find((insight) => !insight.read) ?? null);
       })

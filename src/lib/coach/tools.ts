@@ -163,7 +163,7 @@ function makeHelpers(ctx: CoachContext) {
   return { t, money, targetLabel, periodLabel, basis, evidence };
 }
 
-export function resolvePeriod(key: PeriodKey | undefined, asOf: string): Period {
+function resolvePeriod(key: PeriodKey | undefined, asOf: string): Period {
   switch (key) {
     case "this_month":
       return monthToDate(asOf);

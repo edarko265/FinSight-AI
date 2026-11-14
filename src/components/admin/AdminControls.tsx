@@ -16,7 +16,7 @@ import {
 import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
-export type ProviderChoice = "auto" | "openai" | "gemini";
+type ProviderChoice = "auto" | "openai" | "gemini";
 
 export interface AppSettings {
   aiProvider: ProviderChoice;

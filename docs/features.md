@@ -45,15 +45,15 @@ terms change, the sheet appears again.
 
 ### What can be done with a widget
 
-Every widget has the same controls in its title bar:
+Press and hold a widget's title bar (or click it with a mouse) to show its controls; tap an
+empty part of the title bar to put them away. From the keyboard, tab to **Edit widget**.
 
-| Control                  | What it does                                                                                                                 |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Drag** (grip)          | Drag a widget onto another to move it there, with a mouse or a finger; the page scrolls as you near its edge                 |
-| **Move earlier / later** | The same with arrows, on a phone or from the keyboard                                                                        |
-| **Change size**          | Small, medium or wide: by the button, or by pulling the widget's right edge. Small shortcuts sit two side by side on a phone |
-| **Minimise**             | Folds the widget to its title bar; the plus opens it again                                                                   |
-| **Remove** (×)           | Moves it to the recycle bin, from where it can be restored                                                                   |
+| Control         | What it does                                                                                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Drag**        | Drag a widget onto another to move it there, with a mouse or a finger; the page scrolls as you near its edge                 |
+| **Change size** | Small, medium or wide: by the button, or by pulling the widget's right edge. Small shortcuts sit two side by side on a phone |
+| **Minimise**    | Folds the widget to its title bar; the plus opens it again                                                                   |
+| **Remove** (×)  | Moves it to the recycle bin, from where it can be restored                                                                   |
 
 The order, size and minimised state are saved with the view.
 
@@ -97,8 +97,7 @@ Ask in your own words, by typing, by holding the microphone, or in a voice call.
 ### With every answer
 
 - **A chart** and the values behind it.
-- **How this was worked out** — the steps the calculation took, in order, with the same
-  figures as the answer.
+- **More information** — a note on where the numbers come from, opened from the info icon.
 - **See transactions** — the actual transactions the figure was calculated from.
 - **A short lesson**, for example what an irregular essential cost is.
 - **Add to dashboard** — pins the chart to the view you have open.
@@ -164,7 +163,7 @@ add up to 100.
 | **Plans others have shared**                  | Listed plans, most copied first                                                                                       |
 | **Edit / Stop sharing / Move to recycle bin** | On each plan                                                                                                          |
 
-More on the Plans page:
+More in the Plans part of the Goals page:
 
 - **Follow this plan.** One plan can be followed; the app then says when a slice of your
   month has drifted five points or more from it.
@@ -196,7 +195,7 @@ that topic:
 - a category above the typical range for the age group
 - announcements from the bank
 
-Unread insights show as a badge on the bell and on the navigation, and, with device
+Unread insights show as a badge on the navigation, and, with device
 notifications on, as a **badge on the app icon**. **Mark all as read** clears them.
 
 ### Device notifications

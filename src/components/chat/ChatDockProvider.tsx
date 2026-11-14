@@ -14,7 +14,7 @@ import { dockReducer, initialDockState, type DockMode } from "@/components/chat/
 
 export type { DockMode };
 
-export interface DockRequest {
+interface DockRequest {
   id: number;
   question?: string;
   start?: "listen" | "call";

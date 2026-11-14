@@ -23,6 +23,8 @@ export interface SaveQueue<S> {
 }
 
 export interface SaveQueueOptions<S, R> {
+  /** State already known when the queue is made, such as the last one shown. */
+  initial?: S | null;
   save: (state: S) => Promise<R>;
   /** The desired state or the saving flag changed. */
   onChange?: (desired: S, saving: boolean) => void;
@@ -35,8 +37,8 @@ export interface SaveQueueOptions<S, R> {
 type Waiter = (ok: boolean) => void;
 
 export function createSaveQueue<S, R>(options: SaveQueueOptions<S, R>): SaveQueue<S> {
-  let confirmed: S | null = null;
-  let desired: S | null = null;
+  let confirmed: S | null = options.initial ?? null;
+  let desired: S | null = options.initial ?? null;
   let inFlight = false;
   let dirty = false;
   let counter = 0;

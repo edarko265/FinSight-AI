@@ -29,7 +29,7 @@ export interface ForecastAssumptions {
   expectedIncome: { date: string; cents: number }[];
 }
 
-export type ForecastStatus = "ok" | "shortfall" | "insufficient_data";
+type ForecastStatus = "ok" | "shortfall" | "insufficient_data";
 
 export interface ForecastResult {
   status: ForecastStatus;

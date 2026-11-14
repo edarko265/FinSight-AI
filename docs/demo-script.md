@@ -66,7 +66,7 @@ Work through these after the three-minute flow.
 1. **Talk to a person.** Coach → **Talk to a person** → request investment advice. In the
    admin tab, open the request under **Advisers** and reply. The reply appears on
    the phone.
-1. **Plans.** Goals → **Plans** → **Make a plan** from _Saver_ → **Share** → _Everyone_.
+1. **Plans.** Goals → scroll to **Plans** → **Make a plan** from _Saver_ → **Share** → _Everyone_.
    Point at the last step: "this is all anyone will see". Then, as `CUST02226` in another
    window, open the link: the same percentages, worked out on a different income.
 1. **Teach the coach.** Ask "Can I get a mortgage?" as a customer. In Admin → **Teach the

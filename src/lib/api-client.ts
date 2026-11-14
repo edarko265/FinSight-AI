@@ -30,7 +30,7 @@ export function remember(path: string, value: unknown): void {
   remembered.set(path, value);
 }
 
-export function forgetAll(): void {
+function forgetAll(): void {
   remembered.clear();
   inFlight.clear();
 }
