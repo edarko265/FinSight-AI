@@ -384,6 +384,7 @@ describe("shared plans", () => {
       asOf: "2026-09-15",
       locale: "en" as const,
       benchmarks: [],
+      consent: (await import("@/lib/coach/consent")).consentFrom(null),
     });
     const alice = await contextFor(refA);
     const bob = await contextFor(refB);
@@ -466,6 +467,7 @@ describe("friends, reports and payments", () => {
       asOf: "2026-09-15",
       locale: "en" as const,
       benchmarks: [],
+      consent: (await import("@/lib/coach/consent")).consentFrom(null),
     });
     const alice = await contextFor(refA);
 

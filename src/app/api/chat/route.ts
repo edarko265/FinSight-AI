@@ -4,7 +4,7 @@ import { OUTSIDE_THEMES, themeOf } from "@/lib/admin/themes";
 import { recordUsage } from "@/lib/admin/usage";
 import { answerQuestion } from "@/lib/coach/answer";
 import { appendExchange } from "@/lib/coach/chat-history";
-import { hasAiConsent, readConsent } from "@/lib/coach/consent";
+import { hasAiConsent } from "@/lib/coach/consent";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
 
@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!(await rateLimit(`chat:${ctx.customerRef}`, 20, 60_000))) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
-  const allowModel = hasAiConsent(await readConsent(ctx.customerRef));
+  const allowModel = hasAiConsent(ctx.consent);
   const { message, topic } = await answerQuestion(
     ctx,
     parsed.data.message,

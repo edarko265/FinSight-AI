@@ -1,6 +1,6 @@
 import { getSettings } from "@/lib/admin/settings";
 import { recordUsage } from "@/lib/admin/usage";
-import { hasAiConsent, readConsent } from "@/lib/coach/consent";
+import { hasAiConsent } from "@/lib/coach/consent";
 import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { getEnv } from "@/lib/env";
 import { rateLimit } from "@/lib/security/session";
@@ -20,7 +20,7 @@ export async function GET(): Promise<Response> {
   if (!settings.features.voice || !env.ELEVENLABS_API_KEY || !env.ELEVENLABS_AGENT_ID) {
     return Response.json({ error: "voice_unavailable" }, { status: 503 });
   }
-  if (!hasAiConsent(await readConsent(ctx.customerRef))) {
+  if (!hasAiConsent(ctx.consent)) {
     return Response.json({ error: "consent_required" }, { status: 403 });
   }
   if (!(await rateLimit(`call:${ctx.customerRef}`, 6, 60_000))) {

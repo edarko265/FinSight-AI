@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ActionWidgetBody } from "@/components/dashboard/ActionWidgets";
 import { AddWidgetWizard } from "@/components/dashboard/AddWidgetWizard";
@@ -16,12 +16,13 @@ import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { CountUp } from "@/components/ui/CountUp";
 import { PlusIcon } from "@/components/ui/icons";
-import { api } from "@/lib/api-client";
+import { api, load, peek, remember } from "@/lib/api-client";
 import {
   CUSTOM_PERIOD,
   VIEW_PERIODS,
   type DashboardPayload,
   type DashboardState,
+  type DashboardWidget,
   type DashboardView as SavedView,
   type SavedWidget,
   type ViewPeriod,
@@ -43,11 +44,44 @@ function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+/**
+ * The dashboard as it will look once a change is saved, worked out from what is
+ * already on screen: order, size, minimised state and chart type. Anything that
+ * needs a new calculation (another view, another period, a new widget) waits
+ * for the server.
+ */
+function applyLocally(before: DashboardPayload, next: DashboardState): DashboardPayload {
+  const was = before.views.find((view) => view.id === before.activeId);
+  const now = next.views.find((view) => view.id === next.activeId);
+  if (!was || !now || was.id !== now.id || was.period !== now.period) return before;
+  const drawn = new Map(before.cards.map((card) => [card.id, card]));
+  const cards: DashboardWidget[] = [];
+  for (const widget of now.widgets) {
+    const card = drawn.get(widget.id);
+    if (!card) continue;
+    const style = widget.query.chart;
+    cards.push({
+      ...card,
+      size: widget.size ?? "small",
+      collapsed: widget.collapsed ?? false,
+      card:
+        card.card && style && card.card.chart.kind !== style
+          ? { ...card.card, chart: { kind: style, points: card.card.chart.points } }
+          : card.card,
+    });
+  }
+  return { ...next, cards };
+}
+
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const { overview } = useOverview();
-  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  // What was shown last time is drawn at once, then brought up to date.
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(
+    () => peek<DashboardPayload>(`/api/dashboard?locale=${locale}`) ?? null,
+  );
+  const saveCount = useRef(0);
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -59,12 +93,12 @@ export function DashboardView(): React.JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
-    api<DashboardPayload>(`/api/dashboard?locale=${locale}`)
+    load<DashboardPayload>(`/api/dashboard?locale=${locale}`)
       .then((data) => {
         if (!cancelled) setDashboard(data);
       })
       .catch(() => undefined);
-    api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
+    load<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
       .then((data) => {
         if (!cancelled) setBanner(data.insights.find((insight) => !insight.read) ?? null);
       })
@@ -83,9 +117,23 @@ export function DashboardView(): React.JSX.Element {
     (view.preset ? t(`views.preset.${view.preset}` as MessageKey) : t("views.unnamed"));
 
   function save(next: DashboardState): void {
-    void api<DashboardPayload>(`/api/dashboard?locale=${locale}`, { method: "PUT", json: next })
-      .then(setDashboard)
-      .catch(() => undefined);
+    const path = `/api/dashboard?locale=${locale}`;
+    const before = dashboard;
+    // Show the change straight away; the server's answer then replaces it.
+    if (before) setDashboard(applyLocally(before, next));
+    const mine = ++saveCount.current;
+    void api<DashboardPayload>(path, { method: "PUT", json: next })
+      .then((data) => {
+        remember(path, data);
+        // An older answer must not undo a newer change.
+        if (mine === saveCount.current) setDashboard(data);
+      })
+      .catch(() => {
+        if (mine === saveCount.current && before) {
+          setDashboard(before);
+          toast.fail();
+        }
+      });
   }
 
   function update(change: (state: DashboardState) => DashboardState): void {

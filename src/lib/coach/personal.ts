@@ -10,7 +10,7 @@ import {
   type LinkedKind,
 } from "@/lib/data/linked-accounts";
 import type { MortgageStory } from "@/lib/data/mortgage";
-import { readState, writeState } from "@/lib/data/repository";
+import { readState, readStates, writeState, type StateSnapshot } from "@/lib/data/repository";
 import type { SetAside } from "@/lib/coach/goal-progress";
 
 export type { SetAside };
@@ -59,22 +59,29 @@ export async function listSetAsides(ref: string): Promise<SetAside[]> {
 export const writeSetAsides = (ref: string, items: SetAside[]): Promise<void> =>
   writeState(ref, SET_ASIDES, items.slice(0, 200));
 
+/** The kinds of state `personalise` needs, so a caller can fetch them with others in one read. */
+export const PERSONAL_KINDS = [LINKED, CORRECTIONS, SET_ASIDES, "mortgage"] as const;
+
 /**
  * Builds the customer's full picture from the bank's record: linked accounts
- * merged in, corrections applied, bill adjustments attached.
+ * merged in, corrections applied, bill adjustments attached. Pass `states`
+ * when they were already read, to save a round trip to the database.
  */
 export async function personalise(
   ref: string,
   base: CustomerRecord,
   asOf: string,
   goalIds?: ReadonlySet<string>,
+  states?: StateSnapshot,
 ): Promise<CustomerRecord> {
-  const [linked, corrections, setAsides, mortgage] = await Promise.all([
-    listLinked(ref),
-    readCorrections(ref),
-    listSetAsides(ref),
-    readState<MortgageStory>(ref, "mortgage"),
-  ]);
+  const snapshot = states ?? (await readStates(ref, PERSONAL_KINDS));
+  const linked = (snapshot.get(LINKED) as LinkedAccount[] | undefined) ?? [];
+  const corrections: Corrections = {
+    ...EMPTY,
+    ...((snapshot.get(CORRECTIONS) as Corrections | undefined) ?? {}),
+  };
+  const setAsides = (snapshot.get(SET_ASIDES) as SetAside[] | undefined) ?? [];
+  const mortgage = (snapshot.get("mortgage") as MortgageStory | undefined) ?? null;
   const provider = accountProvider();
   const merged = mergeAccounts(
     base.transactions,
