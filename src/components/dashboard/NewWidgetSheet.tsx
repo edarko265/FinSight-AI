@@ -28,7 +28,7 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
       ref={dialogRef}
       onClose={onClose}
       aria-labelledby="new-widget-title"
-      className="m-0 mx-auto mt-auto h-[88dvh] w-full max-w-md flex-col rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
+      className="m-0 mx-auto mt-auto h-[88dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
     >
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 id="new-widget-title" className="text-base font-semibold">

@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 import { findCustomerRef } from "@/lib/data/repository";
-import { createSession, passwordMatches, rateLimit } from "@/lib/security/session";
+import {
+  clearFailures,
+  createSession,
+  isLockedOut,
+  passwordMatches,
+  rateLimit,
+  recordFailure,
+} from "@/lib/security/session";
 
 const body = z.object({
   customerId: z.string().trim().min(1).max(32),
@@ -16,8 +23,10 @@ export async function POST(request: Request): Promise<Response> {
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_credentials" }, { status: 401 });
 
-  // A second limit per account, so one customer ID cannot be hammered from many addresses.
-  if (!(await rateLimit(`login-id:${parsed.data.customerId.toUpperCase()}`, 8, 15 * 60_000))) {
+  // Failed attempts are also counted per account, so one customer ID cannot be hammered from
+  // many addresses. A successful sign-in clears the count.
+  const accountKey = `login-id:${parsed.data.customerId.toUpperCase()}`;
+  if (await isLockedOut(accountKey, 8, 15 * 60_000)) {
     return Response.json({ error: "too_many_attempts" }, { status: 429 });
   }
 
@@ -25,8 +34,10 @@ export async function POST(request: Request): Promise<Response> {
   const passwordOk = passwordMatches(parsed.data.password);
   const customerRef = await findCustomerRef(parsed.data.customerId.toUpperCase());
   if (!passwordOk || !customerRef) {
+    await recordFailure(accountKey, 15 * 60_000);
     return Response.json({ error: "invalid_credentials" }, { status: 401 });
   }
+  await clearFailures(accountKey);
   await createSession(customerRef);
   return Response.json({ ok: true });
 }

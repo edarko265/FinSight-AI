@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+import { notifyNewInsights, setAppBadge } from "@/components/notifications/useNotifications";
 import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Logo } from "@/components/ui/icons";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
+import { translate } from "@/lib/i18n/translate";
 
 export interface Overview {
   asOf: string;
@@ -87,6 +89,18 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     window.addEventListener(SIGNED_OUT_EVENT, toSignIn);
     return () => window.removeEventListener(SIGNED_OUT_EVENT, toSignIn);
   }, [router]);
+
+  // Keep the home-screen badge in step, and tell the device when new insights appear.
+  const unread = overview?.unreadInsights;
+  useEffect(() => {
+    if (unread === undefined) return;
+    setAppBadge(unread);
+    void notifyNewInsights(
+      unread,
+      translate(locale, "notify.insight.title"),
+      translate(locale, "notify.insight.body", { count: unread }),
+    );
+  }, [unread, locale]);
 
   const refresh = useCallback(() => setTick((value) => value + 1), []);
   const value = useMemo(() => ({ overview, me, refresh }), [overview, me, refresh]);

@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   poweredByHeader: false,
   devIndicators: false,
+  // `pnpm check` builds into its own folder, so it can run while `pnpm dev` is running.
+  // Building into the dev server's folder corrupts its cache and makes pages reload in a loop.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   turbopack: {
     rules: {
       "*.css": {

@@ -130,7 +130,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
       role="dialog"
       aria-modal="true"
       aria-label={t("voice.call.title")}
-      className="fixed inset-0 z-40 mx-auto flex w-full max-w-md flex-col bg-brand text-on-brand fs-rise"
+      className="fixed inset-0 z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand fs-rise"
     >
       <header className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <span className="flex items-center gap-2 text-sm font-semibold">

@@ -10,7 +10,7 @@ import {
   WizardField,
   WizardReview,
 } from "@/components/ui/Wizard";
-import { VIEW_PERIODS, type ViewPeriod } from "@/lib/contracts/chart";
+import { isCustomPeriod, VIEW_PERIODS, type ViewPeriod } from "@/lib/contracts/chart";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 const NAMES: MessageKey[] = [
@@ -41,7 +41,10 @@ export function ViewWizard({
   const value = edited ??
     draft ?? { mode: "new" as const, name: "", period: "last_month" as ViewPeriod };
   const set = (patch: Partial<ViewDraft>): void => setEdited({ ...value, ...patch });
-  const periodLabel = (period: ViewPeriod): string => t(`views.period.${period}` as MessageKey);
+  const periodLabel = (period: ViewPeriod): string =>
+    isCustomPeriod(period)
+      ? period.replace("..", " – ")
+      : t(`views.period.${period}` as MessageKey);
 
   return (
     <Wizard
@@ -88,7 +91,10 @@ export function ViewWizard({
               name="view-period"
               value={value.period}
               onChange={(period) => set({ period })}
-              options={VIEW_PERIODS.map((period) => ({
+              options={[
+                ...VIEW_PERIODS,
+                ...(isCustomPeriod(value.period) ? [value.period] : []),
+              ].map((period) => ({
                 value: period,
                 label: periodLabel(period),
               }))}

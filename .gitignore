@@ -24,6 +24,7 @@ dist/
 build/
 out/
 .next/
+.next-check/
 .turbo/
 .vercel/
 .swc/

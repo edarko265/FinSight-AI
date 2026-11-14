@@ -11,7 +11,9 @@ import {
   type ForecastAssumptions,
 } from "@/lib/analytics/forecast";
 import {
+  addDays,
   completedMonths,
+  isValidDate,
   lastCompletedMonth,
   monthPeriod,
   monthToDate,
@@ -27,7 +29,7 @@ import {
   recordedBalance,
   summariseSpending,
 } from "@/lib/analytics/spending";
-import type { ChartCard, WidgetQuery } from "@/lib/contracts/chart";
+import { CUSTOM_PERIOD, type ChartCard, type WidgetQuery } from "@/lib/contracts/chart";
 import type { EvidenceRef, MoneyFact } from "@/lib/contracts/chat";
 import type { CustomerRecord } from "@/lib/data/types";
 import { formatDay, formatMoney, formatMonth, type Locale } from "@/lib/i18n/config";
@@ -101,7 +103,8 @@ export const PERIOD_KEYS = [
   "last_6_months",
   "last_12_months",
 ] as const;
-export type PeriodKey = (typeof PERIOD_KEYS)[number] | `${number}-${number}`;
+export type PeriodKey =
+  (typeof PERIOD_KEYS)[number] | `${number}-${number}` | `${string}..${string}`;
 
 function makeHelpers(ctx: CoachContext) {
   const t = (key: MessageKey, params?: MessageParams): string => translate(ctx.locale, key, params);
@@ -125,7 +128,18 @@ function makeHelpers(ctx: CoachContext) {
         to: formatMonth(lastMonth, ctx.locale, "long"),
       });
     }
-    return t("period.monthToDate", { month: formatMonth(first, ctx.locale, "long") });
+    const monthSoFar = monthToDate(ctx.asOf);
+    if (
+      period.startInclusive === monthSoFar.startInclusive &&
+      period.endExclusive === monthSoFar.endExclusive
+    ) {
+      return t("period.monthToDate", { month: formatMonth(first, ctx.locale, "long") });
+    }
+    // A range the customer chose: say the exact days.
+    return t("period.range", {
+      from: formatDay(period.startInclusive, ctx.locale),
+      to: formatDay(addDays(period.endExclusive, -1), ctx.locale),
+    });
   };
   const basis = (period: Period): string =>
     t("coach.basis", { period: periodLabel(period), asOf: formatDay(ctx.asOf, ctx.locale) });
@@ -160,8 +174,17 @@ export function resolvePeriod(key: PeriodKey | undefined, asOf: string): Period 
     case undefined:
     case "last_month":
       return lastCompletedMonth(asOf);
-    default:
+    default: {
+      // A custom range, "from..to" with both days included. Nothing after the as-of date is used.
+      const custom = CUSTOM_PERIOD.exec(key);
+      if (custom?.[1] && custom[2] && isValidDate(custom[1]) && isValidDate(custom[2])) {
+        const from = custom[1] <= custom[2] ? custom[1] : custom[2];
+        const to = custom[1] <= custom[2] ? custom[2] : custom[1];
+        const end = addDays(to < asOf ? to : asOf, 1);
+        return { startInclusive: from < end ? from : addDays(end, -1), endExclusive: end };
+      }
       return /^\d{4}-\d{2}$/.test(key) ? monthPeriod(key) : lastCompletedMonth(asOf);
+    }
   }
 }
 

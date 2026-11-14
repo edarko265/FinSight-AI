@@ -82,7 +82,7 @@ export function EvidenceSheet({
       ref={dialogRef}
       onClose={onClose}
       aria-labelledby="evidence-title"
-      className="m-0 mx-auto mt-auto h-[80dvh] w-full max-w-md flex-col rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
+      className="m-0 mx-auto mt-auto h-[80dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
     >
       <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div>

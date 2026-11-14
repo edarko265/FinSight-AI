@@ -105,3 +105,39 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
     return localLimit(key, limit, windowMs);
   }
 }
+
+function limitKey(key: string): string {
+  return createHash("sha256").update(`${getEnv().SESSION_SECRET}:limit:${key}`).digest("base64url");
+}
+
+/**
+ * Failed-attempt lockout. Unlike `rateLimit`, a successful attempt does not
+ * count: only failures do, and a success clears them. While locked, every
+ * attempt is refused, right or wrong, so the limit cannot be used to keep
+ * guessing.
+ */
+export async function isLockedOut(key: string, limit: number, windowMs: number): Promise<boolean> {
+  try {
+    const db = await getDb();
+    const rows = await db.query<{ count: number }>(
+      "SELECT count FROM rate_limits WHERE key = $1 AND window_start >= now() - ($2 * interval '1 millisecond')",
+      [limitKey(key), windowMs],
+    );
+    return Number(rows[0]?.count ?? 0) >= limit;
+  } catch {
+    return false;
+  }
+}
+
+export async function recordFailure(key: string, windowMs: number): Promise<void> {
+  await rateLimit(key, Number.MAX_SAFE_INTEGER, windowMs);
+}
+
+export async function clearFailures(key: string): Promise<void> {
+  try {
+    const db = await getDb();
+    await db.query("DELETE FROM rate_limits WHERE key = $1", [limitKey(key)]);
+  } catch {
+    // Leaving a stale counter only makes the next lockout come sooner.
+  }
+}

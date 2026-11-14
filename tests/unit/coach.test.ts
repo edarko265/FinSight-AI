@@ -129,6 +129,49 @@ describe("safe-to-spend with optional inputs", () => {
   });
 });
 
+describe("custom date ranges", () => {
+  it("sums exactly the days chosen, both ends included", () => {
+    // Restaurants fall on the 12th of each month: one in range, then two.
+    const one = runTool(ctx, "spending", {
+      target: "Restaurants",
+      period: "2026-08-12..2026-08-12",
+    });
+    expect(one.facts[0]?.valueCents).toBe(20_000);
+    const two = runTool(ctx, "spending", {
+      target: "Restaurants",
+      period: "2026-07-12..2026-08-12",
+    });
+    expect(two.facts[0]?.valueCents).toBe(40_000);
+    expect(two.evidence).toMatchObject({
+      startInclusive: "2026-07-12",
+      endExclusive: "2026-08-13",
+    });
+  });
+
+  it("never reaches past the as-of date and tolerates swapped dates", () => {
+    const future = runTool(ctx, "spending", { period: "2026-08-01..2027-01-01" });
+    expect(future.evidence?.endExclusive).toBe("2026-09-16");
+    const swapped = runTool(ctx, "spending", {
+      target: "Restaurants",
+      period: "2026-08-12..2026-07-12",
+    });
+    expect(swapped.facts[0]?.valueCents).toBe(40_000);
+  });
+
+  it("applies a view's custom range to its widgets", () => {
+    const result = runQuery(
+      ctx,
+      { tool: "spending", input: { target: "Restaurants" } },
+      "2026-06-01..2026-08-31",
+    );
+    expect(result?.facts[0]?.valueCents).toBe(60_000);
+  });
+
+  it("rejects a malformed range", () => {
+    expect(runQuery(ctx, { tool: "spending", input: { period: "2026-08-01..oops" } })).toBeNull();
+  });
+});
+
 describe("saved widgets", () => {
   it("re-runs a stored query and applies the view's period and chart", () => {
     const result = runQuery(

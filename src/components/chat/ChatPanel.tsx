@@ -26,6 +26,9 @@ interface ChatPanelProps {
   cardAction?: (card: ChartCard, query: WidgetQuery | undefined) => React.ReactNode;
 }
 
+/** How many starter questions are shown before "More questions" is tapped. */
+const STARTERS = 5;
+
 const SUGGESTIONS: MessageKey[] = [
   "chat.suggest.where",
   "chat.suggest.recommend",
@@ -50,6 +53,7 @@ export function ChatPanel({
   const { me, refresh } = useOverview();
   const [declined, setDeclined] = useState(false);
   const [calling, setCalling] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const voice = useVoice(locale);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -59,7 +63,8 @@ export function ChatPanel({
   const asked = useRef(false);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    // Only follow the conversation; an empty chat stays at the top so the greeting is visible.
+    if (messages.length > 0 || pending) endRef.current?.scrollIntoView({ block: "end" });
   }, [messages, pending]);
 
   async function send(text: string): Promise<void> {
@@ -110,7 +115,6 @@ export function ChatPanel({
   const lastAssistant = [...messages].reverse().find((message) => message.role === "assistant");
   const followUps =
     !pending && lastAssistant?.role === "assistant" ? (lastAssistant.followUps ?? []) : [];
-  const chips = messages.length === 0 ? SUGGESTIONS.map((key) => t(key)) : followUps;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -119,6 +123,34 @@ export function ChatPanel({
           <li className="max-w-[85%] self-start rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm shadow-sm">
             {intro ?? t("chat.intro")}
           </li>
+
+          {messages.length === 0 ? (
+            <li className="fs-rise">
+              {/* Starter questions laid out in a grid, so nothing has to be scrolled sideways. */}
+              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {(showAll ? SUGGESTIONS : SUGGESTIONS.slice(0, STARTERS)).map((key) => (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      onClick={() => void send(t(key))}
+                      className="h-full w-full rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm font-medium"
+                    >
+                      {t(key)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {showAll ? null : (
+                <button
+                  type="button"
+                  onClick={() => setShowAll(true)}
+                  className="mt-2 w-full rounded-full px-4 py-2 text-sm font-semibold text-accent"
+                >
+                  {t("chat.moreQuestions")}
+                </button>
+              )}
+            </li>
+          ) : null}
 
           {messages.map((message) =>
             message.role === "user" ? (
@@ -195,6 +227,24 @@ export function ChatPanel({
             ),
           )}
 
+          {followUps.length > 0 ? (
+            <li>
+              <ul className="flex flex-wrap gap-2">
+                {followUps.map((suggestion) => (
+                  <li key={suggestion}>
+                    <button
+                      type="button"
+                      onClick={() => void send(suggestion)}
+                      className="rounded-full border border-border bg-surface px-3.5 py-2 text-left text-sm font-medium"
+                    >
+                      {suggestion}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ) : null}
+
           {pending ? (
             <li
               className="max-w-[85%] self-start rounded-2xl rounded-bl-md bg-surface px-4 py-3 text-sm text-muted shadow-sm"
@@ -217,22 +267,6 @@ export function ChatPanel({
       </div>
 
       <div className="border-t border-border bg-background px-4 pt-3 pb-3">
-        {chips.length > 0 ? (
-          <ul className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
-            {chips.map((suggestion) => (
-              <li key={suggestion} className="shrink-0">
-                <button
-                  type="button"
-                  onClick={() => void send(suggestion)}
-                  className="rounded-full border border-border bg-surface px-3.5 py-2 text-sm font-medium"
-                >
-                  {suggestion}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
         {calling ? (
           <VoiceCall
             onEnd={() => setCalling(false)}

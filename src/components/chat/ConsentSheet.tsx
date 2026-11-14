@@ -40,7 +40,7 @@ export function ConsentSheet({
         onChoose(false);
       }}
       aria-labelledby="consent-title"
-      className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
+      className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
     >
       <div className="flex-1 overflow-y-auto px-5 pt-5">
         <h2 id="consent-title" className="text-lg font-semibold">

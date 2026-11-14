@@ -145,6 +145,18 @@ describe("rate limiting", () => {
   });
 });
 
+describe("sign-in lockout", () => {
+  it("counts only failures, refuses everything while locked, and clears on success", async () => {
+    const { clearFailures, isLockedOut, recordFailure } = await import("@/lib/security/session");
+    const key = "login-id:TESTA";
+    expect(await isLockedOut(key, 3, 60_000)).toBe(false);
+    for (let attempt = 0; attempt < 3; attempt += 1) await recordFailure(key, 60_000);
+    expect(await isLockedOut(key, 3, 60_000)).toBe(true);
+    await clearFailures(key);
+    expect(await isLockedOut(key, 3, 60_000)).toBe(false);
+  });
+});
+
 describe("anonymous usage statistics", () => {
   it("counts topics per day with no customer reference or text", async () => {
     const { recordUsage, usageSummary } = await import("@/lib/admin/usage");

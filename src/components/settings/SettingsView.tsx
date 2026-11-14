@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useNotifications } from "@/components/notifications/useNotifications";
 import { useOverview } from "@/components/providers/OverviewProvider";
 import {
   FONT_SIZES,
@@ -75,6 +76,7 @@ export function SettingsView(): React.JSX.Element {
   const prefs = usePreferences();
   const { t } = prefs;
   const toast = useToast();
+  const notifications = useNotifications();
   const { me, refresh } = useOverview();
   const [confirmErase, setConfirmErase] = useState(false);
   const router = useRouter();
@@ -82,6 +84,14 @@ export function SettingsView(): React.JSX.Element {
   async function signOut(): Promise<void> {
     await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     router.replace("/login");
+  }
+
+  async function toggleNotifications(on: boolean): Promise<void> {
+    if (on) toast.notify((await notifications.enable()) ? "notify.on" : "notify.off");
+    else {
+      await notifications.disable();
+      toast.notify("notify.off");
+    }
   }
 
   async function setConsent(accepted: boolean): Promise<void> {
@@ -136,6 +146,25 @@ export function SettingsView(): React.JSX.Element {
           </label>
         </Section>
       ) : null}
+
+      <Section title={t("notify.title")}>
+        <label className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+          <span className="text-muted">
+            {notifications.state === "unsupported"
+              ? t("notify.unsupported")
+              : notifications.state === "blocked"
+                ? t("notify.blocked")
+                : t("notify.settingHint")}
+          </span>
+          <input
+            type="checkbox"
+            checked={notifications.state === "on"}
+            disabled={notifications.state === "unsupported" || notifications.state === "blocked"}
+            onChange={(event) => void toggleNotifications(event.target.checked)}
+            className="size-5 shrink-0 accent-(--accent)"
+          />
+        </label>
+      </Section>
 
       {me?.aiEnabled ? (
         <Section title={t("settings.ai")}>

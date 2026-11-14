@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { AffordWizard } from "@/components/dashboard/AffordWizard";
 import { NewWidgetSheet } from "@/components/dashboard/NewWidgetSheet";
+import { PeriodWizard } from "@/components/dashboard/PeriodWizard";
 import { ViewWizard, type ViewDraft } from "@/components/dashboard/ViewWizard";
 import { WidgetCard } from "@/components/dashboard/WidgetCard";
 import { useOverview } from "@/components/providers/OverviewProvider";
@@ -14,6 +15,7 @@ import { CountUp } from "@/components/ui/CountUp";
 import { PlusIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api-client";
 import {
+  CUSTOM_PERIOD,
   VIEW_PERIODS,
   type DashboardPayload,
   type DashboardState,
@@ -21,6 +23,7 @@ import {
   type ViewPeriod,
   type WidgetQuery,
 } from "@/lib/contracts/chart";
+import { formatDay } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 interface InsightItem {
@@ -31,6 +34,11 @@ interface InsightItem {
   read: boolean;
 }
 
+/** A fresh ID for something the customer just created. */
+function newId(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
+
 export function DashboardView(): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
@@ -39,6 +47,7 @@ export function DashboardView(): React.JSX.Element {
   const [banner, setBanner] = useState<InsightItem | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [affordOpen, setAffordOpen] = useState(false);
+  const [periodOpen, setPeriodOpen] = useState(false);
   const [viewDraft, setViewDraft] = useState<ViewDraft | null>(null);
 
   useEffect(() => {
@@ -59,6 +68,9 @@ export function DashboardView(): React.JSX.Element {
   }, [locale]);
 
   const active = dashboard?.views.find((view) => view.id === dashboard.activeId);
+  const customMatch = active ? CUSTOM_PERIOD.exec(active.period) : null;
+  const customRange =
+    customMatch?.[1] && customMatch[2] ? { from: customMatch[1], to: customMatch[2] } : null;
   const viewName = (view: SavedView): string =>
     view.name ||
     (view.preset ? t(`views.preset.${view.preset}` as MessageKey) : t("views.unnamed"));
@@ -85,7 +97,7 @@ export function DashboardView(): React.JSX.Element {
     if (viewDraft.mode === "rename") {
       updateActive((view) => ({ ...view, name, period, preset: undefined }));
     } else {
-      const id = `view-${Date.now()}`;
+      const id = newId("view");
       update((state) => ({
         activeId: id,
         views: [...state.views, { id, name, period, widgets: active.widgets }],
@@ -175,11 +187,7 @@ export function DashboardView(): React.JSX.Element {
 
       {dashboard ? (
         <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3">
-          <div
-            role="tablist"
-            aria-label={t("views.label")}
-            className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
-          >
+          <div role="tablist" aria-label={t("views.label")} className="flex flex-wrap gap-2">
             {dashboard.views.map((view) => (
               <button
                 key={view.id}
@@ -187,7 +195,7 @@ export function DashboardView(): React.JSX.Element {
                 role="tab"
                 aria-selected={view.id === dashboard.activeId}
                 onClick={() => update((state) => ({ ...state, activeId: view.id }))}
-                className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium ${
+                className={`max-w-full truncate rounded-full border px-3.5 py-2 text-sm font-medium ${
                   view.id === dashboard.activeId
                     ? "border-accent bg-accent-soft text-accent"
                     : "border-border text-muted"
@@ -204,10 +212,12 @@ export function DashboardView(): React.JSX.Element {
             </label>
             <select
               id="view-period"
-              value={active?.period ?? "last_month"}
-              onChange={(event) =>
-                updateActive((view) => ({ ...view, period: event.target.value as ViewPeriod }))
-              }
+              value={customRange ? "custom" : (active?.period ?? "last_month")}
+              onChange={(event) => {
+                if (event.target.value === "custom") setPeriodOpen(true);
+                else
+                  updateActive((view) => ({ ...view, period: event.target.value as ViewPeriod }));
+              }}
               className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-2 text-sm"
             >
               {VIEW_PERIODS.map((period) => (
@@ -215,7 +225,21 @@ export function DashboardView(): React.JSX.Element {
                   {t(`views.period.${period}` as MessageKey)}
                 </option>
               ))}
+              <option value="custom">
+                {customRange
+                  ? `${formatDay(customRange.from, locale)} – ${formatDay(customRange.to, locale)}`
+                  : t("views.period.custom")}
+              </option>
             </select>
+            {customRange ? (
+              <button
+                type="button"
+                onClick={() => setPeriodOpen(true)}
+                className="shrink-0 text-sm font-medium text-accent"
+              >
+                {t("common.edit")}
+              </button>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
@@ -265,7 +289,7 @@ export function DashboardView(): React.JSX.Element {
           {t("dashboard.empty")}
         </p>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
           {(dashboard?.cards ?? []).map((widget) => (
             <WidgetCard
               key={widget.id}
@@ -291,6 +315,20 @@ export function DashboardView(): React.JSX.Element {
       )}
 
       <AffordWizard open={affordOpen} onClose={() => setAffordOpen(false)} />
+      {overview ? (
+        <PeriodWizard
+          key={active?.period}
+          open={periodOpen}
+          asOf={overview.asOf}
+          initial={customRange ?? undefined}
+          onClose={() => setPeriodOpen(false)}
+          onApply={(from, to) => {
+            updateActive((view) => ({ ...view, period: `${from}..${to}` }));
+            setPeriodOpen(false);
+            toast.notify("toast.saved");
+          }}
+        />
+      ) : null}
       <ViewWizard draft={viewDraft} onClose={() => setViewDraft(null)} onSave={saveView} />
 
       <NewWidgetSheet
@@ -299,7 +337,7 @@ export function DashboardView(): React.JSX.Element {
         onAdd={(query: WidgetQuery) => {
           updateActive((view) => ({
             ...view,
-            widgets: [{ id: `widget-${Date.now()}`, query }, ...view.widgets].slice(0, 16),
+            widgets: [{ id: newId("widget"), query }, ...view.widgets].slice(0, 16),
           }));
           toast.notify("toast.added");
         }}

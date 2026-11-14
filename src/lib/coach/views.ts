@@ -6,6 +6,7 @@ import type { SessionContext } from "@/lib/coach/context";
 import { runQuery } from "@/lib/coach/registry";
 import {
   CHART_STYLES,
+  CUSTOM_PERIOD,
   VIEW_PERIODS,
   type DashboardPayload,
   type DashboardState,
@@ -27,7 +28,7 @@ const view = z.object({
   id: z.string().min(1).max(60),
   preset: z.enum(["overview", "baskets", "everyday"]).optional(),
   name: z.string().trim().max(40),
-  period: z.enum(VIEW_PERIODS),
+  period: z.union([z.enum(VIEW_PERIODS), z.string().regex(CUSTOM_PERIOD)]),
   widgets: z.array(z.object({ id: z.string().min(1).max(60), query })).max(16),
 });
 export const dashboardStateSchema = z.object({

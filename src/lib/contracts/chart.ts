@@ -67,7 +67,17 @@ export const VIEW_PERIODS = [
   "last_6_months",
   "last_12_months",
 ] as const;
-export type ViewPeriod = (typeof VIEW_PERIODS)[number];
+export type PresetPeriod = (typeof VIEW_PERIODS)[number];
+
+/** A date range the customer picked: "YYYY-MM-DD..YYYY-MM-DD", both days included. */
+export const CUSTOM_PERIOD = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
+
+/** A view's period: one of the presets, or a custom date range. */
+export type ViewPeriod = PresetPeriod | (string & {});
+
+export function isCustomPeriod(period: string): boolean {
+  return CUSTOM_PERIOD.test(period);
+}
 
 /** A named dashboard setup: a set of widgets and the period they are shown for. */
 export interface DashboardView {

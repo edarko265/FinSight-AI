@@ -40,6 +40,11 @@ const schema = z.object({
     .default("2026-09-15"),
   DEMO_LOGIN_PASSWORD: optional,
   ADMIN_PASSWORD: optional,
+  APP_BASE_URL: optional,
+
+  /** Web Push keys for device notifications. Generate with: npx web-push generate-vapid-keys */
+  VAPID_PUBLIC_KEY: optional,
+  VAPID_PRIVATE_KEY: optional,
 });
 
 export type Env = z.infer<typeof schema>;

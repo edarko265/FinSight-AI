@@ -19,7 +19,13 @@ import {
   type PeriodKey,
   type ToolResult,
 } from "@/lib/coach/tools";
-import type { ChartStyle, ViewPeriod, WidgetQuery } from "@/lib/contracts/chart";
+import {
+  CUSTOM_PERIOD,
+  type ChartStyle,
+  type PresetPeriod,
+  type ViewPeriod,
+  type WidgetQuery,
+} from "@/lib/contracts/chart";
 
 /**
  * Every calculation the coach can run, with a validated input schema. Chat,
@@ -27,7 +33,11 @@ import type { ChartStyle, ViewPeriod, WidgetQuery } from "@/lib/contracts/chart"
  * saved widget is just a stored { tool, input } that is re-run when shown.
  */
 const target = z.enum(TARGET_KEYS);
-const period = z.union([z.enum(PERIOD_KEYS), z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/)]);
+const period = z.union([
+  z.enum(PERIOD_KEYS),
+  z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+  z.string().regex(CUSTOM_PERIOD),
+]);
 const cents = z.number().int().min(0).max(100_000_000);
 
 const asPeriod = (value: string | undefined): PeriodKey | undefined =>
@@ -62,7 +72,7 @@ export function isToolName(value: string): value is ToolName {
   return value in TOOL_SCHEMAS;
 }
 
-const MONTHS_FOR_PERIOD: Partial<Record<ViewPeriod, number>> = {
+const MONTHS_FOR_PERIOD: Partial<Record<PresetPeriod, number>> = {
   last_3_months: 3,
   last_6_months: 6,
   last_12_months: 12,
@@ -145,7 +155,18 @@ export function runQuery(
     ) {
       input.period = viewPeriod;
     }
-    const months = MONTHS_FOR_PERIOD[viewPeriod];
+    const custom = CUSTOM_PERIOD.exec(viewPeriod);
+    // For a month-by-month trend, a custom range becomes the nearest whole number of months.
+    const months =
+      custom?.[1] && custom[2]
+        ? Math.min(
+            12,
+            Math.max(
+              3,
+              Math.round((Date.parse(custom[2]) - Date.parse(custom[1])) / (30.4 * 86_400_000)),
+            ),
+          )
+        : MONTHS_FOR_PERIOD[viewPeriod as PresetPeriod];
     if (query.tool === "trend" && months) input.months = months;
   }
   const parsed = TOOL_SCHEMAS[query.tool].safeParse(input);

@@ -88,7 +88,7 @@ export function Wizard({
         if (!dismissable) event.preventDefault();
       }}
       aria-labelledby="wizard-title"
-      className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
+      className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
     >
       <header className="flex items-center justify-between gap-3 px-5 pt-5">
         <h2 id="wizard-title" className="text-base font-semibold">

@@ -98,7 +98,7 @@ export function StoryView(): React.JSX.Element {
       role="dialog"
       aria-modal="true"
       aria-label={t("story.title")}
-      className="fixed inset-0 z-40 mx-auto flex w-full max-w-md flex-col bg-brand text-on-brand"
+      className="fixed inset-0 z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand"
     >
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
         <ol className="flex gap-1.5" aria-hidden="true">

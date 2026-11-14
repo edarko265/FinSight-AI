@@ -3,3 +3,5 @@ node_modules/
 coverage/
 pnpm-lock.yaml
 docs/FinSight-AI-Project-Scope.md
+.next-check/
+public/sw.js
