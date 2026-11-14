@@ -19,6 +19,7 @@
     "voice:setup": "tsx scripts/setup-voice-agent.ts",
     "db:check": "tsx scripts/db-check.ts",
     "build:check": "NEXT_DIST_DIR=.next-check next build",
+    "e2e": "playwright test",
     "data:mortgage": "tsx scripts/ingest-mortgage.ts",
     "limits:clear": "tsx scripts/clear-limits.ts"
   },
@@ -39,6 +40,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "1.49.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^24",
     "@types/pg": "^8.23.1",
