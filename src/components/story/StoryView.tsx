@@ -12,6 +12,7 @@ import { useVoice } from "@/components/voice/useVoice";
 import { api } from "@/lib/api-client";
 import type { ChartCard } from "@/lib/contracts/chart";
 import { InfoTip } from "@/components/ui/InfoTip";
+import { useEscapeClose } from "@/components/ui/TabSheet";
 
 interface Slide {
   id: string;
@@ -94,12 +95,15 @@ export function StoryView(): React.JSX.Element {
     router.push("/dashboard");
   };
 
+  const closeButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => closeButton.current?.focus(), []);
+  useEscapeClose(true, close);
+
   return (
     <div
       role="dialog"
-      aria-modal="true"
       aria-label={t("story.title")}
-      className="fixed inset-0 z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand"
+      className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand"
     >
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
         <ol className="flex gap-1.5" aria-hidden="true">
@@ -144,6 +148,7 @@ export function StoryView(): React.JSX.Element {
               </button>
             ) : null}
             <button
+              ref={closeButton}
               type="button"
               onClick={close}
               aria-label={t("story.close")}

@@ -49,6 +49,7 @@ export function BottomNav(): React.JSX.Element {
   return (
     <nav
       aria-label="Main"
+      data-bottom-nav
       className="box-border h-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] shrink-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="grid h-full grid-cols-5">

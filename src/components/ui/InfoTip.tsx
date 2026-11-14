@@ -34,7 +34,11 @@ export function InfoTip({ children, lead, className = "" }: InfoTipProps): React
         title={label}
         onClick={() => setOpen((value) => !value)}
         onKeyDown={(event) => {
-          if (event.key === "Escape") setOpen(false);
+          if (event.key !== "Escape" || !open) return;
+          // Closes only the tip, not the sheet or story around it.
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
         }}
         className={`-ml-1 flex size-8 shrink-0 items-center justify-center rounded-full outline-none hover:bg-background focus-visible:ring-2 focus-visible:ring-accent ${
           open ? "text-accent" : "text-muted"

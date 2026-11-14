@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { ChartView } from "@/components/charts/ChartView";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon, MicIcon, PhoneIcon } from "@/components/ui/icons";
+import { useCloseOnNavigation, useEscapeClose } from "@/components/ui/TabSheet";
+import { createSessionGuard } from "@/components/voice/session-guard";
 import { api } from "@/lib/api-client";
 import type { AssistantMessage } from "@/lib/contracts/chat";
 
@@ -87,6 +89,24 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
     getOutputVolume,
   } = conversation;
 
+  // The session is ended once, whether by navigation, Escape, the button or unmounting.
+  const guard = useRef(createSessionGuard());
+  const hangUp = (): void => {
+    if (guard.current.end()) endSession();
+  };
+  const endButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => endButton.current?.focus(), []);
+  // Tapping a tab hangs up (the dock keeps the chat mounted across pages); so does Escape.
+  useCloseOnNavigation(true, () => {
+    hangUp();
+    onEnd();
+  });
+  const endCall = (): void => {
+    hangUp();
+    onEnd();
+  };
+  useEscapeClose(true, endCall);
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;
@@ -94,8 +114,9 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
       .then(({ signedUrl }) =>
         startSession({ signedUrl, overrides: { agent: { language: localeRef.current } } }),
       )
+      .then(() => guard.current.started())
       .catch(() => setFailed(true));
-    return () => endSession();
+    return () => hangUp();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once when the call opens, end when it closes
   }, []);
 
@@ -128,9 +149,8 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
   return (
     <div
       role="dialog"
-      aria-modal="true"
       aria-label={t("voice.call.title")}
-      className="fixed inset-0 z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand fs-rise"
+      className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand fs-rise"
     >
       <header className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <span className="flex items-center gap-2 text-sm font-semibold">
@@ -138,8 +158,9 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
           {t("voice.call.title")}
         </span>
         <button
+          ref={endButton}
           type="button"
-          onClick={onEnd}
+          onClick={endCall}
           aria-label={t("voice.call.end")}
           className="-m-2 rounded-full p-2"
         >
@@ -220,7 +241,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
         ) : null}
       </div>
 
-      <div className="flex items-center justify-center gap-4 px-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+      <div className="flex items-center justify-center gap-4 px-6 pb-6">
         <button
           type="button"
           onClick={() => setMuted(!isMuted)}
@@ -234,7 +255,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
         </button>
         <button
           type="button"
-          onClick={onEnd}
+          onClick={endCall}
           className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-on-primary"
         >
           <PhoneIcon className="size-5" />
