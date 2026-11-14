@@ -388,6 +388,10 @@ export const en = {
   "voucher.tier.bronze": "Bronze",
   "voucher.tier.silver": "Silver",
   "voucher.tier.gold": "Gold",
+  "voucher.tier.platinum": "Platinum",
+  "voucher.tier.diamond": "Diamond",
+  "voucher.stage.prev": "Previous stage",
+  "voucher.stage.next": "Next stage",
   "voucher.brand.grocery": "our grocery stores",
   "voucher.brand.fuel": "our fuel stations",
   "voucher.kind.grocery.title": "{percent} off a grocery product",
@@ -1459,6 +1463,9 @@ export const en = {
   "goals.reached": "Goal reached.",
   "goals.monthsLeft": "About {months} more months at the planned amount.",
   "goals.aside.cta": "Set money aside",
+  "goals.safeShort": "Safe to set aside",
+  "goals.savedShort": "Set aside so far",
+  "goals.monthsShort": "{months} mo left",
   "goals.aside.safe":
     "You could set aside about {amount} now and still cover a month of bills, essentials and your usual spending.",
   "goals.aside.none":

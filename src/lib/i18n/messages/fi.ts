@@ -381,6 +381,10 @@ export const fi: Record<MessageKey, string> = {
   "voucher.tier.bronze": "Pronssi",
   "voucher.tier.silver": "Hopea",
   "voucher.tier.gold": "Kulta",
+  "voucher.tier.platinum": "Platina",
+  "voucher.tier.diamond": "Timantti",
+  "voucher.stage.prev": "Edellinen vaihe",
+  "voucher.stage.next": "Seuraava vaihe",
   "voucher.brand.grocery": "ruokakauppoissamme",
   "voucher.brand.fuel": "huoltoasemillamme",
   "voucher.kind.grocery.title": "{percent} alennus yhdestä ruokatuotteesta",
@@ -1454,6 +1458,9 @@ export const fi: Record<MessageKey, string> = {
   "goals.reached": "Tavoite saavutettu.",
   "goals.monthsLeft": "Noin {months} kuukautta lisää suunnitellulla summalla.",
   "goals.aside.cta": "Laita rahaa sivuun",
+  "goals.safeShort": "Turvallisesti säästettävissä",
+  "goals.savedShort": "Säästetty tähän mennessä",
+  "goals.monthsShort": "{months} kk jäljellä",
   "goals.aside.safe":
     "Voisit laittaa nyt sivuun noin {amount} ja silti kattaa kuukauden laskut, välttämättömät menot ja tavallisen kulutuksesi.",
   "goals.aside.none":

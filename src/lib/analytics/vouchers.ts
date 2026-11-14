@@ -36,6 +36,22 @@ export const VOUCHER_TIERS: readonly {
       { id: "gold-fuel", kind: "fuel", centsPerLitre: 15 },
     ],
   },
+  {
+    id: "platinum",
+    multiplier: 4,
+    options: [
+      { id: "platinum-grocery", kind: "grocery", percentOff: 20 },
+      { id: "platinum-fuel", kind: "fuel", centsPerLitre: 20 },
+    ],
+  },
+  {
+    id: "diamond",
+    multiplier: 5,
+    options: [
+      { id: "diamond-grocery", kind: "grocery", percentOff: 25 },
+      { id: "diamond-fuel", kind: "fuel", centsPerLitre: 25 },
+    ],
+  },
 ];
 
 /**
@@ -68,15 +84,23 @@ export function voucherLadder(input: VoucherLadderInput): VoucherLadder {
   const available = incomeCents > 0;
   const saved = Math.max(0, savedCents);
 
-  const tiers: VoucherTier[] = VOUCHER_TIERS.map((tier) => {
+  const targetFor = (multiplier: number): number =>
     // Round once per tier so the target is a whole number of cents.
-    const targetCents = available ? Math.round((incomeCents * tenths * tier.multiplier) / 1000) : 0;
+    available ? Math.round((incomeCents * tenths * multiplier) / 1000) : 0;
+
+  const tiers: VoucherTier[] = VOUCHER_TIERS.map((tier, index) => {
+    const targetCents = targetFor(tier.multiplier);
+    // A stage only starts filling once the one before it is done.
+    const startCents = index > 0 ? targetFor(VOUCHER_TIERS[index - 1]!.multiplier) : 0;
     return {
       id: tier.id,
       multiplier: tier.multiplier,
       targetCents,
       remainingCents: Math.max(0, targetCents - saved),
-      progress: targetCents > 0 ? Math.min(1, saved / targetCents) : 0,
+      progress:
+        targetCents > startCents
+          ? Math.min(1, Math.max(0, (saved - startCents) / (targetCents - startCents)))
+          : 0,
       unlocked: targetCents > 0 && saved >= targetCents,
       options: tier.options.map((option) => ({ ...option })),
     };

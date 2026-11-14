@@ -8,6 +8,8 @@ export const TIER_COLOUR: Record<VoucherTierId, string> = {
   bronze: "#c27a3a",
   silver: "#7a8794",
   gold: "#b8860b",
+  platinum: "#4f8f9a",
+  diamond: "#4a7fd4",
 };
 
 /** Flat illustration for a voucher kind, drawn in the theme colours. Decorative only. */

@@ -46,9 +46,15 @@ const targets = (result: ReturnType<typeof voucherLadder>): number[] =>
   result.tiers.map((tier) => tier.targetCents);
 
 describe("voucher ladder", () => {
-  it("defines three tiers with multipliers 1 to 3", () => {
-    expect(VOUCHER_TIERS.map((tier) => tier.multiplier)).toEqual([1, 2, 3]);
-    expect(VOUCHER_TIERS.map((tier) => tier.id)).toEqual(["bronze", "silver", "gold"]);
+  it("defines five tiers with multipliers 1 to 5", () => {
+    expect(VOUCHER_TIERS.map((tier) => tier.multiplier)).toEqual([1, 2, 3, 4, 5]);
+    expect(VOUCHER_TIERS.map((tier) => tier.id)).toEqual([
+      "bronze",
+      "silver",
+      "gold",
+      "platinum",
+      "diamond",
+    ]);
     expect(
       VOUCHER_TIERS.map((tier) =>
         tier.options.map((o) => (o.kind === "grocery" ? o.percentOff : o.centsPerLitre)),
@@ -57,6 +63,8 @@ describe("voucher ladder", () => {
       [5, 5],
       [10, 10],
       [15, 15],
+      [20, 20],
+      [25, 25],
     ]);
     expect(
       VOUCHER_TIERS.every((tier) => tier.options.map((o) => o.kind).join() === "grocery,fuel"),
@@ -71,7 +79,7 @@ describe("voucher ladder", () => {
       floorApplied: true,
       ratePercent: 5.9,
     });
-    expect(targets(result)).toEqual([9000, 18000, 27000]);
+    expect(targets(result)).toEqual([9000, 18000, 27000, 36000, 45000]);
   });
 
   it("switches from the floor to the national rate at 3.0 versus 2.9", () => {
@@ -86,19 +94,19 @@ describe("voucher ladder", () => {
   it("uses the national rate when it is above the floor", () => {
     const result = ladder({ nationalRatePercent: 5.9 });
     expect(result.source).toMatchObject({ baseRatePercent: 5.9, floorApplied: false });
-    expect(targets(result)).toEqual([17700, 35400, 53100]);
+    expect(targets(result)).toEqual([17700, 35400, 53100, 70800, 88500]);
   });
 
   it("rounds each target once to whole cents", () => {
     const result = ladder({ incomeCents: 123457, nationalRatePercent: 3 });
     // 123457 * 0.03 = 3703.71 -> 3704; x2 = 7407.42 -> 7407, not 2 * 3704
-    expect(targets(result)).toEqual([3704, 7407, 11111]);
+    expect(targets(result)).toEqual([3704, 7407, 11111, 14815, 18519]);
   });
 
   it("rounds half a cent up", () => {
     // 50 cents * 3% = 1.5 -> 2; x3 = 4.5 -> 5
     const result = ladder({ incomeCents: 50, nationalRatePercent: 0 });
-    expect(targets(result)).toEqual([2, 3, 5]);
+    expect(targets(result)).toEqual([2, 3, 5, 6, 8]);
   });
 
   it("unlocks exactly at the target and not one cent below", () => {
@@ -109,6 +117,14 @@ describe("voucher ladder", () => {
     const below = ladder({ savedCents: 8999, nationalRatePercent: 0 });
     expect(below.tiers[0]).toMatchObject({ unlocked: false, remainingCents: 1 });
     expect(below.tiers[0]?.progress).toBeCloseTo(8999 / 9000, 10);
+  });
+
+  it("fills a stage only once the one before it is done", () => {
+    // Targets are 9000, 18000, ... so 13500 is bronze done and silver half way.
+    const result = ladder({ savedCents: 13500, nationalRatePercent: 0 });
+    expect(result.tiers.map((tier) => tier.progress)).toEqual([1, 0.5, 0, 0, 0]);
+    const first = ladder({ savedCents: 4500, nationalRatePercent: 0 });
+    expect(first.tiers.map((tier) => tier.progress)).toEqual([0.5, 0, 0, 0, 0]);
   });
 
   it("clamps progress to 1 when savings exceed the target", () => {

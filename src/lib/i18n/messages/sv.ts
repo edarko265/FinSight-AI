@@ -380,6 +380,10 @@ export const sv: Record<MessageKey, string> = {
   "voucher.tier.bronze": "Brons",
   "voucher.tier.silver": "Silver",
   "voucher.tier.gold": "Guld",
+  "voucher.tier.platinum": "Platina",
+  "voucher.tier.diamond": "Diamant",
+  "voucher.stage.prev": "Föregående steg",
+  "voucher.stage.next": "Nästa steg",
   "voucher.brand.grocery": "våra livsmedelsbutiker",
   "voucher.brand.fuel": "våra bensinstationer",
   "voucher.kind.grocery.title": "{percent} rabatt på en matvara",
@@ -1447,6 +1451,9 @@ export const sv: Record<MessageKey, string> = {
   "goals.reached": "Målet nått.",
   "goals.monthsLeft": "Cirka {months} månader till med planerat belopp.",
   "goals.aside.cta": "Lägg undan pengar",
+  "goals.safeShort": "Säkert att spara undan",
+  "goals.savedShort": "Undansparat hittills",
+  "goals.monthsShort": "{months} mån kvar",
   "goals.aside.safe":
     "Du kan lägga undan cirka {amount} nu och ändå täcka en månads räkningar, nödvändigt och din vanliga konsumtion.",
   "goals.aside.none":
