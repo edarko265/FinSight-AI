@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { ChartView } from "@/components/charts/ChartView";
 import { ConsentSheet } from "@/components/chat/ConsentSheet";
@@ -90,12 +90,32 @@ export function ChatPanel({
   }, [messages, pending]);
 
   // Grow the composer with its text up to about five lines, then let it scroll.
-  useLayoutEffect(() => {
+  const fitInput = useCallback((): void => {
     const input = inputRef.current;
     if (!input) return;
     input.style.height = "auto";
-    input.style.height = `${Math.min(input.scrollHeight, 128)}px`;
-  }, [draft, voice.recording]);
+    // scrollHeight leaves out the borders, which border-box sizing counts.
+    const height = input.scrollHeight + (input.offsetHeight - input.clientHeight);
+    input.style.height = `${Math.min(height, 128)}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    fitInput();
+  }, [draft, voice.recording, fitInput]);
+
+  // Re-measure when the width changes (rotation, sheet resize); height writes are ignored.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    let width = input.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (input.clientWidth === width) return;
+      width = input.clientWidth;
+      fitInput();
+    });
+    observer.observe(input);
+    return () => observer.disconnect();
+  }, [fitInput]);
 
   useEffect(() => {
     onStatus?.({ pending, count: messages.length });
@@ -199,7 +219,7 @@ export function ChatPanel({
                     <button
                       type="button"
                       onClick={() => void send(t(key))}
-                      className="h-full w-full rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm font-medium"
+                      className="h-full min-h-11 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm font-medium"
                     >
                       {t(key)}
                     </button>
@@ -210,7 +230,7 @@ export function ChatPanel({
                 <button
                   type="button"
                   onClick={() => setShowAll(true)}
-                  className="mt-2 w-full rounded-full px-4 py-2 text-sm font-semibold text-accent"
+                  className="mt-2 min-h-11 w-full rounded-full px-4 py-2 text-sm font-semibold text-accent"
                 >
                   {t("chat.moreQuestions")}
                 </button>
@@ -359,13 +379,17 @@ export function ChatPanel({
               <button
                 type="button"
                 onClick={() => setCalling(true)}
-                className="flex items-center gap-1.5"
+                className="inline-flex min-h-11 items-center gap-1.5"
               >
                 <PhoneIcon className="size-4" />
                 {t("voice.call.start")}
               </button>
             ) : null}
-            {showAdvisor ? <Link href="/advisor">{t("advisor.cta")} →</Link> : null}
+            {showAdvisor ? (
+              <Link href="/advisor" className="inline-flex min-h-11 items-center">
+                {t("advisor.cta")} →
+              </Link>
+            ) : null}
           </div>
         ) : null}
 
@@ -391,7 +415,13 @@ export function ChatPanel({
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               // Enter sends, Shift+Enter adds a line; Enter while composing (IME) confirms text.
-              if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+              if (
+                event.key !== "Enter" ||
+                event.shiftKey ||
+                event.nativeEvent.isComposing ||
+                event.nativeEvent.keyCode === 229
+              )
+                return;
               event.preventDefault();
               void send(draft);
             }}
