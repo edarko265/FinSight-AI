@@ -3,7 +3,13 @@
 import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { Suggestions, Wizard, WizardChoices, WizardField, WizardReview } from "@/components/ui/Wizard";
+import {
+  Suggestions,
+  Wizard,
+  WizardChoices,
+  WizardField,
+  WizardReview,
+} from "@/components/ui/Wizard";
 import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { api } from "@/lib/api-client";
 import { formatMoney } from "@/lib/i18n/config";

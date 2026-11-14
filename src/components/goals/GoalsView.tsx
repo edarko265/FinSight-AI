@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { PlansView } from "@/components/plans/PlansView";
 import { VoucherLadder } from "@/components/goals/VoucherLadder";
 import { GoalWizard, type GoalDraft } from "@/components/goals/GoalWizard";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
@@ -10,7 +11,7 @@ import { useOverview } from "@/components/providers/OverviewProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { LoadError } from "@/components/ui/LoadError";
 import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
-import { PendingLabel, Spinner } from "@/components/ui/Spinner";
+import { Spinner } from "@/components/ui/Spinner";
 import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Suggestions, Wizard, WizardField, WizardReview } from "@/components/ui/Wizard";
 import { api, ApiError } from "@/lib/api-client";
@@ -56,15 +57,122 @@ interface GoalsPayload {
   setAsideCents: number;
 }
 
-const FIT_TONE = {
-  fits: "bg-accent-soft text-accent",
-  stretch: "bg-accent-soft text-accent",
-  hard: "bg-warning-soft text-warning",
-} as const;
+type IconName =
+  "plus" | "edit" | "trash" | "clock" | "chat" | "coin" | "trophy" | "check" | "bulb" | "chevron";
+
+const ICON_PATHS: Record<IconName, string> = {
+  plus: "M12 5v14M5 12h14",
+  edit: "M4 20h4L19 9l-4-4L4 16v4zM13 7l4 4",
+  trash: "M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13",
+  clock: "M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
+  chat: "M4 5h16v11H9l-5 4V5z",
+  coin: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v10M9.5 9.5C9.5 8.7 10.6 8 12 8s2.5.7 2.5 1.5S13.4 11 12 11s-2.5.7-2.5 1.5S10.6 14 12 14s2.5-.7 2.5-1.5",
+  trophy: "M8 4h8v6a4 4 0 0 1-8 0V4zM8 6H4v1a3 3 0 0 0 4 3M16 6h4v1a3 3 0 0 1-4 3M12 14v4M8 20h8",
+  check: "M5 12l5 5 9-10",
+  bulb: "M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11v2h6v-2a6 6 0 0 0-3-11z",
+  chevron: "M9 6l6 6-6 6",
+};
+
+function Icon({
+  name,
+  className = "size-6",
+}: {
+  name: IconName;
+  className?: string;
+}): React.JSX.Element {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d={ICON_PATHS[name]} />
+    </svg>
+  );
+}
+
+/** Round icon-only action; the label is for assistive tech and the hover tooltip. */
+function IconButton({
+  icon,
+  label,
+  onClick,
+  tone = "bg-background text-accent",
+  disabled,
+  size = "size-12",
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  tone?: string;
+  disabled?: boolean;
+  size?: string;
+}): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-disabled={disabled}
+      onClick={onClick}
+      className={`flex ${size} items-center justify-center rounded-full aria-disabled:opacity-60 ${tone}`}
+    >
+      <Icon name={icon} />
+    </button>
+  );
+}
+
+/** A circular progress gauge with the percentage in the middle. */
+function ProgressRing({
+  percent,
+  label,
+  behind,
+}: {
+  percent: number;
+  label: string;
+  behind: boolean;
+}): React.JSX.Element {
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const shown = Math.min(100, percent);
+  return (
+    <div
+      className="relative size-[4.5rem] shrink-0"
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={shown}
+    >
+      <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden="true">
+        <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="10" className="stroke-border" />
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          strokeWidth="10"
+          strokeLinecap="round"
+          className={behind ? "stroke-warning" : "stroke-accent"}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - shown / 100)}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold tabular-nums">
+        {percent}
+        <span className="text-xs">%</span>
+      </span>
+    </div>
+  );
+}
 
 /** One goal with its progress. Owns the hook for its own "move to bin" action. */
 function GoalCard({
-  plan: { goal, fit, roomCents, savedCents, percent, monthsLeft, pace, setAsides },
+  plan: { goal, fit, savedCents, percent, monthsLeft, pace, setAsides },
   money,
   onAside,
   onEdit,
@@ -88,87 +196,69 @@ function GoalCard({
   }
 
   return (
-    <article className="rounded-2xl border border-border bg-surface p-4">
-      <h3 className="text-base font-semibold">{goal.name}</h3>
-      <p className="text-2xl font-semibold tabular-nums">{money(goal.targetCents)}</p>
-      <p className="mt-1 text-sm text-muted">
-        {t("goals.perMonth", { monthly: money(goal.monthlyCents), months: goal.months })}
-      </p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-border" aria-hidden="true">
-        <div
-          className="h-full rounded-full bg-accent"
-          style={{
-            width: `${Math.min(100, Math.round((roomCents / Math.max(1, goal.monthlyCents)) * 100))}%`,
-          }}
+    <article className="rounded-3xl border border-border bg-surface p-4">
+      <div className="flex items-center gap-4">
+        <ProgressRing percent={percent} label={t("goals.progress")} behind={pace === "behind"} />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-base font-semibold leading-tight">{goal.name}</h3>
+          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 tabular-nums">
+            <span className="text-2xl font-semibold">{money(savedCents)}</span>
+            <span className="text-muted">/ {money(goal.targetCents)}</span>
+          </p>
+        </div>
+        <IconButton
+          icon="plus"
+          label={t("goals.aside.cta")}
+          onClick={onAside}
+          tone="bg-accent text-on-primary"
         />
       </div>
-      <p className="mt-2 flex items-center justify-between gap-2 text-sm text-muted">
-        <span>
-          {t("goal.row.room")}: {money(roomCents)}
-        </span>
-        <span className={`rounded-full px-2.5 py-1 font-medium ${FIT_TONE[fit]}`}>
-          {t(`goals.fit.${fit}` as MessageKey)}
-        </span>
-      </p>
-      <div className="mt-4 rounded-xl bg-background p-3">
-        <p className="flex items-baseline justify-between gap-3 text-sm">
-          <span className="font-semibold">{t("goals.progress")}</span>
-          <span className="tabular-nums">
-            {money(savedCents)} / {money(goal.targetCents)} · {percent} %
-          </span>
-        </p>
-        <div
-          className="mt-2 h-3 overflow-hidden rounded-full bg-border"
-          role="meter"
-          aria-label={t("goals.progress")}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
+        <span
+          className={`rounded-full px-3 py-1.5 ${
+            pace === "behind" || fit === "hard"
+              ? "bg-warning-soft text-warning"
+              : "bg-accent-soft text-accent"
+          }`}
+          title={t(`goals.fit.${fit}` as MessageKey)}
         >
-          <div
-            className="fs-grow-x h-full rounded-full bg-accent"
-            style={{ width: `${percent}%` }}
+          {percent >= 100 ? t("goals.reached") : t(`goals.pace.${pace}` as MessageKey)}
+        </span>
+        {percent < 100 ? (
+          <span className="flex items-center gap-1.5 rounded-full bg-background px-3 py-1.5 tabular-nums text-muted">
+            <Icon name="clock" className="size-4" />
+            {t("goals.monthsShort", { months: monthsLeft })}
+          </span>
+        ) : null}
+        <div className="ml-auto flex gap-1">
+          <IconButton icon="edit" label={t("common.edit")} onClick={onEdit} size="size-11" />
+          <IconButton
+            icon="trash"
+            label={t("common.moveToBin")}
+            onClick={() => void removeGoal()}
+            tone="bg-background text-muted"
+            disabled={removing}
+            size="size-11"
           />
         </div>
-        <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-          <span
-            className={`rounded-full px-2.5 py-1 font-medium ${
-              pace === "behind" ? "bg-warning-soft text-warning" : "bg-accent-soft text-accent"
-            }`}
+      </div>
+      {setAsides.length > 0 ? (
+        <details className="mt-1">
+          <summary
+            className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-accent"
+            aria-label={t("goals.aside.history", { count: setAsides.length })}
           >
-            {t(`goals.pace.${pace}` as MessageKey)}
-          </span>
-          {percent >= 100 ? t("goals.reached") : t("goals.monthsLeft", { months: monthsLeft })}
-        </p>
-        {setAsides.length > 0 ? (
-          <details className="mt-2">
-            <summary className="flex min-h-11 cursor-pointer items-center text-xs font-semibold text-accent">
-              {t("goals.aside.history", { count: setAsides.length })}
-            </summary>
-            <ul className="mt-2 flex flex-col divide-y divide-border text-sm">
-              {setAsides.map((item) => (
-                <SetAsideRow key={item.id} item={item} money={money} onChanged={onChanged} />
-              ))}
-            </ul>
-          </details>
-        ) : null}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
-        <button type="button" onClick={onAside} className="min-h-11 text-accent">
-          {t("goals.aside.cta")}
-        </button>
-        <button type="button" onClick={onEdit} className="min-h-11 text-accent">
-          {t("common.edit")}
-        </button>
-        <button
-          type="button"
-          aria-disabled={removing}
-          onClick={() => void removeGoal()}
-          className="min-h-11 text-muted aria-disabled:opacity-60"
-        >
-          {removing ? <PendingLabel>{t("common.removing")}</PendingLabel> : t("common.moveToBin")}
-        </button>
-      </div>
+            <Icon name="coin" className="size-5" />
+            <span className="tabular-nums">{setAsides.length}</span>
+            <Icon name="chevron" className="size-4" />
+          </summary>
+          <ul className="flex flex-col divide-y divide-border">
+            {setAsides.map((item) => (
+              <SetAsideRow key={item.id} item={item} money={money} onChanged={onChanged} />
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </article>
   );
 }
@@ -195,18 +285,17 @@ function SetAsideRow({
         {money(item.cents)}
         <span className="text-muted"> · {formatDay(item.date, locale)}</span>
       </span>
-      <button
-        type="button"
-        aria-disabled={pending}
-        className="min-h-11 text-xs font-semibold text-muted aria-disabled:opacity-60"
+      <IconButton
+        icon="trash"
+        label={t("common.moveToBin")}
+        tone="bg-transparent text-muted"
+        disabled={pending}
         onClick={() => {
           void run().then((result) => {
             if (result.ok) onChanged();
           });
         }}
-      >
-        {pending ? <PendingLabel>{t("common.removing")}</PendingLabel> : t("common.moveToBin")}
-      </button>
+      />
     </li>
   );
 }
@@ -231,7 +320,6 @@ export function GoalsView(): React.JSX.Element {
   const [when, setWhen] = useState("");
   const [euros, setEuros] = useState("");
   const [saveError, setSaveError] = useState<MessageKey | null>(null);
-
 
   useEffect(() => {
     let cancelled = false;
@@ -302,7 +390,6 @@ export function GoalsView(): React.JSX.Element {
     return true;
   }
 
-
   const rewards = data?.rewards;
   const money = (cents: number): string => formatMoney(cents, locale);
   const askLink = (question: MessageKey): string => `/chat?q=${encodeURIComponent(t(question))}`;
@@ -311,21 +398,8 @@ export function GoalsView(): React.JSX.Element {
     <div ref={contentRef} tabIndex={-1} className="flex flex-col gap-5 px-4 py-4 outline-none">
       <h1 className="text-xl font-semibold">{t("goals.title")}</h1>
 
-      <Link
-        href="/plans"
-        className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm"
-      >
-        <span>
-          <span className="block font-semibold">{t("plans.title")}</span>
-          <span className="block text-muted">{t("goals.plansLink")}</span>
-        </span>
-        <span className="shrink-0 font-semibold text-accent" aria-hidden="true">
-          →
-        </span>
-      </Link>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold">{t("goals.yours")}</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className="sr-only">{t("goals.yours")}</h2>
         {loadFailed ? <LoadError onRetry={retry} /> : null}
         {retrying && data ? (
           <LoadingRegion
@@ -342,20 +416,35 @@ export function GoalsView(): React.JSX.Element {
             <SkeletonCard />
           </LoadingRegion>
         ) : null}
-        {data ? (
-          <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
-            {t(safe > 0 ? "goals.aside.safe" : "goals.aside.none", { amount: money(safe) })}
+        {data && data.goals.length > 0 ? (
+          <div
+            className="flex items-center gap-4 rounded-3xl bg-accent-soft p-5 text-accent"
+            title={t(safe > 0 ? "goals.aside.safe" : "goals.aside.none", { amount: money(safe) })}
+          >
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-accent text-on-primary">
+              <Icon name="coin" className="size-8" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">{t("goals.safeShort")}</span>
+              <span className="block text-3xl font-semibold tabular-nums">{money(safe)}</span>
+            </span>
+            <span className="sr-only">
+              {t(safe > 0 ? "goals.aside.safe" : "goals.aside.none", { amount: money(safe) })}
+            </span>
             {data.setAsideCents > 0 ? (
-              <span className="block text-muted">
-                {t("goals.aside.total", { amount: money(data.setAsideCents) })}
+              <span className="ml-auto text-right">
+                <span className="block text-sm font-semibold opacity-80">
+                  {t("goals.savedShort")}
+                </span>
+                <span className="block text-xl font-semibold tabular-nums">
+                  {money(data.setAsideCents)}
+                </span>
+                <span className="sr-only">
+                  {t("goals.aside.total", { amount: money(data.setAsideCents) })}
+                </span>
               </span>
             ) : null}
-          </p>
-        ) : null}
-        {data && data.goals.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
-            {t("goals.empty")}
-          </p>
+          </div>
         ) : null}
         {data?.goals.map((plan) => (
           <GoalCard
@@ -378,110 +467,92 @@ export function GoalsView(): React.JSX.Element {
             onChanged={reload}
           />
         ))}
-        <Link
-          href={askLink("chat.suggest.goal")}
-          className="rounded-full bg-primary px-5 py-3 text-center text-sm font-semibold text-on-primary"
-        >
-          {t("goals.tell")}
-        </Link>
-        <button
-          type="button"
-          onClick={() => setEditing({ name: "", euros: "", months: "" })}
-          className="rounded-full border border-border px-5 py-3 text-center text-sm font-semibold"
-        >
-          {t("goals.add")}
-        </button>
-        <Link href="/trash" className="text-center text-sm font-medium text-accent">
-          {t("trash.open")}
-        </Link>
+        {data && data.goals.length === 0 ? <p className="sr-only">{t("goals.empty")}</p> : null}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            title={t("goals.add")}
+            aria-label={t("goals.add")}
+            onClick={() => setEditing({ name: "", euros: "", months: "" })}
+            className="flex min-h-16 flex-1 items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-border px-3 text-center text-sm font-semibold text-accent"
+          >
+            <Icon name="plus" className="size-6 shrink-0" />
+            {t("goals.add")}
+          </button>
+          <Link
+            href={askLink("chat.suggest.goal")}
+            title={t("goals.tell")}
+            aria-label={t("goals.tell")}
+            className="flex min-h-16 flex-1 items-center justify-center gap-2 rounded-3xl bg-primary px-3 text-center text-sm font-semibold text-on-primary"
+          >
+            <Icon name="chat" className="size-6 shrink-0" />
+            {t("goals.tell")}
+          </Link>
+        </div>
       </section>
 
-      <GoalWizard
-        draft={editing}
-        onClose={() => setEditing(null)}
-        onSaved={() => {
-          setEditing(null);
-          toast.notify("toast.saved");
-          setTick((value) => value + 1);
-        }}
-      />
-
-      {data && data.recommendations.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold">{t("advice.title")}</h2>
-          <ul className="flex flex-col gap-2">
-            {data.recommendations.map((item) => (
-              <li key={item.id} className="rounded-2xl border border-border bg-surface p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-sm font-semibold">{item.title}</h3>
-                  {item.monthlyValueCents > 0 ? (
-                    <span className="shrink-0 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent tabular-nums">
-                      +{money(item.monthlyValueCents)}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-sm text-muted">{item.body}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
       {rewards ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold">{t("rewards.title")}</h2>
-          <div className="rounded-2xl bg-brand p-5 text-on-brand">
-            <p className="text-sm opacity-80">
-              {t(`rewards.level.${rewards.level}` as MessageKey)}
-            </p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">
-              {t("rewards.points", { points: rewards.points })}
-            </p>
+        <section className="flex flex-col gap-4">
+          <h2 className="sr-only">{t("rewards.title")}</h2>
+          <div
+            className="rounded-3xl bg-brand p-5 text-on-brand"
+            title={t(`rewards.level.${rewards.level}` as MessageKey)}
+          >
+            <div className="flex items-center gap-3">
+              <Icon name="trophy" className="size-9" />
+              <span>
+                <span className="block text-sm font-semibold opacity-80">
+                  {t(`rewards.level.${rewards.level}` as MessageKey)}
+                </span>
+                <span className="block text-3xl font-semibold tabular-nums">
+                  {t("rewards.points", { points: rewards.points })}
+                </span>
+              </span>
+              <span className="sr-only">
+                {t(`rewards.level.${rewards.level}` as MessageKey)},{" "}
+                {t("rewards.points", { points: rewards.points })}
+              </span>
+            </div>
             {rewards.nextLevelAt !== null ? (
-              <>
+              <div
+                className="mt-4 h-3 overflow-hidden rounded-full bg-white/20"
+                role="meter"
+                aria-label={t("rewards.next", { points: rewards.nextLevelAt - rewards.points })}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round((rewards.points / rewards.nextLevelAt) * 100)}
+              >
                 <div
-                  className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"
-                  aria-hidden="true"
-                >
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{
-                      width: `${Math.round((rewards.points / rewards.nextLevelAt) * 100)}%`,
-                    }}
-                  />
-                </div>
-                <p className="mt-2 text-sm opacity-80">
-                  {t("rewards.next", { points: rewards.nextLevelAt - rewards.points })}
-                </p>
-              </>
+                  className="h-full rounded-full bg-primary"
+                  style={{
+                    width: `${Math.min(100, Math.round((rewards.points / rewards.nextLevelAt) * 100))}%`,
+                  }}
+                />
+              </div>
             ) : null}
           </div>
 
-          <ul className="flex flex-col gap-2">
+          <ul className="grid grid-cols-2 gap-2">
             {rewards.achievements.map((item) => (
               <li
                 key={item.id}
-                className={`flex items-start justify-between gap-3 rounded-2xl border p-4 ${
-                  item.earned
-                    ? "border-accent bg-accent-soft"
-                    : "border-border bg-surface opacity-70"
+                title={item.body}
+                className={`flex items-center gap-3 rounded-2xl p-3 ${
+                  item.earned ? "bg-accent text-on-primary" : "bg-surface text-muted opacity-70"
                 }`}
               >
-                <div className="min-w-0">
-                  <h3 className="text-sm font-semibold">{item.title}</h3>
-                  <p className="mt-0.5 text-sm text-muted">{item.body}</p>
-                </div>
-                <span className="shrink-0 text-right text-xs font-semibold">
-                  <span className="block tabular-nums">+{item.points}</span>
-                  <span className={item.earned ? "text-accent" : "text-muted"}>
-                    {t(item.earned ? "rewards.earned" : "rewards.notYet")}
-                  </span>
+                <Icon name={item.earned ? "trophy" : "check"} className="size-7 shrink-0" />
+                <span className="min-w-0 text-sm font-semibold leading-tight">
+                  <span className="line-clamp-2">{item.title}</span>
+                  <span className="tabular-nums opacity-80">+{item.points}</span>
+                </span>
+                <span className="sr-only">
+                  {t(item.earned ? "rewards.earned" : "rewards.notYet")}
                 </span>
               </li>
             ))}
           </ul>
 
-          <h3 className="text-sm font-semibold">{t("voucher.title")}</h3>
           <VoucherLadder
             onStale={() => setTick((value) => value + 1)}
             ladder={rewards.vouchers}
@@ -501,6 +572,45 @@ export function GoalsView(): React.JSX.Element {
           />
         </section>
       ) : null}
+      <GoalWizard
+        draft={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          toast.notify("toast.saved");
+          setTick((value) => value + 1);
+        }}
+      />
+
+      {data && data.recommendations.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="sr-only">{t("advice.title")}</h2>
+          <ul className="flex flex-col gap-2">
+            {data.recommendations.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
+              >
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Icon name="bulb" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-semibold">{item.title}</h3>
+                  <p className="line-clamp-2 text-sm text-muted">{item.body}</p>
+                </div>
+                {item.monthlyValueCents > 0 ? (
+                  <span className="shrink-0 rounded-full bg-accent-soft px-3 py-1.5 font-semibold text-accent tabular-nums">
+                    +{money(item.monthlyValueCents)}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <PlansView />
+
       <Wizard
         open={saving !== null}
         title={t("goals.aside.title", { goal: saving?.name ?? "" })}

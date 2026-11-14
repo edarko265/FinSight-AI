@@ -217,9 +217,6 @@ export function SettingsView(): React.JSX.Element {
           <Link href="/corrections" className="font-semibold text-accent">
             {t("corrections.title")}
           </Link>
-          <Link href="/plans" className="font-semibold text-accent">
-            {t("plans.title")}
-          </Link>
           <Link href="/mortgage" className="font-semibold text-accent">
             {t("mortgage.title")}
           </Link>
