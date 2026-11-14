@@ -425,12 +425,6 @@ export const fi: Record<MessageKey, string> = {
   "reward.investing.body": "Sijoitit viime kuussa {amount}.",
   "reward.goal.title": "Asetit tavoitteen",
   "reward.goal.body": "Kerroit valmentajalle, mihin säästät.",
-  "reward.coupon.coffee.title": "Ilmainen kahvi",
-  "reward.coupon.coffee.body": "Esimerkkikuponki: yksi kahvi talon piikkiin.",
-  "reward.coupon.groceries.title": "Lisäbonus ruokaostoksista",
-  "reward.coupon.groceries.body": "Esimerkkikuponki: +1 % bonusta ruokaostoksista kuukauden ajan.",
-  "reward.coupon.voucher.title": "5 €:n etuseteli",
-  "reward.coupon.voucher.body": "Esimerkkikuponki: 5 € alennus seuraavasta ostoksesta.",
   "admin.title": "FinSight-hallinta",
   "admin.login.title": "Ylläpidon kirjautuminen",
   "admin.login.hint": "Vain koostetilastoja. Asiakastietoja ei voi avata täältä.",
@@ -714,7 +708,7 @@ export const fi: Record<MessageKey, string> = {
   "admin.flag.voice": "Ääni",
   "admin.flag.voice.note": "Puhutut kysymykset, puhutut vastaukset ja äänipuhelut.",
   "admin.flag.rewards": "Palkinnot",
-  "admin.flag.rewards.note": "Pisteet, tasot ja kupongit Tavoitteet-sivulla.",
+  "admin.flag.rewards.note": "Pisteet, tasot ja etusetelit Tavoitteet-sivulla.",
   "admin.flag.advisor": "Neuvoja",
   "admin.flag.advisor.note": "Antaa asiakkaiden pyytää neuvojaa valmentajasta.",
   "admin.fee": "Neuvojan maksu",
@@ -737,10 +731,7 @@ export const fi: Record<MessageKey, string> = {
   "admin.rules.points": "Pisteet kustakin saavutuksesta",
   "admin.rules.pointsHint":
     "Aseta, montako pistettä kustakin edistymisestä saa. Putken arvo on kuukautta kohti, enintään kuusi kuukautta.",
-  "admin.rules.coupons": "Milloin kupongit aukeavat",
-  "admin.rules.couponsHint":
-    "Aseta pistemäärä, jonka asiakas tarvitsee kuhunkin kuponkiin. Pienemmät luvut tekevät palkinnoista helpommin saavutettavia.",
-  "admin.rules.summary": "{count} saavutusta · kupongit {a}, {b} ja {c} pisteellä",
+  "admin.rules.summary": "{count} saavutusta · etusetelit käyttävät julkista säästöasteen tilastoa",
   "admin.rule.under_average": "Kevyempi kuukausi",
   "admin.rule.choice_down": "Omat valinnat −10 %",
   "admin.rule.buffer": "Kuukauden laskut katettu",
@@ -849,7 +840,7 @@ export const fi: Record<MessageKey, string> = {
     "Käytä palvelua vain omaa tiliäsi varten. Älä yritä päästä muiden asiakkaiden tietoihin, kuormittaa palvelua tai käyttää tekoälyä väärin.",
   "terms.rewards.title": "Palkinnot ja neuvoja",
   "terms.rewards.body":
-    "Pisteet ja kupongit ovat esimerkkejä, eikä niillä ole rahallista arvoa. Neuvojakeskustelut ja niiden hinta esitetään esimerkkinä siitä, miten palvelu voisi toimia.",
+    "Pisteet ja etusetelit ovat esimerkkejä, eikä niillä ole rahallista arvoa. Neuvojakeskustelut ja niiden hinta esitetään esimerkkinä siitä, miten palvelu voisi toimia.",
   "terms.changes.title": "Saatavuus ja muutokset",
   "terms.changes.body":
     "Prototyyppi tarjotaan sellaisenaan, ja se voi muuttua tai olla poissa käytöstä. Jos ehdot muuttuvat, sinua pyydetään hyväksymään ne uudelleen.",
