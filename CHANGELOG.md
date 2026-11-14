@@ -134,6 +134,9 @@ All notable changes to this project are documented here. The format follows
 - From the iPhone home screen, the header and the sign-in screens stay clear of the status
   bar even when the phone reports no room for it.
 
+- The coach button and its half-screen sheet are placed against the app frame, so on a
+  phone they sit just above the tab bar instead of following the browser window.
+
 ### Security
 
 - **Benchmark download.** The script that fetches Statistics Finland's figures now writes only
