@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AdvisorQueue } from "@/components/admin/AdvisorQueue";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
@@ -35,6 +36,7 @@ interface AdminPayload {
     goalsSet: number;
     voiceUses: number;
     widgetsPinned: number;
+    advisorRequests: number;
   };
 }
 
@@ -174,10 +176,14 @@ export function AdminDashboard(): React.JSX.Element {
             <Stat label={t("admin.unanswered")} value={`${percent(usage.unanswered, total)} %`} />
             <Stat label={t("admin.consent")} value={number(usage.consentAccepted)} />
             <Stat label={t("admin.goals")} value={number(usage.goalsSet)} />
-            <Stat label={t("admin.voice")} value={number(usage.voiceUses)} />
+            <Stat label={t("admin.advisor.stat")} value={number(usage.advisorRequests)} />
             <Stat label={t("admin.withdrawn")} value={number(usage.consentWithdrawn)} />
             <Stat label={t("admin.sessions")} value={number(system.activeSessions)} />
           </div>
+
+          <Panel title={t("admin.advisor")}>
+            <AdvisorQueue />
+          </Panel>
 
           <div className="grid gap-5 md:grid-cols-2">
             <Panel title={t("admin.usage")}>

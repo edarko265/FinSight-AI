@@ -19,7 +19,7 @@ import {
   type PeriodKey,
   type ToolResult,
 } from "@/lib/coach/tools";
-import type { ViewPeriod, WidgetQuery } from "@/lib/contracts/chart";
+import type { ChartStyle, ViewPeriod, WidgetQuery } from "@/lib/contracts/chart";
 
 /**
  * Every calculation the coach can run, with a validated input schema. Chat,
@@ -101,14 +101,28 @@ function execute<T extends ToolName>(ctx: CoachContext, tool: T, raw: unknown): 
   }
 }
 
+/**
+ * Redraws a result in the chart type the user asked for. Every chart is a list
+ * of labelled amounts, so any of them can be shown as bars, a line or a pie.
+ */
+export function applyChart(result: ToolResult, chart: ChartStyle | undefined): ToolResult {
+  if (!chart || !result.card) return result;
+  return {
+    ...result,
+    card: { ...result.card, chart: { kind: chart, points: result.card.chart.points } },
+    query: result.query ? { ...result.query, chart } : undefined,
+  };
+}
+
 /** Runs one tool with validated input and records the call on the result. */
 export function runTool<T extends ToolName>(
   ctx: CoachContext,
   tool: T,
   input: ToolInput<T>,
+  chart?: ChartStyle,
 ): ToolResult {
   const result = execute(ctx, tool, input);
-  return { ...result, query: { tool, input: input as Record<string, unknown> } };
+  return applyChart({ ...result, query: { tool, input: input as Record<string, unknown> } }, chart);
 }
 
 /**
@@ -137,5 +151,5 @@ export function runQuery(
   const parsed = TOOL_SCHEMAS[query.tool].safeParse(input);
   if (!parsed.success) return null;
   const result = execute(ctx, query.tool, parsed.data);
-  return { ...result, query };
+  return applyChart({ ...result, query: { tool: query.tool, input: query.input } }, query.chart);
 }

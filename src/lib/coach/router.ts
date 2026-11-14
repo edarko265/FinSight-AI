@@ -1,4 +1,5 @@
-import { runTool } from "@/lib/coach/registry";
+import { applyChart, runTool } from "@/lib/coach/registry";
+import type { ChartStyle } from "@/lib/contracts/chart";
 import {
   fallbackResult,
   type CoachContext,
@@ -87,7 +88,7 @@ function detectPeriod(text: string): PeriodKey | undefined {
   return explicit ? (`${explicit[1]}-${explicit[2]}` as PeriodKey) : undefined;
 }
 
-export function routeQuestion(ctx: CoachContext, question: string): ToolResult {
+function route(ctx: CoachContext, question: string): ToolResult {
   const text = question.toLowerCase();
   const target = detectTarget(text);
   const period = detectPeriod(text);
@@ -119,6 +120,23 @@ export function routeQuestion(ctx: CoachContext, question: string): ToolResult {
   if (PATTERNS.where.test(text) || PATTERNS.spend.test(text))
     return runTool(ctx, "spending", { period });
   return fallbackResult(ctx);
+}
+
+const CHART_WORDS: [ChartStyle, RegExp][] = [
+  ["donut", /\bpie\b|donut|doughnut|piirakka|ympyrä|cirkel|tårt/],
+  ["line", /line (chart|graph)|as a line|viiva|linje/],
+  ["bar", /bar (chart|graph)|as bars|pylväs|palkki|stapel/],
+];
+
+/** The chart type the user asked for by name, if any. */
+export function detectChart(question: string): ChartStyle | undefined {
+  const text = question.toLowerCase();
+  return CHART_WORDS.find(([, pattern]) => pattern.test(text))?.[0];
+}
+
+/** Basic mode: picks the calculation by keywords and draws it in the chart type asked for. */
+export function routeQuestion(ctx: CoachContext, question: string): ToolResult {
+  return applyChart(route(ctx, question), detectChart(question));
 }
 
 const GOAL_WORDS =

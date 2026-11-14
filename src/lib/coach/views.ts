@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { SessionContext } from "@/lib/coach/context";
 import { runQuery } from "@/lib/coach/registry";
 import {
+  CHART_STYLES,
   VIEW_PERIODS,
   type DashboardPayload,
   type DashboardState,
@@ -19,6 +20,7 @@ const STATE_KIND = "views";
 const query = z.object({
   tool: z.string().max(40),
   input: z.record(z.string().max(40), z.unknown()),
+  chart: z.enum(CHART_STYLES).optional(),
 });
 const view = z.object({
   id: z.string().min(1).max(60),

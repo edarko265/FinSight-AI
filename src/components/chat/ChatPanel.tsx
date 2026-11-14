@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { ChartView } from "@/components/charts/ChartView";
@@ -211,6 +212,10 @@ export function ChatPanel({
             ))}
           </ul>
         ) : null}
+
+        <Link href="/advisor" className="mb-2 block text-center text-xs font-semibold text-accent">
+          {t("advisor.cta")} →
+        </Link>
 
         {voice.error === "mic" ? (
           <p className="mb-2 text-xs text-warning">{t("chat.micDenied")}</p>

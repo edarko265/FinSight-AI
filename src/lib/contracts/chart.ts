@@ -35,6 +35,10 @@ export type ChartSpec = BarChartSpec | LineChartSpec | DonutChartSpec | FlowChar
 
 export type ChartKind = ChartSpec["kind"];
 
+/** Chart types a user can ask for or switch any widget to. */
+export const CHART_STYLES = ["bar", "line", "donut"] as const;
+export type ChartStyle = (typeof CHART_STYLES)[number];
+
 /** A chart with the text that must accompany it: colour and shape are never the only signal. */
 export interface ChartCard {
   title: string;
@@ -48,6 +52,8 @@ export interface ChartCard {
 export interface WidgetQuery {
   tool: string;
   input: Record<string, unknown>;
+  /** The chart type the user chose for this widget, if they changed it from the default. */
+  chart?: ChartStyle;
 }
 
 export interface DashboardWidget extends ChartCard {

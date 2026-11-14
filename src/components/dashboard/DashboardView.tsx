@@ -272,6 +272,14 @@ export function DashboardView(): React.JSX.Element {
                   widgets: view.widgets.filter((item) => item.id !== id),
                 }))
               }
+              onChart={(id, chart) =>
+                updateActive((view) => ({
+                  ...view,
+                  widgets: view.widgets.map((item) =>
+                    item.id === id ? { ...item, query: { ...item.query, chart } } : item,
+                  ),
+                }))
+              }
             />
           ))}
         </div>

@@ -6,7 +6,7 @@ import { getDb } from "@/lib/db/client";
  * Anonymous usage counting. Records only what kind of thing happened, in which
  * language, and whether AI was used: never who asked or what they typed.
  */
-export type UsageKind = "question" | "consent" | "goal" | "voice" | "widget";
+export type UsageKind = "question" | "consent" | "goal" | "voice" | "widget" | "advisor";
 
 export async function recordUsage(
   kind: UsageKind,
@@ -39,6 +39,7 @@ export interface UsageSummary {
   goalsSet: number;
   voiceUses: number;
   widgetsPinned: number;
+  advisorRequests: number;
 }
 
 export async function usageSummary(): Promise<UsageSummary> {
@@ -92,5 +93,6 @@ export async function usageSummary(): Promise<UsageSummary> {
     goalsSet: kinds.get("goal") ?? 0,
     voiceUses: kinds.get("voice") ?? 0,
     widgetsPinned: kinds.get("widget") ?? 0,
+    advisorRequests: kinds.get("advisor") ?? 0,
   };
 }

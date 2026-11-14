@@ -44,3 +44,15 @@ export function formatDay(date: string, locale: Locale): string {
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`));
 }
+
+/** Formats a local date-time such as "2026-09-16T10:00" for display. */
+export function formatSlot(slot: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(LOCALE_INFO[locale].intl, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(`${slot}:00Z`));
+}

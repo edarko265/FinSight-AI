@@ -6,6 +6,7 @@ import { generateText, isStepCount, tool, type LanguageModel } from "ai";
 import { z } from "zod";
 
 import type { SessionContext } from "@/lib/coach/context";
+import { CHART_STYLES } from "@/lib/contracts/chart";
 import { goalsResult, setGoal } from "@/lib/coach/goals";
 import { runTool, TOOL_SCHEMAS } from "@/lib/coach/registry";
 import type { CoachContext, ToolResult } from "@/lib/coach/tools";
@@ -40,6 +41,7 @@ export function coachSystemPrompt(ctx: CoachContext): string {
     `Today is ${ctx.asOf} in this demo. The data is synthetic and covers one account.`,
     "Every amount, count, date and comparison you state must come from a tool result in this conversation. Never calculate, estimate or recall money figures yourself, and never invent merchants, bills or income.",
     "Call a tool for any question about the user's money. Use the amounts exactly as the tool gives them.",
+    "The user decides how their data is shown. If they ask for a pie, bar or line chart, pass that as the tool's chart parameter, and offer another chart type when it would be clearer.",
     "Each tool also draws a chart (pie, bar, line or a money-flow diagram) that the app shows next to your reply. When the user asks for a chart or diagram, call the tool that draws it.",
     "The app shows the chart and the figures next to your reply, so add meaning instead of repeating every number: say what stands out and why it matters.",
     "Teach as you go. Spending falls into three baskets: mandatory and regular (rent), mandatory and irregular (a broken washing machine), and everyday spending that slips through the fingers. Never treat essentials such as food or medicine as waste, and never shame the user.",
@@ -74,35 +76,41 @@ export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
     return forModel(result);
   };
   const euros = z.number().min(0).max(1_000_000).optional();
+  const chartField = {
+    chart: z
+      .enum(CHART_STYLES)
+      .optional()
+      .describe("Chart type the user asked for; 'donut' is a pie chart. Omit to use the default."),
+  };
   return {
     get_spending: tool({
       description:
         "Total spending in a period: overall by category (pie chart), or for one kind of spending. target 'taxi' and 'cafes' are picked out by merchant code. period is a named period or one month as YYYY-MM; default is the last completed month.",
-      inputSchema: TOOL_SCHEMAS.spending,
-      execute: async (input) => run(runTool(ctx, "spending", input)),
+      inputSchema: TOOL_SCHEMAS.spending.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "spending", input, chart)),
     }),
     get_spending_trend: tool({
       description:
         "Spending month by month over recent months (bar or line chart), overall or for one kind.",
-      inputSchema: TOOL_SCHEMAS.trend,
-      execute: async (input) => run(runTool(ctx, "trend", input)),
+      inputSchema: TOOL_SCHEMAS.trend.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "trend", input, chart)),
     }),
     get_baskets: tool({
       description:
         "The three baskets: regular bills, irregular essentials and everyday spending (pie chart).",
-      inputSchema: TOOL_SCHEMAS.baskets,
-      execute: async (input) => run(runTool(ctx, "baskets", input)),
+      inputSchema: TOOL_SCHEMAS.baskets.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "baskets", input, chart)),
     }),
     get_money_flow: tool({
       description:
         "A flow diagram of where income went in a period: bills, essentials, everyday spending, investing and what was left.",
-      inputSchema: TOOL_SCHEMAS.flow,
-      execute: async (input) => run(runTool(ctx, "flow", input)),
+      inputSchema: TOOL_SCHEMAS.flow.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "flow", input, chart)),
     }),
     get_balance: tool({
       description: "Recorded account balance now and at the end of recent months (line chart).",
-      inputSchema: TOOL_SCHEMAS.balance,
-      execute: async () => run(runTool(ctx, "balance", {})),
+      inputSchema: TOOL_SCHEMAS.balance.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "balance", {}, chart)),
     }),
     get_safe_to_spend: tool({
       description:
@@ -131,31 +139,31 @@ export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
     }),
     simulate_reduction: tool({
       description: "What a percentage cut to one kind of spending would have saved. Hypothetical.",
-      inputSchema: TOOL_SCHEMAS.what_if,
-      execute: async (input) => run(runTool(ctx, "what_if", input)),
+      inputSchema: TOOL_SCHEMAS.what_if.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "what_if", input, chart)),
     }),
     compare_with_peers: tool({
       description:
         "Compare the user's typical month with people of a similar age in the dataset, with Statistics Finland context where available.",
-      inputSchema: TOOL_SCHEMAS.peers,
-      execute: async (input) => run(runTool(ctx, "peers", input)),
+      inputSchema: TOOL_SCHEMAS.peers.extend(chartField),
+      execute: async ({ chart, ...input }) => run(runTool(ctx, "peers", input, chart)),
     }),
     get_spending_pattern: tool({
       description:
         "Describe the user's spending pattern: basket shares and largest free-choice categories.",
-      inputSchema: TOOL_SCHEMAS.profile,
-      execute: async () => run(runTool(ctx, "profile", {})),
+      inputSchema: TOOL_SCHEMAS.profile.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "profile", {}, chart)),
     }),
     get_regular_payments: tool({
       description: "Regular monthly bills and the usual income pattern, suggested from history.",
-      inputSchema: TOOL_SCHEMAS.recurring,
-      execute: async () => run(runTool(ctx, "recurring", {})),
+      inputSchema: TOOL_SCHEMAS.recurring.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "recurring", {}, chart)),
     }),
     get_recommendations: tool({
       description:
         "Ranked, personalised suggestions for improving the user's finances, each with an estimated monthly value. Call this when the user asks for advice, seems unsure what to do, or after showing a problem.",
-      inputSchema: TOOL_SCHEMAS.recommend,
-      execute: async () => run(runTool(ctx, "recommend", {})),
+      inputSchema: TOOL_SCHEMAS.recommend.extend(chartField),
+      execute: async ({ chart }) => run(runTool(ctx, "recommend", {}, chart)),
     }),
     set_savings_goal: tool({
       description:
