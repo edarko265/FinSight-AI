@@ -2,10 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { adminCall } from "@/components/admin/admin-api";
+import { adminCall, requireResult } from "@/components/admin/admin-api";
+import { LoadState } from "@/components/admin/LoadState";
 import { Panel } from "@/components/admin/parts";
+import { RowButton } from "@/components/admin/RowButton";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { LoadError } from "@/components/ui/LoadError";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
 type Kind = "announcement" | "request" | "staff" | "training";
@@ -88,18 +93,9 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
     void load();
   }, [load]);
 
-  async function act(item: BinItem, action: "restore" | "purge"): Promise<void> {
-    const result = await adminCall(`${PATHS[item.kind]}/${item.id}`, "POST", { action });
-    if (!result) {
-      toast.fail();
-      return;
-    }
-    toast.notify(action === "restore" ? "toast.restored" : "toast.deleted");
-    await load();
-  }
-
   async function emptyBin(): Promise<void> {
     if (!items) return;
+    if (busy) return;
     setBusy(true);
     const results = await Promise.all(
       items.map((item) => adminCall(`${PATHS[item.kind]}/${item.id}`, "POST", { action: "purge" })),
@@ -113,44 +109,22 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
 
   return (
     <Panel title={t("admin.bin")}>
-      {failed ? <p className="text-sm text-warning">{t("admin.loadFailed")}</p> : null}
-      {items === null ? (
-        <p className="text-sm text-muted" role="status">
-          …
-        </p>
-      ) : items.length === 0 ? (
+      {failed && items ? (
+        <LoadError onRetry={() => void load()} messageKey="admin.loadFailed" />
+      ) : null}
+      <LoadState show={items === null} failed={false} onRetry={() => void load()} />
+      {items === null ? null : items.length === 0 ? (
         <p className="text-sm text-muted">{t("admin.bin.empty")}</p>
       ) : (
         <>
           <ul className="flex flex-col gap-2">
             {items.map((item) => (
-              <li
+              <TrashRow
                 key={`${item.kind}-${item.id}`}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm"
-              >
-                <span className="min-w-0">
-                  <span className="block text-xs text-muted">
-                    {t(`admin.trash.kind.${item.kind}` as MessageKey)}
-                  </span>
-                  <span className="block truncate">{item.label}</span>
-                </span>
-                <span className="flex gap-4 font-semibold">
-                  <button
-                    type="button"
-                    className="text-accent"
-                    onClick={() => void act(item, "restore")}
-                  >
-                    {t("common.restore")}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-warning"
-                    onClick={() => void act(item, "purge")}
-                  >
-                    {t("common.deleteForever")}
-                  </button>
-                </span>
-              </li>
+                item={item}
+                label={t(`admin.trash.kind.${item.kind}` as MessageKey)}
+                onDone={load}
+              />
             ))}
           </ul>
           {confirming ? (
@@ -166,11 +140,15 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
                 </button>
                 <button
                   type="button"
-                  disabled={busy}
-                  className="text-warning"
+                  aria-disabled={busy}
+                  className="min-h-11 text-warning"
                   onClick={() => void emptyBin()}
                 >
-                  {t("common.deleteForever")}
+                  {busy ? (
+                    <PendingLabel>{t("common.deleting")}</PendingLabel>
+                  ) : (
+                    t("common.deleteForever")
+                  )}
                 </button>
               </span>
             </div>
@@ -187,5 +165,56 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
       )}
       <p className="text-xs text-muted">{t("admin.trash.note")}</p>
     </Panel>
+  );
+}
+
+function TrashRow({
+  item,
+  label,
+  onDone,
+}: {
+  item: BinItem;
+  label: string;
+  onDone: () => Promise<void>;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const toast = useToast();
+  const [which, setWhich] = useState<"restore" | "purge">("restore");
+  const { run, pending } = useAsyncAction(async (action: "restore" | "purge"): Promise<void> => {
+    requireResult(await adminCall(`${PATHS[item.kind]}/${item.id}`, "POST", { action }));
+    toast.notify(action === "restore" ? "toast.restored" : "toast.deleted");
+    await onDone();
+  });
+  const start = (action: "restore" | "purge"): void => {
+    setWhich(action);
+    void run(action);
+  };
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm">
+      <span className="min-w-0">
+        <span className="block text-xs text-muted">{label}</span>
+        <span className="block truncate">{item.label}</span>
+      </span>
+      <span className="flex gap-4 font-semibold">
+        <RowButton
+          pending={pending}
+          active={which === "restore"}
+          pendingLabel={t("common.restoring")}
+          className="min-h-11 text-accent"
+          onClick={() => start("restore")}
+        >
+          {t("common.restore")}
+        </RowButton>
+        <RowButton
+          pending={pending}
+          active={which === "purge"}
+          pendingLabel={t("common.deleting")}
+          className="min-h-11 text-warning"
+          onClick={() => start("purge")}
+        >
+          {t("common.deleteForever")}
+        </RowButton>
+      </span>
+    </li>
   );
 }

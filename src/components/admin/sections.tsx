@@ -13,7 +13,10 @@ import { AdvisorQueue } from "@/components/admin/AdvisorQueue";
 import { Announcements } from "@/components/admin/Announcements";
 import { Bars, DailyChart, Meter, Panel, Ring, Stat } from "@/components/admin/parts";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonText } from "@/components/ui/Skeleton";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { formatDay, formatMoney, isLocale, LOCALE_INFO } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
@@ -501,31 +504,35 @@ export function AnnouncementsSection(): React.JSX.Element {
 /** Device notifications: who has them on, and sending the reminders by hand. */
 export function NotificationsSection(): React.JSX.Element {
   const { t } = usePreferences();
-  const toast = useToast();
   const { reload } = useAdminData();
   const { number } = useAdmin();
   const [customers, setCustomers] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
   const [result, setResult] = useState<{ sent: number; customers: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/admin/reminders", { credentials: "same-origin" })
-      .then((response) =>
-        response.ok ? (response.json() as Promise<{ customers: number }>) : null,
-      )
-      .then((payload) => {
-        if (!cancelled && payload) setCustomers(payload.customers);
+      .then((response) => {
+        if (!response.ok) throw new Error("reminders failed");
+        return response.json() as Promise<{ customers: number }>;
       })
-      .catch(() => undefined);
+      .then((payload) => {
+        if (cancelled) return;
+        setCustomers(payload.customers);
+        setFailed(false);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tick]);
 
-  async function send(): Promise<void> {
-    setBusy(true);
-    try {
+  const { run: send, pending: busy } = useAsyncAction(
+    async (): Promise<void> => {
       const response = await fetch("/api/admin/reminders", {
         method: "POST",
         credentials: "same-origin",
@@ -534,34 +541,50 @@ export function NotificationsSection(): React.JSX.Element {
       const payload = (await response.json()) as { sent: number; customers: number };
       setResult(payload);
       setCustomers(payload.customers);
-      toast.notify("toast.sent");
       reload();
-    } catch {
-      toast.fail();
-    } finally {
-      setBusy(false);
-    }
-  }
+    },
+    { successKey: "toast.sent" },
+  );
 
   return (
     <>
       <h1 className="text-2xl font-semibold tracking-tight">{t("admin.nav.notifications")}</h1>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("notify.title")} value={customers === null ? "…" : number(customers)} />
-      </div>
+      {customers === null ? (
+        failed ? (
+          <LoadError
+            messageKey="admin.loadFailed"
+            onRetry={() => {
+              setFailed(false);
+              setTick((value) => value + 1);
+            }}
+          />
+        ) : (
+          <LoadingRegion>
+            <SkeletonText lines={2} />
+          </LoadingRegion>
+        )
+      ) : (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat label={t("notify.title")} value={number(customers)} />
+        </div>
+      )}
       <Panel title={t("admin.nav.notifications")}>
-        <p className="text-sm">
-          {customers === null ? "…" : t("admin.notifications.devices", { count: customers })}
-        </p>
+        {customers === null ? null : (
+          <p className="text-sm">{t("admin.notifications.devices", { count: customers })}</p>
+        )}
         <p className="text-sm text-muted">{t("admin.notifications.note")}</p>
         <p className="text-sm text-muted">{t("admin.notifications.announce")}</p>
         <button
           type="button"
-          disabled={busy}
+          aria-disabled={busy}
           onClick={() => void send()}
-          className="self-start rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary disabled:opacity-60"
+          className="min-h-11 self-start rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary aria-disabled:opacity-60"
         >
-          {t(busy ? "admin.notifications.sending" : "admin.notifications.send")}
+          {busy ? (
+            <PendingLabel>{t("admin.notifications.sending")}</PendingLabel>
+          ) : (
+            t("admin.notifications.send")
+          )}
         </button>
         {result ? (
           <p role="status" className="rounded-xl bg-accent-soft px-3 py-2 text-sm">

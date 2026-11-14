@@ -8,6 +8,8 @@ import type { AppSettings } from "@/components/admin/AdminControls";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { LOCALE_INFO } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -198,14 +200,22 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
   }, []);
   const value = useMemo(() => ({ data, reload, patch }), [data, reload, patch]);
 
-  if (isLogin) return <>{children}</>;
+  const { run: signOutRun, pending: signingOut } = useAsyncAction(
+    async (): Promise<void> => {
+      const response = await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw new Error("logout failed");
+      router.replace("/admin/login");
+    },
+    { errorKey: "common.saveFailed" },
+  );
+  const signOut = (): void => {
+    void signOutRun();
+  };
 
-  async function signOut(): Promise<void> {
-    await fetch("/api/admin/logout", { method: "POST", credentials: "same-origin" }).catch(
-      () => undefined,
-    );
-    router.replace("/admin/login");
-  }
+  if (isLogin) return <>{children}</>;
 
   const current = (href: string): boolean =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -253,10 +263,15 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
             {data ? <SignedInAs me={data.me} /> : null}
             <button
               type="button"
-              onClick={() => void signOut()}
+              onClick={signOut}
+              aria-disabled={signingOut}
               className="rounded-full border border-border px-4 py-2 text-sm font-semibold"
             >
-              {t("admin.signOut")}
+              {signingOut ? (
+                <PendingLabel>{t("common.signingOut")}</PendingLabel>
+              ) : (
+                t("admin.signOut")
+              )}
             </button>
           </div>
         </header>
@@ -282,7 +297,8 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
               </button>
               <button
                 type="button"
-                onClick={() => void signOut()}
+                onClick={signOut}
+                aria-disabled={signingOut}
                 className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold lg:hidden"
               >
                 {t("admin.signOut")}
@@ -320,7 +336,8 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
             children
           ) : failed ? null : (
             <div className="flex flex-1 items-center justify-center py-20" role="status">
-              <Logo className="size-14 animate-pulse" />
+              <span className="sr-only">{t("common.loading")}</span>
+              <Logo className="size-14 animate-pulse motion-reduce:animate-none" />
             </div>
           )}
         </main>

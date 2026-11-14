@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { adminCall } from "@/components/admin/admin-api";
+import { adminCall, requireResult } from "@/components/admin/admin-api";
+import { LoadState } from "@/components/admin/LoadState";
 import { Bars, Panel, Stat } from "@/components/admin/parts";
+import { RowButton } from "@/components/admin/RowButton";
+import { useAdminLoad } from "@/components/admin/use-admin-load";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 const SLICES = ["bills", "essentials", "everyday", "saving", "investing"] as const;
@@ -27,31 +29,8 @@ type Result = { plans: SharedPlan[] };
  */
 export function SharedPlans(): React.JSX.Element {
   const { t } = usePreferences();
-  const toast = useToast();
-  const [plans, setPlans] = useState<SharedPlan[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void adminCall<Result>("/api/admin/plans").then((result) => {
-      if (cancelled) return;
-      if (result) setPlans(result.plans);
-      else setFailed(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function remove(code: string): Promise<void> {
-    const result = await adminCall<Result>("/api/admin/plans", "DELETE", { code });
-    if (!result) {
-      toast.fail();
-      return;
-    }
-    setPlans(result.plans);
-    toast.notify("toast.updated");
-  }
+  const { data, failed, reload, setData } = useAdminLoad<Result>("/api/admin/plans");
+  const plans = data?.plans ?? null;
 
   const all = plans ?? [];
   const average = (key: (typeof SLICES)[number]): number =>
@@ -95,42 +74,61 @@ export function SharedPlans(): React.JSX.Element {
         </Panel>
       </div>
       <Panel title={t("admin.nav.plans")}>
-        {failed ? <p className="text-sm text-warning">{t("admin.loadFailed")}</p> : null}
+        <LoadState show={!plans} failed={failed} onRetry={reload} />
         {plans && plans.length === 0 ? (
           <p className="text-sm text-muted">{t("admin.plans.empty")}</p>
         ) : null}
         <ul className="flex flex-col gap-2">
           {all.map((plan) => (
-            <li
-              key={plan.code}
-              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm"
-            >
-              <span className="min-w-0">
-                <span className="font-semibold">{plan.name}</span>
-                <span className="text-muted">
-                  {" · "}
-                  {t(plan.listed ? "admin.plans.isListed" : "admin.plans.codeOnly")}
-                  {" · "}
-                  {t("plans.copies", { count: plan.copies })}
-                </span>
-                <span className="block text-muted tabular-nums">
-                  {SLICES.map(
-                    (key) => `${t(`plan.slice.${key}` as MessageKey)} ${plan.split[key]} %`,
-                  ).join(" · ")}
-                </span>
-              </span>
-              <button
-                type="button"
-                className="font-semibold text-warning"
-                onClick={() => void remove(plan.code)}
-              >
-                {t("admin.plans.remove")}
-              </button>
-            </li>
+            <PlanRow key={plan.code} plan={plan} onChange={(next) => setData({ plans: next })} />
           ))}
         </ul>
         <p className="text-xs text-muted">{t("admin.plans.note")}</p>
       </Panel>
     </>
+  );
+}
+
+function PlanRow({
+  plan,
+  onChange,
+}: {
+  plan: SharedPlan;
+  onChange: (plans: SharedPlan[]) => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const toast = useToast();
+  const { run, pending } = useAsyncAction(async (): Promise<void> => {
+    const result = requireResult(
+      await adminCall<Result>("/api/admin/plans", "DELETE", { code: plan.code }),
+    );
+    onChange(result.plans);
+    toast.notify("toast.updated");
+  });
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm">
+      <span className="min-w-0">
+        <span className="font-semibold">{plan.name}</span>
+        <span className="text-muted">
+          {" · "}
+          {t(plan.listed ? "admin.plans.isListed" : "admin.plans.codeOnly")}
+          {" · "}
+          {t("plans.copies", { count: plan.copies })}
+        </span>
+        <span className="block text-muted tabular-nums">
+          {SLICES.map((key) => `${t(`plan.slice.${key}` as MessageKey)} ${plan.split[key]} %`).join(
+            " · ",
+          )}
+        </span>
+      </span>
+      <RowButton
+        pending={pending}
+        pendingLabel={t("common.removing")}
+        className="min-h-11 font-semibold text-warning"
+        onClick={() => void run()}
+      >
+        {t("admin.plans.remove")}
+      </RowButton>
+    </li>
   );
 }

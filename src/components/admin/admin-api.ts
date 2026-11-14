@@ -38,3 +38,9 @@ export async function adminSubmit<T>(
     return { ok: false, error: "request_failed" };
   }
 }
+
+/** Turns `adminCall`'s null into a thrown error, so `useAsyncAction` treats a failed call as a failure. */
+export function requireResult<T>(result: T | null): T {
+  if (result === null) throw new Error("request_failed");
+  return result;
+}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -57,27 +57,30 @@ export function AdminControls({
   onSaved: (next: AppSettings) => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const toast = useToast();
   const [editing, setEditing] = useState<Editing>(null);
   const [fee, setFee] = useState("");
   const [limit, setLimit] = useState("");
   const [rules, setRules] = useState(settings.rewards);
   const [provider, setProvider] = useState<ProviderChoice>(settings.aiProvider);
 
-  async function save(next: AppSettings): Promise<void> {
-    const response = await fetch("/api/admin/settings", {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    if (!response.ok) {
-      toast.fail();
-      return;
-    }
-    onSaved(((await response.json()) as { settings: AppSettings }).settings);
-    toast.notify("toast.updated");
-    setEditing(null);
+  const saver = useAsyncAction(
+    async (next: AppSettings): Promise<void> => {
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      if (!response.ok) throw new Error("settings failed");
+      onSaved(((await response.json()) as { settings: AppSettings }).settings);
+      setEditing(null);
+    },
+    { successKey: "toast.updated", errorKey: "common.saveFailed" },
+  );
+
+  /** True when saved; false keeps a wizard open on its last step. */
+  async function save(next: AppSettings): Promise<boolean> {
+    return (await saver.run(next)).ok;
   }
 
   const feeEuros = Number(fee.replace(",", "."));
@@ -125,7 +128,9 @@ export function AdminControls({
               <input
                 type="checkbox"
                 checked={settings.features[flag]}
+                aria-disabled={saver.pending}
                 onChange={(event) =>
+                  !saver.pending &&
                   void save({
                     ...settings,
                     features: { ...settings.features, [flag]: event.target.checked },
