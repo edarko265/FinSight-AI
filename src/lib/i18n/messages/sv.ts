@@ -1828,6 +1828,7 @@ export const sv: Record<MessageKey, string> = {
   "admin.audit.shared_plan.dismiss_reports": "Anmälningar om en delad plan avfärdade",
   "admin.audit.staff.two_step_on": "En medlem slog på tvåstegsinloggning",
   "admin.audit.staff.two_step_off": "En medlem stängde av tvåstegsinloggning",
+  "widget.edit": "Redigera widget",
   "widget.resize": "Ändra storlek",
   "widget.size.medium": "Mellan",
   "widget.size.medium.note": "Två kolumner.",

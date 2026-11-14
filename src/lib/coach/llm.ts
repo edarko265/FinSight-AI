@@ -55,7 +55,7 @@ export function getCoachModel(
   return null;
 }
 
-export function coachSystemPrompt(ctx: CoachContext): string {
+function coachSystemPrompt(ctx: CoachContext): string {
   return [
     "You are FinSight, a warm, plain-spoken personal finance coach inside a banking app.",
     `Always reply in ${LOCALE_INFO[ctx.locale].label}. Keep replies short: two to four sentences, no markdown, no lists.`,
@@ -91,7 +91,7 @@ function forModel(result: ToolResult): Record<string, unknown> {
 }
 
 /** The same tools the basic mode uses, exposed to the model with validated inputs. No customer ID, no SQL. */
-export function coachTools(ctx: SessionContext, collected: ToolResult[]) {
+function coachTools(ctx: SessionContext, collected: ToolResult[]) {
   const run = (result: ToolResult): Record<string, unknown> => {
     collected.push(result);
     return forModel(result);

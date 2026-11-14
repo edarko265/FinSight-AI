@@ -137,6 +137,13 @@ All notable changes to this project are documented here. The format follows
 - The coach button and its half-screen sheet are placed against the app frame, so on a
   phone they sit just above the tab bar instead of following the browser window.
 
+- The dashboard asks for its data once instead of twice, shares one insights request between
+  the banner and the widget, no longer loads the conversation until the coach is opened, and
+  again shows the last dashboard at once while it refreshes.
+- Announcements are sent with their publishing time and translations again.
+- Widget controls can be reached from the keyboard through an Edit widget button.
+- Each form dialog has its own title, so a screen reader no longer reads another form's name.
+
 ### Security
 
 - **Benchmark download.** The script that fetches Statistics Finland's figures now writes only

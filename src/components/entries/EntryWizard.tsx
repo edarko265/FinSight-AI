@@ -29,7 +29,7 @@ export interface EntryRow {
   note: string;
 }
 
-export interface EntryAlert {
+interface EntryAlert {
   id: string;
   severity: "warning" | "info";
   title: string;

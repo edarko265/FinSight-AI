@@ -21,7 +21,7 @@ export interface Announcement {
   translations: Translations;
 }
 
-export type Translations = Partial<Record<"fi" | "sv", { title: string; body: string }>>;
+type Translations = Partial<Record<"fi" | "sv", { title: string; body: string }>>;
 
 type Row = {
   id: string;

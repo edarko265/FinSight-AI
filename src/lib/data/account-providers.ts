@@ -20,7 +20,7 @@ export interface AccountProvider {
   transactions(account: LinkedAccount, customerSeed: string, asOf: string): Promise<Transaction[]>;
 }
 
-export const simulatedAccounts: AccountProvider = {
+const simulatedAccounts: AccountProvider = {
   id: "simulated",
   simulated: true,
   banks: DEMO_BANKS,

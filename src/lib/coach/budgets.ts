@@ -29,11 +29,11 @@ const KIND = "budgets";
 const MAX = 12;
 export const BUDGET_TARGETS = TARGET_KEYS;
 
-export async function listBudgets(ref: string): Promise<Budget[]> {
+async function listBudgets(ref: string): Promise<Budget[]> {
   return (await readState<Budget[]>(ref, KIND)) ?? [];
 }
 
-export function budgetStatus(ctx: SessionContext, budget: Budget): BudgetStatus {
+function budgetStatus(ctx: SessionContext, budget: Budget): BudgetStatus {
   const filter = TARGETS[budget.target];
   const spentCents = summariseSpending(ctx.record.transactions, {
     period: monthToDate(ctx.asOf),

@@ -21,7 +21,7 @@ export interface PaymentProvider {
   charge(input: { amountCents: number; purpose: string }): Promise<{ reference: string }>;
 }
 
-export const simulatedProvider: PaymentProvider = {
+const simulatedProvider: PaymentProvider = {
   id: "simulated",
   simulated: true,
   async charge() {

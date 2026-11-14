@@ -17,7 +17,7 @@ import {
 import type { MessageKey } from "@/lib/i18n/translate";
 import { InfoTip } from "@/components/ui/InfoTip";
 
-export interface WidgetHandlers {
+interface WidgetHandlers {
   onRemove: (id: string) => void;
   /** Redraws the widget in another chart type. */
   onChart: (id: string, chart: ChartStyle) => void;
@@ -268,6 +268,16 @@ export function WidgetCard({
             <SettingsIcon className="size-4" />
           </button>
         ) : null}
+        {/* Shown only when reached by keyboard: a long press is not something a keyboard can do. */}
+        <button
+          type="button"
+          aria-pressed={isEditing}
+          aria-label={`${t("widget.edit")}: ${title}`}
+          onClick={() => setEditing((mode) => (mode === "editing" ? "view" : "editing"))}
+          className="sr-only rounded-full px-3 py-1.5 text-sm font-semibold text-accent focus-visible:not-sr-only"
+        >
+          {t("widget.edit")}
+        </button>
         {isEditing ? (
           <>
             <button

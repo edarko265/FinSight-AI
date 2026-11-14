@@ -45,24 +45,26 @@ export function NewWidgetSheet({ open, onClose, onAdd }: NewWidgetSheetProps): R
           </button>
         </header>
 
-        <ChatPanel
-          intro={t("dashboard.widgetPrompt")}
-          placeholder={t("dashboard.widgetExample")}
-          cardAction={(_card, query) =>
-            query ? (
-              <button
-                type="button"
-                onClick={() => {
-                  onAdd(query);
-                  onClose();
-                }}
-                className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary"
-              >
-                {t("chat.addToDashboard")}
-              </button>
-            ) : null
-          }
-        />
+        {open ? (
+          <ChatPanel
+            intro={t("dashboard.widgetPrompt")}
+            placeholder={t("dashboard.widgetExample")}
+            cardAction={(_card, query) =>
+              query ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAdd(query);
+                    onClose();
+                  }}
+                  className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary"
+                >
+                  {t("chat.addToDashboard")}
+                </button>
+              ) : null
+            }
+          />
+        ) : null}
       </dialog>
     </>
   );

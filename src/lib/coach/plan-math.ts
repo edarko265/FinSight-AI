@@ -9,7 +9,7 @@ import type { Transaction } from "@/lib/data/types";
  * anybody earns, spends or saves.
  */
 export const SLICES = ["bills", "essentials", "everyday", "saving", "investing"] as const;
-export type SliceKey = (typeof SLICES)[number];
+type SliceKey = (typeof SLICES)[number];
 export type Split = Record<SliceKey, number>;
 
 /** Starting points offered when making a plan. */

@@ -1832,6 +1832,7 @@ export const fi: Record<MessageKey, string> = {
   "admin.audit.shared_plan.dismiss_reports": "Jaetun suunnitelman ilmoitukset hylätty",
   "admin.audit.staff.two_step_on": "Jäsen otti käyttöön kaksivaiheisen kirjautumisen",
   "admin.audit.staff.two_step_off": "Jäsen poisti kaksivaiheisen kirjautumisen",
+  "widget.edit": "Muokkaa widgettiä",
   "widget.resize": "Muuta kokoa",
   "widget.size.medium": "Keskikokoinen",
   "widget.size.medium.note": "Kaksi saraketta.",

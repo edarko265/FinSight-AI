@@ -8,7 +8,7 @@ import type { Transaction } from "@/lib/data/types";
  * similar age in the same synthetic dataset. Only group percentiles are ever
  * stored, and groups below MIN_GROUP_SIZE are dropped.
  */
-export const BENCHMARK_MONTHS = 12;
+const BENCHMARK_MONTHS = 12;
 export const MIN_GROUP_SIZE = 30;
 
 export const AGE_BANDS = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"] as const;
@@ -24,7 +24,7 @@ export function ageBand(age: number | null): AgeBand {
   return "65+";
 }
 
-export const BENCHMARK_METRICS = [
+const BENCHMARK_METRICS = [
   "consumption",
   "basket:regular",
   "basket:irregular",

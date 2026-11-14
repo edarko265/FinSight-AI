@@ -72,7 +72,7 @@ const VALUES_ON_COLUMNS = 4;
  * dashed line at the average. The amounts are written on the columns when there is room, and the
  * list under the chart always carries all of them.
  */
-export function Columns({ points }: { points: ChartPoint[] }): React.JSX.Element {
+function Columns({ points }: { points: ChartPoint[] }): React.JSX.Element {
   const { locale, t } = usePreferences();
   const labels = useChartLabels();
   const max = Math.max(...points.map((point) => point.valueCents), 1);

@@ -59,7 +59,7 @@ export function typeOfInsight(id: string): NotifyType {
 }
 
 /** The hour of the day in Finland, where the bank's customers are. */
-export function hourInFinland(now: Date): number {
+function hourInFinland(now: Date): number {
   return Number(
     new Intl.DateTimeFormat("en-GB", {
       hour: "2-digit",

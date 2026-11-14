@@ -7,7 +7,7 @@ import { Suggestions, Wizard, WizardReview } from "@/components/ui/Wizard";
 import { formatDay } from "@/lib/i18n/config";
 
 /** The first day in the dataset. */
-export const DATA_START = "2024-10-01";
+const DATA_START = "2024-10-01";
 
 function shift(date: string, days: number): string {
   const moved = new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000);

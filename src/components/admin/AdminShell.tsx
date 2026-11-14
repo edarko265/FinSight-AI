@@ -96,7 +96,7 @@ export function useAdminData(): AdminValue {
 export const isManager = (role: AdminRole): boolean => role === "owner" || role === "admin";
 
 /** `manager` sections are for the owner and administrators; the rest are open to every member of staff. */
-export const ADMIN_SECTIONS: { href: string; label: MessageKey; manager?: boolean }[] = [
+const ADMIN_SECTIONS: { href: string; label: MessageKey; manager?: boolean }[] = [
   { href: "/admin", label: "admin.nav.overview" },
   { href: "/admin/usage", label: "admin.nav.usage" },
   { href: "/admin/training", label: "admin.nav.training" },

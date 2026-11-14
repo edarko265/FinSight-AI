@@ -9,11 +9,11 @@ import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Logo } from "@/components/ui/icons";
 import { LoadError } from "@/components/ui/LoadError";
-import { api, load, SIGNED_OUT_EVENT } from "@/lib/api-client";
+import { load, SIGNED_OUT_EVENT } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
 import { translate } from "@/lib/i18n/translate";
 
-export interface Overview {
+interface Overview {
   asOf: string;
   balanceCents: number;
   forecast: {
@@ -25,7 +25,7 @@ export interface Overview {
   unreadInsights: number;
 }
 
-export interface Me {
+interface Me {
   customerId: string;
   asOf: string;
   aiEnabled: boolean;

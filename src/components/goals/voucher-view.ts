@@ -3,7 +3,7 @@ import { LOCALE_INFO, type Locale } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 /** Below this share the ring shows nothing: a round cap alone would read as about 5%. */
-export const RING_MIN_PROGRESS = 0.02;
+const RING_MIN_PROGRESS = 0.02;
 
 /** stroke-dashoffset for a ring of the given circumference; progress is clamped to 0..1. */
 export function ringOffset(length: number, progress: number): number {
