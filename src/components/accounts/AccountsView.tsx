@@ -115,17 +115,9 @@ export function AccountsView(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
-      <div>
-        <InfoTip
-          lead={
-            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
-              {t("accounts.title")}
-            </h1>
-          }
-        >
-          {t("accounts.intro")}
-        </InfoTip>
-      </div>
+      <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+        {t("accounts.title")}
+      </h1>
       <p className="rounded-2xl border border-warning bg-warning-soft px-4 py-3 text-sm">
         {t("accounts.simulation")}
       </p>

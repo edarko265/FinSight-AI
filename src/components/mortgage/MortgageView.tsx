@@ -109,17 +109,9 @@ export function MortgageView(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
-      <div>
-        <InfoTip
-          lead={
-            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
-              {t("mortgage.title")}
-            </h1>
-          }
-        >
-          {t("mortgage.intro")}
-        </InfoTip>
-      </div>
+      <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+        {t("mortgage.title")}
+      </h1>
       <p className="rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm">
         {t("mortgage.disclaimer")}
       </p>
