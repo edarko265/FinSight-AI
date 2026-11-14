@@ -401,7 +401,12 @@ export const sv: Record<MessageKey, string> = {
   "voucher.source.statfin": "Statistikcentralen",
   "voucher.source.other": "{name}",
   "voucher.licence": "Licens: {licence}.",
-  "voucher.floor": "Miniminivån 3 % användes eftersom den publicerade siffran var lägre.",
+  "voucher.floor": "Miniminivån {floor} % användes eftersom den publicerade siffran var lägre.",
+  "voucher.lockedNow": "Den här förmånen är inte längre upplåst. Vi uppdaterade dina framsteg.",
+  "voucher.confirm": "Välj den här förmånen",
+  "voucher.choosing": "Väljer…",
+  "voucher.off": "Förmåner är inte aktiverade just nu.",
+  "voucher.sourceLead": "Källa:",
   "reward.underAverage.title": "En lättare månad",
   "reward.underAverage.body":
     "Du lade {amount} förra månaden, under ditt tremånaderssnitt på {average}.",

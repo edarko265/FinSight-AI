@@ -379,6 +379,7 @@ export function GoalsView(): React.JSX.Element {
 
           <h3 className="text-sm font-semibold">{t("voucher.title")}</h3>
           <VoucherLadder
+            onStale={() => setTick((value) => value + 1)}
             ladder={rewards.vouchers}
             onChange={(vouchers) =>
               setData((current) =>

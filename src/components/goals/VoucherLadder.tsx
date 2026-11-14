@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { TIER_COLOUR, VoucherArt } from "@/components/goals/VoucherArt";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
-import { api } from "@/lib/api-client";
+import { nextTierId, ringOffset, statusKey } from "@/components/goals/voucher-view";
+import { api, ApiError } from "@/lib/api-client";
 import type { VoucherLadder as Ladder, VoucherOption, VoucherTier } from "@/lib/contracts/rewards";
 import { formatMoney, formatMonth } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -21,7 +22,6 @@ function Ring({
   tier: VoucherTier;
   kind: VoucherOption["kind"];
 }): React.JSX.Element {
-  const progress = Math.min(1, Math.max(0, tier.progress));
   return (
     <div className="relative size-24 shrink-0" style={{ color: TIER_COLOUR[tier.id] }}>
       <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden="true">
@@ -42,7 +42,7 @@ function Ring({
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={RING_LENGTH}
-          strokeDashoffset={RING_LENGTH * (1 - progress)}
+          strokeDashoffset={ringOffset(RING_LENGTH, tier.progress)}
           className="motion-safe:transition-[stroke-dashoffset] motion-safe:duration-700"
         />
       </svg>
@@ -76,31 +76,53 @@ function LockIcon(): React.JSX.Element {
 export function VoucherLadder({
   ladder,
   onChange,
+  onStale,
 }: {
   ladder: Ladder;
   onChange: (next: Ladder) => void;
+  /** The server says the picture changed (a tier is no longer unlocked): reload the ladder. */
+  onStale: () => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [off, setOff] = useState(false);
+  /** The option highlighted but not yet confirmed. */
+  const [draft, setDraft] = useState<string | null>(null);
+  const inFlight = useRef(false);
   const money = (cents: number): string => formatMoney(cents, locale);
   const kindLabel = (option: VoucherOption): string =>
     t(`voucher.kind.${option.kind}` as MessageKey, { amount: money(option.valueCents) });
 
   async function run(request: () => Promise<Ladder>, done: MessageKey): Promise<void> {
-    if (busy) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     try {
       onChange(await request());
+      setDraft(null);
       toast.notify(done);
-    } catch {
-      toast.fail();
+    } catch (failure) {
+      if (failure instanceof ApiError && failure.status === 404) {
+        setOff(true);
+      } else if (
+        failure instanceof ApiError &&
+        failure.status === 409 &&
+        failure.code === "locked"
+      ) {
+        setDraft(null);
+        toast.fail("voucher.lockedNow");
+        onStale();
+      } else {
+        toast.fail();
+      }
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }
 
-  const pick = (tier: VoucherTier, option: VoucherOption): Promise<void> =>
+  const confirm = (tier: VoucherTier, option: VoucherOption): Promise<void> =>
     run(
       () =>
         api<Ladder>("/api/goals/voucher", {
@@ -117,7 +139,19 @@ export function VoucherLadder({
     ? ladder.tiers.find((tier) => tier.id === selected?.tierId)
     : undefined;
   const chosen = chosenTier?.options.find((option) => option.id === selected?.optionId);
-  const nextId = ladder.tiers.find((tier) => !tier.unlocked)?.id;
+  const chosenHere = (tier: VoucherTier): VoucherOption | undefined =>
+    tier.options.find((option) => option.id === picked);
+  const nextId = nextTierId(ladder.tiers);
+  const current = ladder.selectedValid ? (selected?.optionId ?? null) : null;
+  const picked = draft ?? current;
+  if (off) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted">
+        {t("voucher.off")}
+      </p>
+    );
+  }
+  const provisionalKey = statusKey(source.provisional);
   const sourceName = t(
     (source.id === "statfin-15ac"
       ? "voucher.source.statfin"
@@ -150,7 +184,7 @@ export function VoucherLadder({
               </div>
               <button
                 type="button"
-                disabled={busy}
+                aria-disabled={busy}
                 onClick={() => void clear()}
                 className="min-h-11 shrink-0 rounded-full border border-border px-4 text-sm font-semibold disabled:opacity-50"
               >
@@ -219,12 +253,12 @@ export function VoucherLadder({
                   </div>
 
                   {tier.unlocked ? (
-                    <fieldset className="mt-3 flex flex-col gap-2" disabled={busy}>
+                    <fieldset className="mt-3 flex flex-col gap-2">
                       <legend className="sr-only">
                         {t("voucher.choose", { tier: t(`voucher.tier.${tier.id}` as MessageKey) })}
                       </legend>
                       {tier.options.map((option) => {
-                        const checked = ladder.selectedValid && selected?.optionId === option.id;
+                        const checked = picked === option.id;
                         return (
                           <label
                             key={option.id}
@@ -239,7 +273,9 @@ export function VoucherLadder({
                               name="voucher-option"
                               value={option.id}
                               checked={checked}
-                              onChange={() => void pick(tier, option)}
+                              onChange={() => {
+                                if (!inFlight.current) setDraft(option.id);
+                              }}
                               className="size-5 shrink-0 accent-[var(--accent)]"
                             />
                             <VoucherArt
@@ -252,6 +288,19 @@ export function VoucherLadder({
                       })}
                     </fieldset>
                   ) : null}
+                  {tier.unlocked ? (
+                    <button
+                      type="button"
+                      aria-disabled={busy || !chosenHere(tier) || picked === current}
+                      onClick={() => {
+                        const option = chosenHere(tier);
+                        if (option && picked !== current) void confirm(tier, option);
+                      }}
+                      className="mt-3 min-h-11 w-full rounded-full bg-primary px-5 text-sm font-semibold text-on-primary aria-disabled:opacity-50"
+                    >
+                      {busy ? t("voucher.choosing") : t("voucher.confirm")}
+                    </button>
+                  ) : null}
                 </li>
               );
             })}
@@ -260,11 +309,13 @@ export function VoucherLadder({
       )}
 
       <p className="text-xs text-muted">
-        {t("voucher.basis", {
-          base: source.baseRatePercent,
-          year: source.year,
-          status: source.provisional ? t("voucher.provisional") : "",
-        })}{" "}
+        {ladder.available
+          ? `${t("voucher.basis", {
+              base: source.baseRatePercent,
+              year: source.year,
+              status: provisionalKey ? t(provisionalKey) : "",
+            })} `
+          : `${t("voucher.sourceLead")} `}
         <a
           href={source.url}
           target="_blank"
@@ -274,7 +325,9 @@ export function VoucherLadder({
           {sourceName}
         </a>
         . {t("voucher.licence", { licence: source.licence })}
-        {source.floorApplied ? ` ${t("voucher.floor")}` : ""}
+        {ladder.available && source.floorApplied
+          ? ` ${t("voucher.floor", { floor: source.baseRatePercent })}`
+          : ""}
       </p>
     </div>
   );

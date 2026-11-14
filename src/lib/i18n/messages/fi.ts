@@ -402,7 +402,13 @@ export const fi: Record<MessageKey, string> = {
   "voucher.source.statfin": "Tilastokeskus",
   "voucher.source.other": "{name}",
   "voucher.licence": "Lisenssi: {licence}.",
-  "voucher.floor": "Käytössä oli 3 %:n vähimmäistaso, koska julkaistu luku oli sitä pienempi.",
+  "voucher.floor":
+    "Käytössä oli {floor} %:n vähimmäistaso, koska julkaistu luku oli sitä pienempi.",
+  "voucher.lockedNow": "Tämä etuus ei ole enää avattu. Päivitimme edistymisesi.",
+  "voucher.confirm": "Valitse tämä etuus",
+  "voucher.choosing": "Valitaan…",
+  "voucher.off": "Etuudet eivät ole tällä hetkellä käytössä.",
+  "voucher.sourceLead": "Lähde:",
   "reward.underAverage.title": "Kevyempi kuukausi",
   "reward.underAverage.body":
     "Käytit viime kuussa {amount}, alle kolmen kuukauden keskiarvosi {average}.",

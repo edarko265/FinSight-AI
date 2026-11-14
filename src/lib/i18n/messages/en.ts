@@ -409,7 +409,12 @@ export const en = {
   "voucher.source.statfin": "Statistics Finland",
   "voucher.source.other": "{name}",
   "voucher.licence": "Licence: {licence}.",
-  "voucher.floor": "The 3% minimum was used because the published rate was lower.",
+  "voucher.floor": "The {floor}% minimum was used because the published rate was lower.",
+  "voucher.lockedNow": "This voucher isn't unlocked anymore. We refreshed your progress.",
+  "voucher.confirm": "Choose this voucher",
+  "voucher.choosing": "Choosing…",
+  "voucher.off": "Vouchers are not switched on right now.",
+  "voucher.sourceLead": "Source:",
   "reward.underAverage.title": "A lighter month",
   "reward.underAverage.body":
     "You spent {amount} last month, under your three-month average of {average}.",
