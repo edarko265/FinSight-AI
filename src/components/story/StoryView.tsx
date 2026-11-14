@@ -130,7 +130,7 @@ export function StoryView(): React.JSX.Element {
       aria-label={t("story.title")}
       className="outline-none fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand"
     >
-      <div className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+      <div className="px-4 pt-[calc(var(--safe-top)+0.75rem)]">
         <ol className="flex gap-1.5" aria-hidden="true">
           {(slides ?? []).map((item, position) => (
             <li key={item.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/25">

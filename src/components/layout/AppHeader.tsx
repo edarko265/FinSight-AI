@@ -14,7 +14,7 @@ export function AppHeader(): React.JSX.Element {
   const { overview, overviewLoading, dashboardBalanceVisible } = useOverview();
 
   return (
-    <header className="shrink-0 bg-brand px-4 pt-[env(safe-area-inset-top)] text-on-brand">
+    <header className="shrink-0 bg-brand px-4 pt-[var(--safe-top)] text-on-brand">
       <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-3 py-2.5 md:max-w-3xl xl:max-w-6xl">
         <Link href="/dashboard" className="flex items-center gap-2">
           {/* The logo's tile is the header's own green, so it gets an outline to stand apart. */}

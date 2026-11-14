@@ -166,7 +166,7 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
       aria-label={t("voice.call.title")}
       className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand fs-rise"
     >
-      <header className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
+      <header className="flex items-center justify-between px-5 pt-[calc(var(--safe-top)+1rem)]">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <PhoneIcon className="size-4" />
           {t("voice.call.title")}

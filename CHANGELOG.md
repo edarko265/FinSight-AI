@@ -130,6 +130,10 @@ All notable changes to this project are documented here. The format follows
 - A server fault during sign-in was reported as a wrong password.
 - The model could save a goal in answer to a purchase question.
 
+- Add income and Add expense are back on the balance card.
+- From the iPhone home screen, the header and the sign-in screens stay clear of the status
+  bar even when the phone reports no room for it.
+
 ### Security
 
 - **Benchmark download.** The script that fetches Statistics Finland's figures now writes only

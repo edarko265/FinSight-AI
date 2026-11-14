@@ -237,6 +237,19 @@ export function DashboardView(): React.JSX.Element {
             "—"
           )}
         </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(["income", "expense"] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              onClick={() => setEntryDraft({ kind })}
+              className="flex min-h-11 items-center gap-1 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold"
+            >
+              <PlusIcon className="size-4" />
+              {t(`entries.add.${kind}`)}
+            </button>
+          ))}
+        </div>
         {forecast && forecast.status !== "insufficient_data" ? (
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-white/15 pt-3">
             <div>

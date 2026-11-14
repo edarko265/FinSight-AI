@@ -24,7 +24,7 @@ const HALF =
   "inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] h-[50dvh] rounded-t-2xl border-t border-border shadow-2xl md:inset-x-auto md:right-6 md:bottom-6 md:h-[min(36rem,70dvh)] md:w-96 md:rounded-2xl md:border";
 /** Full mode stops above the tab bar on phones; at md the tab bar is hidden, so it reaches the edge. */
 const FULL =
-  "inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] pt-[env(safe-area-inset-top)] md:bottom-0 md:pt-0";
+  "inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] pt-[var(--safe-top)] md:bottom-0 md:pt-0";
 /** Closed sheets stay mounted but slide out of view and out of the tab order. */
 const CLOSED = "invisible translate-y-full pointer-events-none";
 const SWIPE_PX = 60;
