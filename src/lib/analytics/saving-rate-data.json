@@ -8,26 +8,32 @@
   },
   "year": 2025,
   "ratePercent": 5.9,
+  "provisional": true,
   "history": [
     {
       "year": 2021,
-      "ratePercent": 4.3
+      "ratePercent": 4.3,
+      "provisional": false
     },
     {
       "year": 2022,
-      "ratePercent": 1.5
+      "ratePercent": 1.5,
+      "provisional": false
     },
     {
       "year": 2023,
-      "ratePercent": 2.2
+      "ratePercent": 2.2,
+      "provisional": false
     },
     {
       "year": 2024,
-      "ratePercent": 4.1
+      "ratePercent": 4.1,
+      "provisional": true
     },
     {
       "year": 2025,
-      "ratePercent": 5.9
+      "ratePercent": 5.9,
+      "provisional": true
     }
   ]
 }
