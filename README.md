@@ -72,7 +72,7 @@ real progress.
 
 |                    |                                                                                          |
 | ------------------ | ---------------------------------------------------------------------------------------- |
-| 🗣️ **Coach**       | Text chat and realtime voice calls; 11 calculations it can run; works with or without AI |
+| 🗣️ **Coach**       | Text chat and realtime voice calls; 12 calculations it can run; works with or without AI |
 | 🌍 **Languages**   | English, Finnish, Swedish — interface, answers and speech                                |
 | 📈 **Charts**      | Pie, bar, line and money-flow; the customer picks the type by asking or with a switch    |
 | 🧩 **Dashboard**   | Widgets pinned from conversation, saved as named views, with a period filter             |
@@ -80,13 +80,16 @@ real progress.
 | 🎯 **Goals**       | Set by describing them; planned from the customer's own monthly room                     |
 | 🏆 **Rewards**     | Points, levels and example coupons for progress against one's own past                   |
 | 👥 **Benchmarks**  | Age-group percentiles from the dataset, plus Statistics Finland 2022                     |
-| 🔔 **Insights**    | In-app notifications with badges and a banner; staff announcements                       |
+| 🥧 **Plans**       | Split income into five slices; share with friends as percentages only, never amounts     |
+| 🔔 **Insights**    | Notifications in the app and on the device: shortfalls, habits, bills, goal reminders    |
+| 🎓 **Teach**       | Staff write the answer for what the coach could not answer; it then gives it             |
 | 🧑‍💼 **Adviser**     | Hand-over to a human, with a booked call; first conversation free                        |
-| 🛠️ **Admin**       | Anonymous usage, AI spend, feature switches, fees, reward rules, audit log               |
+| 🛠️ **Admin**       | Eleven sections, staff accounts with roles, charts, moderation, recycle bin, audit log   |
 | 🔐 **Data**        | 5,100 customers and 3,626,755 transactions, every one encrypted per customer             |
-| 🧪 **Tests**       | 74, including the real migrations on an in-memory PostgreSQL                             |
+| 🧪 **Tests**       | 88, including the real migrations on an in-memory PostgreSQL                             |
 
-📖 [Feature guide](docs/features.md) · [Admin guide](docs/admin-guide.md) ·
+📖 [Feature guide](docs/features.md) · [How it works](docs/how-it-works.md) ·
+[Admin guide](docs/admin-guide.md) ·
 [Demo script](docs/demo-script.md)
 
 ---
@@ -305,7 +308,8 @@ FinSight-AI/
 | Document                                           | What it answers                                         |
 | -------------------------------------------------- | ------------------------------------------------------- |
 | [Features](docs/features.md)                       | Everything a customer can do, screen by screen          |
-| [Admin guide](docs/admin-guide.md)                 | What each admin panel shows and controls                |
+| [How it works](docs/how-it-works.md)               | The logic step by step, with flowcharts; the statistics |
+| [Admin guide](docs/admin-guide.md)                 | Each admin section, staff roles, teaching the coach     |
 | [Demo script](docs/demo-script.md)                 | A three-minute walkthrough, and what to say             |
 | [Architecture](docs/architecture.md)               | How an answer is made, the calculations, the API        |
 | [Security](docs/security.md)                       | Encryption, sessions, customer isolation, AI boundaries |

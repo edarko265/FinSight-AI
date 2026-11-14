@@ -22,18 +22,18 @@ The figures above are for the demo date, 15 September 2026.
 
 ## Three minutes
 
-| Time | Do                                                                                             | Say                                                                                                                                         |
-| ---- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0:00 | Open the sign-in page. Tap **Sign in**, pick _Steady month_, use the demo password             | "Synthetic customer, synthetic data. No Finnish bank lets you talk to your own money yet. This does."                                       |
-| 0:20 | Dashboard appears. Point at the balance card                                                   | "Balance, and what is actually safe to spend this week after bills, essentials and a reserve. An estimate, and it says so."                 |
-| 0:35 | Coach → tap **How much did I spend on taxis last month?**                                      | "The model does not do the sum. It picks a calculation; our server runs it to the cent."                                                    |
-| 0:50 | Tap **See transactions**                                                                       | "Every answer opens the transactions behind it. That is the trust."                                                                         |
-| 1:05 | Type: _where does my money go, as a pie chart_                                                 | "The three baskets from the brief: regular bills, irregular essentials, everyday spending. And the customer chose the chart, not the bank." |
-| 1:25 | Tap **Add to dashboard**, go to Dashboard, switch the widget to **Bars**                       | "They build their own dashboard and save it as a view."                                                                                     |
-| 1:40 | Coach → **Start a voice call**. Ask aloud: _"Paljonko voin käyttää tällä viikolla?"_           | "Finnish, by voice, same numbers. The voice agent has no access to data; it asks our coach."                                                |
-| 2:10 | End call. Type: _I want to take the kids to Lapland next winter, maybe two thousand_           | "A goal from a sentence, with a plan built from what this customer usually has left."                                                       |
-| 2:30 | Goals tab                                                                                      | "Recommendations with their monthly value, and rewards for progress against their own past, not against other people."                      |
-| 2:45 | Admin tab → Controls → switch **AI coach** off. Back to the phone, ask the taxi question again | "AI off. Same answer, same chart, labelled basic mode. And staff see what customers ask about without ever seeing who asked."               |
+| Time | Do                                                                                                 | Say                                                                                                                                         |
+| ---- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00 | Open the sign-in page. Tap **Sign in**, pick _Steady month_, use the demo password                 | "Synthetic customer, synthetic data. No Finnish bank lets you talk to your own money yet. This does."                                       |
+| 0:20 | Dashboard appears. Point at the balance card                                                       | "Balance, and what is actually safe to spend this week after bills, essentials and a reserve. An estimate, and it says so."                 |
+| 0:35 | Coach → tap **How much did I spend on taxis last month?**                                          | "The model does not do the sum. It picks a calculation; our server runs it to the cent."                                                    |
+| 0:50 | Tap **See transactions**                                                                           | "Every answer opens the transactions behind it. That is the trust."                                                                         |
+| 1:05 | Type: _where does my money go, as a pie chart_                                                     | "The three baskets from the brief: regular bills, irregular essentials, everyday spending. And the customer chose the chart, not the bank." |
+| 1:25 | Tap **Add to dashboard**, go to Dashboard, switch the widget to **Bars**                           | "They build their own dashboard and save it as a view."                                                                                     |
+| 1:40 | Coach → **Start a voice call**. Ask aloud: _"Paljonko voin käyttää tällä viikolla?"_               | "Finnish, by voice, same numbers. The voice agent has no access to data; it asks our coach."                                                |
+| 2:10 | End call. Type: _I want to take the kids to Lapland next winter, maybe two thousand_               | "A goal from a sentence, with a plan built from what this customer usually has left."                                                       |
+| 2:30 | Goals tab                                                                                          | "Recommendations with their monthly value, and rewards for progress against their own past, not against other people."                      |
+| 2:45 | Admin tab → **Controls** → switch **AI coach** off. Back to the phone, ask the taxi question again | "AI off. Same answer, same chart, labelled basic mode. And staff see what customers ask about without ever seeing who asked."               |
 
 ### If something fails live
 
@@ -61,20 +61,30 @@ Work through these after the three-minute flow.
    Statistics Finland note under the chart.
 1. **Languages and accessibility.** Settings → Svenska, Dark, Extra large.
 1. **Talk to a person.** Coach → **Talk to a person** → request investment advice. In the
-   admin tab, open the request under _Human help requests_ and reply. The reply appears on
+   admin tab, open the request under **Advisers** and reply. The reply appears on
    the phone.
-1. **Admin.** Change the adviser fee, publish an announcement and watch it arrive under
-   Insights, then read the audit log.
+1. **Plans.** Goals → **Plans** → **Make a plan** from _Saver_ → **Share** → _Everyone_.
+   Point at the last step: "this is all anyone will see". Then, as `CUST02226` in another
+   window, open the link: the same percentages, worked out on a different income.
+1. **Teach the coach.** Ask "Can I get a mortgage?" as a customer. In Admin → **Teach the
+   coach**, the Loans theme has a count: **Teach an answer**, start from the example, save.
+   Ask again: the coach gives the bank's answer, labelled as from the team.
+1. **Admin.** Overview → tap a tile to land on its section. Hover the daily chart. Change
+   the adviser fee under Controls, publish an announcement, add an adviser under **Team**,
+   sign in as them in a private window and see the shorter menu, then read the audit log
+   under System.
 1. **The trust story.** Run `pnpm db:check`, then show a row of `customer_ledgers` in the
    database console: nothing readable.
 
 ## Questions you may get
 
-| Question                            | Answer                                                                                                                                                                                                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Can the AI make up a number?        | Its wording is checked against the calculation. If it states an amount the calculation did not produce, its wording is thrown away and the calculation's own sentence is shown. The admin page counts how often that happens. |
-| What does the AI see?               | The question, recent turns of the conversation, and totals. Never the transaction list, the customer ID, age or postal code. And only if the customer said yes.                                                               |
-| What if the customer says no to AI? | The coach answers the same questions by recognising keywords in three languages.                                                                                                                                              |
-| Where is the data?                  | PostgreSQL in the EU. Each customer's history is encrypted with their own key before it is stored.                                                                                                                            |
-| Is this production-ready?           | No. It is a prototype on synthetic data. `docs/privacy.md` and `docs/security.md` list what a real launch would need.                                                                                                         |
-| How would it plug into S-mobiili?   | It is a web app that installs to the home screen and can be embedded in a WebView. All data access sits behind one module, which a bank API would replace.                                                                    |
+| Question                                    | Answer                                                                                                                                                                                                                        |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Can the AI make up a number?                | Its wording is checked against the calculation. If it states an amount the calculation did not produce, its wording is thrown away and the calculation's own sentence is shown. The admin page counts how often that happens. |
+| What does the AI see?                       | The question, recent turns of the conversation, and totals. Never the transaction list, the customer ID, age or postal code. And only if the customer said yes.                                                               |
+| What if the customer says no to AI?         | The coach answers the same questions by recognising keywords in three languages.                                                                                                                                              |
+| Can friends see my money if I share a plan? | No. A plan holds a name and five whole percentages; there is no amount in it to share, and the shared record is not linked to you.                                                                                            |
+| How does it learn?                          | Not by training on customers. Staff see which themes it could not answer and write the answer; the coach then gives exactly that.                                                                                             |
+| Where is the data?                          | PostgreSQL in the EU. Each customer's history is encrypted with their own key before it is stored.                                                                                                                            |
+| Is this production-ready?                   | No. It is a prototype on synthetic data. `docs/privacy.md` and `docs/security.md` list what a real launch would need.                                                                                                         |
+| How would it plug into S-mobiili?           | It is a web app that installs to the home screen and can be embedded in a WebView. All data access sits behind one module, which a bank API would replace.                                                                    |

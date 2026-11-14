@@ -1,6 +1,8 @@
 # Architecture
 
 How a question becomes an answer, what the pieces are, and where each lives in the code.
+For the rules and thresholds behind each calculation, with step-by-step flowcharts, see
+[how-it-works.md](how-it-works.md).
 
 ---
 
@@ -72,6 +74,10 @@ flowchart TB
 If the model is off, slow, over its daily limit or returns an error, step 4 falls through to
 keyword matching. The customer always gets an answer.
 
+For a subject no calculation covers (loans, insurance, taxes), an answer that staff have
+taught the coach is given first, word for word
+([`taught.ts`](../src/lib/coach/taught.ts)).
+
 ## 3. The calculations
 
 Every calculation is a "tool" with a validated input schema, registered in
@@ -91,6 +97,7 @@ and the voice agent all run them through the same two functions, `runTool` and `
 | `profile`       | Basket shares and largest free-choice categories                           | Bars                  |
 | `recurring`     | Regular bills and the usual income pattern                                 | Bars                  |
 | `recommend`     | Ranked suggestions with a monthly value                                    | Bars                  |
+| `plan`          | The month as five slices of income, in percentages                         | Pie                   |
 | goals           | Save a goal, plan how to fund it ([`goals.ts`](../src/lib/coach/goals.ts)) | Bars                  |
 
 A dashboard widget is a stored `{ tool, input, chart }`. It is re-run whenever it is shown,
@@ -149,24 +156,27 @@ flowchart LR
 Every route validates its input, takes the customer from the session, and returns JSON.
 Routes marked 🔒 also require the terms to be accepted.
 
-| Route                                                     | Method                   | Purpose                                                         |
-| --------------------------------------------------------- | ------------------------ | --------------------------------------------------------------- |
-| `/api/auth/login`, `/api/auth/logout`                     | POST                     | Sign in and out                                                 |
-| `/api/me`                                                 | GET                      | Who is signed in and which features are on                      |
-| `/api/consent`                                            | GET, POST                | Accept the terms; choose or withdraw AI                         |
-| 🔒 `/api/overview`                                        | GET                      | Balance, safe-to-spend, unread insights                         |
-| 🔒 `/api/chat`                                            | POST                     | Ask the coach                                                   |
-| 🔒 `/api/dashboard`                                       | GET, PUT                 | Saved views and their calculated widgets                        |
-| 🔒 `/api/transactions`                                    | GET                      | The transactions behind an answer                               |
-| 🔒 `/api/forecast`                                        | POST                     | Safe-to-spend with the customer's own assumptions               |
-| 🔒 `/api/goals`                                           | GET, POST, PATCH, DELETE | Goals, rewards, recommendations                                 |
-| 🔒 `/api/insights`                                        | GET, POST                | Insights and announcements; mark as read                        |
-| 🔒 `/api/trash`                                           | GET, POST                | Recycle bin: restore, delete, empty                             |
-| 🔒 `/api/advisor`, `/api/advisor/messages`                | GET, POST                | Request an adviser; write to them                               |
-| 🔒 `/api/voice/stt`, `/api/voice/tts`, `/api/voice/agent` | POST, POST, GET          | Speech in, speech out, start a call                             |
-| `/api/privacy/export`, `/api/privacy/erase`               | GET, POST                | Download or delete the customer's data                          |
-| `/api/admin/*`                                            | various                  | Admin sign-in, overview, settings, announcements, adviser queue |
-| `/api/health`                                             | GET                      | Liveness and the deployed commit                                |
+| Route                                                     | Method                   | Purpose                                                                                                        |
+| --------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `/api/auth/login`, `/api/auth/logout`                     | POST                     | Sign in and out                                                                                                |
+| `/api/me`                                                 | GET                      | Who is signed in and which features are on                                                                     |
+| `/api/consent`                                            | GET, POST                | Accept the terms; choose or withdraw AI                                                                        |
+| 🔒 `/api/overview`                                        | GET                      | Balance, safe-to-spend, unread insights                                                                        |
+| 🔒 `/api/chat`                                            | POST                     | Ask the coach                                                                                                  |
+| 🔒 `/api/dashboard`                                       | GET, PUT                 | Saved views and their calculated widgets                                                                       |
+| 🔒 `/api/transactions`                                    | GET                      | The transactions behind an answer                                                                              |
+| 🔒 `/api/forecast`                                        | POST                     | Safe-to-spend with the customer's own assumptions                                                              |
+| 🔒 `/api/goals`                                           | GET, POST, PATCH, DELETE | Goals, rewards, recommendations                                                                                |
+| 🔒 `/api/insights`                                        | GET, POST                | Insights and announcements; mark as read                                                                       |
+| 🔒 `/api/trash`                                           | GET, POST                | Recycle bin: restore, delete, empty                                                                            |
+| 🔒 `/api/advisor`, `/api/advisor/messages`                | GET, POST                | Request an adviser; write to them                                                                              |
+| 🔒 `/api/voice/stt`, `/api/voice/tts`, `/api/voice/agent` | POST, POST, GET          | Speech in, speech out, start a call                                                                            |
+| `/api/privacy/export`, `/api/privacy/erase`               | GET, POST                | Download or delete the customer's data                                                                         |
+| 🔒 `/api/plans`                                           | GET, POST                | Plans: make, edit, share by code, copy, preview                                                                |
+| 🔒 `/api/push`                                            | GET, POST, DELETE        | Device notification subscriptions                                                                              |
+| `/api/cron/reminders`                                     | GET                      | The daily reminder job (needs `CRON_SECRET`)                                                                   |
+| `/api/admin/*`                                            | various                  | Staff sign-in, overview, settings, announcements, adviser queue, team, taught answers, shared plans, reminders |
+| `/api/health`                                             | GET                      | Liveness and the deployed commit                                                                               |
 
 ## 6. Stack
 

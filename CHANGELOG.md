@@ -27,6 +27,22 @@ All notable changes to this project are documented here. The format follows
 - **Adviser hand-over.** Request a human, book a call, continue the conversation.
 - **Admin.** Anonymous usage, AI usage, feature switches, provider, adviser fee, daily AI
   limit, reward rules, announcements, adviser queue and workload, audit log.
+- **Plans.** A month's income split into five slices; plans made from the customer's own
+  month or an example; shared by code or listed publicly as percentages only, never
+  amounts; copied and worked out on the copier's own income.
+- **Teach the coach.** Staff write the answer for themes the coach could not answer; the
+  coach then gives it word for word, labelled as from the bank's team.
+- **Staff accounts.** Administrators, advisers and personal bankers with their own
+  sign-in; roles enforced on every admin route; audit entries record who acted.
+- **Admin sections.** Navigation with eleven sections, charts that show numbers on hover,
+  tap and keyboard, CSV download, moderation of shared plans, one recycle bin, light and
+  dark switch.
+- **Device notifications.** Asked on first use, switchable in Settings; app-icon badge;
+  daily reminders for goals, bills, shortfalls and habits going the wrong way.
+- **Layout.** Responsive from 320 px phones to desktops; custom date ranges with a date
+  picker; language as a selector; error and not-found pages.
+- **Documentation.** `docs/how-it-works.md`: the logic step by step with flowcharts, and
+  how the statistical data is used.
 - **Privacy.** Terms of use and privacy notice accepted at first sign-in; optional AI
   consent; data export; erasure; recycle bin.
 - **Data.** Streaming ingestion of the full dataset into per-customer sealed ledgers.

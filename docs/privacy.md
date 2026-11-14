@@ -86,7 +86,21 @@ zero-retention options where the provider offers them, and document internationa
   when it arrives and is not kept.
 - **Announcement reach**: how many customers saw each one, not which.
 - **Adviser requests**: what the customer chose to share, under a pseudonym.
+- **Shared plans**: the name and percentages a customer published, not who published them.
 - **Not** a customer's transactions, balance or profile. No admin route returns them.
+
+## Sharing plans
+
+Sharing is the customer's own, deliberate act, and it publishes the minimum: a plan's name
+and five whole percentages. No amount exists in a plan to be shared. Goal names are hidden
+unless the customer chooses to show them. The published record is not linked to the
+customer, can be withdrawn at any time, and is withdrawn automatically when the plan is
+deleted. Before publishing, the customer is shown exactly what others will see.
+
+## Device notifications
+
+Asked once, on first use; switched on or off in Settings. A notification carries a title
+only. Withdrawing removes the device's subscription.
 
 ## Rewards
 

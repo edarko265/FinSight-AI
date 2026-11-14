@@ -36,16 +36,18 @@ flowchart LR
 2. Add the environment variables below (Settings → Environment Variables), for Production
    and Preview. Copy the values from your `.env.local`; never commit them.
 
-   | Variable                                                                    | Notes                                       |
-   | --------------------------------------------------------------------------- | ------------------------------------------- |
-   | `DATABASE_URL`                                                              | The Neon pooled string                      |
-   | `DATA_ENCRYPTION_KEY`, `DATA_ENCRYPTION_KEY_ID`, `BLIND_INDEX_KEY`          | Same values used for ingestion              |
-   | `SESSION_SECRET`                                                            | Any 32 random bytes, base64                 |
-   | `AI_PROCESSING_ALLOWED`, `AI_PROVIDER`, `OPENAI_API_KEY` / `GEMINI_API_KEY` | AI coach                                    |
-   | `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`                                 | Voice                                       |
-   | `DEMO_MODE=true`, `DEMO_AS_OF_DATE=2026-09-15`, `DEMO_LOGIN_PASSWORD`       | Demo sign-in                                |
-   | `ADMIN_PASSWORD`                                                            | Choose a strong one for a public deployment |
-   | `APP_BASE_URL`                                                              | `https://finsightai.araxda.com`             |
+   | Variable                                                                    | Notes                                                                       |
+   | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+   | `DATABASE_URL`                                                              | The Neon pooled string                                                      |
+   | `DATA_ENCRYPTION_KEY`, `DATA_ENCRYPTION_KEY_ID`, `BLIND_INDEX_KEY`          | Same values used for ingestion                                              |
+   | `SESSION_SECRET`                                                            | Any 32 random bytes, base64                                                 |
+   | `AI_PROCESSING_ALLOWED`, `AI_PROVIDER`, `OPENAI_API_KEY` / `GEMINI_API_KEY` | AI coach                                                                    |
+   | `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`                                 | Voice                                                                       |
+   | `DEMO_MODE=true`, `DEMO_AS_OF_DATE=2026-09-15`, `DEMO_LOGIN_PASSWORD`       | Demo sign-in                                                                |
+   | `ADMIN_PASSWORD`                                                            | Choose a strong one for a public deployment                                 |
+   | `APP_BASE_URL`                                                              | `https://finsightai.araxda.com`                                             |
+   | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`                                     | Device notifications. Generate once with `npx web-push generate-vapid-keys` |
+   | `CRON_SECRET`                                                               | Any long random string. Vercel sends it to the daily reminder job           |
 
 3. Deploy.
 

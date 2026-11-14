@@ -144,14 +144,38 @@ only for the signed-in customer.
 - The agent has no data and no credentials. Its only tool runs in the customer's browser
   and calls our coach with their session.
 
-## 7. Admin
+## 7. Admin and staff
 
 - Reads aggregates only. No admin route opens a customer's transactions.
+- **Staff accounts.** The owner signs in with the installation password; other staff with
+  their own username and password. Names, usernames and roles are sealed; usernames are
+  looked up by blind index; passwords are kept only as salted scrypt hashes.
+- **Roles are enforced on the server.** Every admin route checks the signed-in member's
+  role; advisers and personal bankers get "forbidden" on settings, team, announcements and
+  reminders whatever the screen shows.
+- **Access ends at once.** A member is looked up on every request, so moving them to the
+  recycle bin or changing their role takes effect immediately, not when a cookie expires.
 - Usage statistics are counts per day and topic: no customer reference, no question text.
 - Questions outside the coach's scope are reduced to a theme on arrival; the text is not
-  kept.
+  kept. Staff teach answers by theme.
 - Adviser requests show a pseudonym and only what the customer chose to share.
-- Every change is written to the audit log.
+- Every change is written to the audit log with who made it.
+
+### Shared plans
+
+- A plan has no field that can hold an amount: five whole percentages and a name.
+- A name with a currency sign or three or more digits in a row is refused.
+- The shared record has **no customer reference**, is sealed at rest, and lives under a
+  random eight-character code. Code look-ups are rate-limited.
+- Unsharing, or moving the plan to the recycle bin, deletes the shared record.
+- Known limit: someone who already knows one of the sharer's amounts can estimate the
+  others from the percentages. The share screen shows exactly what will be visible.
+
+### Device notifications
+
+- A device's subscription is sealed with its customer's key.
+- Notifications carry a title only. No amount ever passes through a push service.
+- The daily job is callable only with `CRON_SECRET`.
 
 ## 8. Secrets and data in the repository
 
@@ -189,6 +213,10 @@ decrypted values, questions or transactions.
 - the usage table has no column that could hold a customer or a question
 - adviser requests are sealed, pseudonymous, and can only be deleted from the bin
 - an amount the calculation did not produce is caught by the grounding check
+- staff names, usernames and passwords are not readable in the database, and a member in
+  the recycle bin cannot sign in
+- a shared plan's stored row contains no customer reference, name or goal name, and
+  disappears when the plan is unshared or binned
 
 ## 12. Known limits
 
@@ -199,7 +227,7 @@ Be straight about these when asked.
   nonce set-up.
 - **Keys are environment variables**, not in a KMS.
 - **No penetration test** has been done.
-- **Adviser role is the admin password.** There are no individual staff accounts.
+- **Staff sign-in is username and password.** There is no second factor or single sign-on.
 - **In demo mode the sign-in page shows the demo password** on purpose.
 
 ## 13. Before real customers
