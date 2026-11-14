@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useLoad } from "@/components/shared/useLoad";
+import { LoadError } from "@/components/ui/LoadError";
+import { LoadingRegion, SkeletonCard } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api-client";
 import { formatDay, formatMoney } from "@/lib/i18n/config";
 import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
@@ -75,22 +77,7 @@ const STEPS = [
  */
 export function MortgageView(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const [data, setData] = useState<Payload | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    api<Payload>("/api/mortgage")
-      .then((payload) => {
-        if (!cancelled) setData(payload);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data, failed, retry, headingRef } = useLoad(() => api<Payload>("/api/mortgage"));
 
   const money = (cents: number): string => formatMoney(cents, locale);
   const text = (prefix: string, value: string): string =>
@@ -123,14 +110,20 @@ export function MortgageView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div>
-        <InfoTip lead={<h1 className="text-xl font-semibold">{t("mortgage.title")}</h1>}>
+        <InfoTip
+          lead={
+            <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+              {t("mortgage.title")}
+            </h1>
+          }
+        >
           {t("mortgage.intro")}
         </InfoTip>
       </div>
       <p className="rounded-2xl border border-border bg-accent-soft px-4 py-3 text-sm">
         {t("mortgage.disclaimer")}
       </p>
-      {failed ? <p className="text-sm text-warning">{t("admin.loadFailed")}</p> : null}
+      {failed ? <LoadError onRetry={retry} /> : null}
 
       {story ? (
         <section className={`${card} flex flex-col gap-3`}>
@@ -299,9 +292,10 @@ export function MortgageView(): React.JSX.Element {
           {t("mortgage.noStats")}
         </p>
       ) : failed ? null : (
-        <p className="py-10 text-center text-sm text-muted" role="status">
-          …
-        </p>
+        <LoadingRegion className="flex flex-col gap-5">
+          <SkeletonCard />
+          <SkeletonCard />
+        </LoadingRegion>
       )}
 
       <Link

@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { useOverview } from "@/components/providers/OverviewProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
-import { useToast } from "@/components/providers/ToastProvider";
+import { useLoad } from "@/components/shared/useLoad";
+import { LoadError } from "@/components/ui/LoadError";
+import { SkeletonList, LoadingRegion } from "@/components/ui/Skeleton";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { api } from "@/lib/api-client";
 
 interface InsightItem {
@@ -26,26 +29,28 @@ const TONE = {
 /** In-app notifications: each one comes from the user's own data and opens the coach on that topic. */
 export function InsightsView(): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const toast = useToast();
   const { refresh } = useOverview();
-  const [insights, setInsights] = useState<InsightItem[] | null>(null);
+  const {
+    data,
+    failed,
+    retry,
+    setData: setInsights,
+    headingRef,
+  } = useLoad(() => api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`), locale);
+  const insights = data?.insights ?? null;
 
-  useEffect(() => {
-    let cancelled = false;
-    api<{ insights: InsightItem[] }>(`/api/insights?locale=${locale}`)
-      .then((data) => {
-        if (!cancelled) setInsights(data.insights);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [locale]);
+  const markAllRead = useAsyncAction(() => api("/api/insights", { method: "POST" }), {
+    successKey: "toast.markedRead",
+  });
 
-  async function markAllRead(): Promise<void> {
-    await api("/api/insights", { method: "POST" });
-    toast.notify("toast.markedRead");
-    setInsights((current) => current?.map((insight) => ({ ...insight, read: true })) ?? null);
+  async function onMarkAllRead(): Promise<void> {
+    const result = await markAllRead.run();
+    if (!result.ok) return;
+    setInsights((current) =>
+      current
+        ? { insights: current.insights.map((insight) => ({ ...insight, read: true })) }
+        : null,
+    );
     refresh();
   }
 
@@ -54,17 +59,31 @@ export function InsightsView(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">{t("insights.title")}</h1>
+        <h1 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+          {t("insights.title")}
+        </h1>
         {unread ? (
           <button
             type="button"
-            onClick={() => void markAllRead()}
-            className="text-sm font-medium text-accent"
+            aria-disabled={markAllRead.pending}
+            onClick={() => void onMarkAllRead()}
+            className="min-h-11 text-sm font-medium text-accent"
           >
-            {t("insights.markRead")}
+            {markAllRead.pending ? (
+              <PendingLabel>{t("common.saving")}</PendingLabel>
+            ) : (
+              t("insights.markRead")
+            )}
           </button>
         ) : null}
       </div>
+
+      {failed ? <LoadError onRetry={retry} /> : null}
+      {!insights && !failed ? (
+        <LoadingRegion>
+          <SkeletonList rows={4} />
+        </LoadingRegion>
+      ) : null}
 
       {insights && insights.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
