@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon } from "@/components/ui/icons";
+import {
+  TAB_SHEET_MAX_H,
+  TAB_SHEET_POSITION,
+  TabSheetBackdrop,
+  useSheetDialog,
+} from "@/components/ui/TabSheet";
 
 export interface WizardStep {
   title: string;
@@ -47,18 +53,13 @@ export function Wizard({
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   const close = (): void => {
     setIndex(0);
     setBusy(false);
     onClose();
   };
+  // Dismissable wizards stay above the tab bar and leave it usable; the others cover everything.
+  const onKeyDown = useSheetDialog(dialogRef, open, close, !dismissable);
 
   const current = Math.min(index, steps.length - 1);
   const step = steps[current];
@@ -81,81 +82,89 @@ export function Wizard({
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={close}
-      onCancel={(event) => {
-        if (!dismissable) event.preventDefault();
-      }}
-      aria-labelledby="wizard-title"
-      className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
-    >
-      <header className="flex items-center justify-between gap-3 px-5 pt-5">
-        <h2 id="wizard-title" className="text-base font-semibold">
-          {title}
-        </h2>
-        {dismissable ? (
-          <button
-            type="button"
-            onClick={close}
-            aria-label={t("evidence.close")}
-            className="-m-1 rounded-full p-1 text-muted"
-          >
-            <CloseIcon />
-          </button>
-        ) : null}
-      </header>
-
-      <div className="px-5 pt-3">
-        <p className="text-sm font-medium text-muted" aria-live="polite">
-          {t("wizard.step", { current: current + 1, total: steps.length })}
-        </p>
-        <ol className="mt-2 flex gap-1.5" aria-hidden="true">
-          {steps.map((item, position) => (
-            <li
-              key={item.title}
-              className={`h-1.5 flex-1 rounded-full ${position <= current ? "bg-accent" : "bg-border"}`}
-            />
-          ))}
-        </ol>
-      </div>
-
-      {open && step ? (
-        <form onSubmit={(event) => void advance(event)} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto px-5 pt-5 pb-2">
-            <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
-            <p className="mt-1 text-sm text-muted">{step.hint}</p>
-            <div className="mt-4">{step.content}</div>
-          </div>
-          {error ? (
-            <p
-              role="alert"
-              className="mx-5 rounded-xl bg-warning-soft px-3 py-2 text-sm text-warning"
-            >
-              {error}
-            </p>
-          ) : null}
-          <div className="flex gap-2 px-5 pt-3 pb-5">
-            {current > 0 ? (
-              <button
-                type="button"
-                onClick={() => setIndex(current - 1)}
-                className="rounded-full border border-border px-5 py-3 text-sm font-semibold"
-              >
-                {t("wizard.back")}
-              </button>
-            ) : null}
+    <>
+      {dismissable && open ? <TabSheetBackdrop onClick={close} /> : null}
+      <dialog
+        ref={dialogRef}
+        onClose={close}
+        onKeyDown={onKeyDown}
+        onCancel={(event) => {
+          if (!dismissable) event.preventDefault();
+        }}
+        aria-labelledby="wizard-title"
+        className={`${
+          dismissable
+            ? `${TAB_SHEET_POSITION} ${TAB_SHEET_MAX_H}`
+            : "m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl"
+        } flex-col bg-background p-0 text-foreground backdrop:bg-black/50 open:flex`}
+      >
+        <header className="flex items-center justify-between gap-3 px-5 pt-5">
+          <h2 id="wizard-title" className="text-base font-semibold">
+            {title}
+          </h2>
+          {dismissable ? (
             <button
-              type="submit"
-              disabled={!step.valid || busy}
-              className="flex-1 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary disabled:opacity-40"
+              type="button"
+              onClick={close}
+              aria-label={t("evidence.close")}
+              className="-m-1 rounded-full p-1 text-muted"
             >
-              {last ? finishLabel : t("wizard.next")}
+              <CloseIcon />
             </button>
-          </div>
-        </form>
-      ) : null}
-    </dialog>
+          ) : null}
+        </header>
+
+        <div className="px-5 pt-3">
+          <p className="text-sm font-medium text-muted" aria-live="polite">
+            {t("wizard.step", { current: current + 1, total: steps.length })}
+          </p>
+          <ol className="mt-2 flex gap-1.5" aria-hidden="true">
+            {steps.map((item, position) => (
+              <li
+                key={item.title}
+                className={`h-1.5 flex-1 rounded-full ${position <= current ? "bg-accent" : "bg-border"}`}
+              />
+            ))}
+          </ol>
+        </div>
+
+        {open && step ? (
+          <form onSubmit={(event) => void advance(event)} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 overflow-y-auto px-5 pt-5 pb-2">
+              <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
+              <p className="mt-1 text-sm text-muted">{step.hint}</p>
+              <div className="mt-4">{step.content}</div>
+            </div>
+            {error ? (
+              <p
+                role="alert"
+                className="mx-5 rounded-xl bg-warning-soft px-3 py-2 text-sm text-warning"
+              >
+                {error}
+              </p>
+            ) : null}
+            <div className="flex gap-2 px-5 pt-3 pb-5">
+              {current > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setIndex(current - 1)}
+                  className="rounded-full border border-border px-5 py-3 text-sm font-semibold"
+                >
+                  {t("wizard.back")}
+                </button>
+              ) : null}
+              <button
+                type="submit"
+                disabled={!step.valid || busy}
+                className="flex-1 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-on-primary disabled:opacity-40"
+              >
+                {last ? finishLabel : t("wizard.next")}
+              </button>
+            </div>
+          </form>
+        ) : null}
+      </dialog>
+    </>
   );
 }
 

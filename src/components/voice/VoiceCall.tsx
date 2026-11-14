@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChartView } from "@/components/charts/ChartView";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { CloseIcon, MicIcon, PhoneIcon } from "@/components/ui/icons";
+import { useCloseOnNavigation } from "@/components/ui/TabSheet";
 import { api } from "@/lib/api-client";
 import type { AssistantMessage } from "@/lib/contracts/chat";
 
@@ -87,6 +88,12 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
     getOutputVolume,
   } = conversation;
 
+  // Tapping a tab hangs up: the dock keeps the chat mounted across pages.
+  useCloseOnNavigation(true, () => {
+    endSession();
+    onEnd();
+  });
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;
@@ -128,9 +135,8 @@ function Call({ onExchange, onEnd }: VoiceCallProps): React.JSX.Element {
   return (
     <div
       role="dialog"
-      aria-modal="true"
       aria-label={t("voice.call.title")}
-      className="fixed inset-0 z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand fs-rise"
+      className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-h))] z-40 flex flex-col bg-brand px-[max(0px,calc((100vw-30rem)/2))] text-on-brand fs-rise"
     >
       <header className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <span className="flex items-center gap-2 text-sm font-semibold">
