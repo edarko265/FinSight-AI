@@ -32,6 +32,10 @@ export interface ChatPanelProps {
   request?: { id: number; question?: string; start?: "listen" | "call" };
   /** Rendered under each chart the assistant returns, e.g. an "Add to dashboard" button. */
   cardAction?: (card: ChartCard, query: WidgetQuery | undefined) => React.ReactNode;
+  /** Told whenever a reply starts or arrives, e.g. so the floating coach can flag a new answer. */
+  onStatus?: (status: { pending: boolean; count: number }) => void;
+  /** Leaves out the "Call" link above the input, for a host that offers the call itself. */
+  hideCallLink?: boolean;
 }
 
 /** How many starter questions are shown before "More questions" is tapped. */
@@ -58,6 +62,8 @@ export function ChatPanel({
   start,
   request,
   cardAction,
+  onStatus,
+  hideCallLink = false,
 }: ChatPanelProps): React.JSX.Element {
   const { t, locale, voiceReplies } = usePreferences();
   const { me, refresh } = useOverview();
@@ -76,6 +82,10 @@ export function ChatPanel({
     // Only follow the conversation; an empty chat stays at the top so the greeting is visible.
     if (messages.length > 0 || pending) endRef.current?.scrollIntoView({ block: "end" });
   }, [messages, pending]);
+
+  useEffect(() => {
+    onStatus?.({ pending, count: messages.length });
+  }, [onStatus, pending, messages.length]);
 
   async function send(text: string): Promise<void> {
     const question = text.trim();
@@ -328,7 +338,7 @@ export function ChatPanel({
         ) : null}
 
         <div className="mb-2 flex items-center justify-center gap-5 text-sm font-semibold text-accent">
-          {me?.voiceAgentEnabled && me.aiConsent && !calling ? (
+          {me?.voiceAgentEnabled && me.aiConsent && !calling && !hideCallLink ? (
             <button
               type="button"
               onClick={() => setCalling(true)}
