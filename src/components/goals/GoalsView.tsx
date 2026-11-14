@@ -134,7 +134,7 @@ function GoalCard({
         </p>
         {setAsides.length > 0 ? (
           <details className="mt-2">
-            <summary className="cursor-pointer text-xs font-semibold text-accent">
+            <summary className="flex min-h-11 cursor-pointer items-center text-xs font-semibold text-accent">
               {t("goals.aside.history", { count: setAsides.length })}
             </summary>
             <ul className="mt-2 flex flex-col divide-y divide-border text-sm">

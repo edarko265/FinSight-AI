@@ -31,14 +31,24 @@ export function ConsentSheet({
   const { t } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [choice, setChoice] = useState<boolean | null>(null);
-  const { run, pending } = useAsyncAction(async (accepted: boolean) => {
+  // Set after a successful save and kept until the parent closes the sheet, so the buttons
+  // and Escape stay inert while the new state is still arriving.
+  const [decided, setDecided] = useState(false);
+  if (decided && !open) setDecided(false);
+  const { run, pending: running } = useAsyncAction(async (accepted: boolean) => {
     setChoice(accepted);
     try {
       await onChoose(accepted);
-    } finally {
+      setDecided(true);
+    } catch (failure) {
       setChoice(null);
+      throw failure;
     }
   });
+  const pending = running || decided;
+  const choose = (accepted: boolean): void => {
+    if (!pending) void run(accepted);
+  };
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -52,7 +62,7 @@ export function ConsentSheet({
       ref={dialogRef}
       onCancel={(event) => {
         event.preventDefault();
-        void run(false);
+        choose(false);
       }}
       aria-labelledby="consent-title"
       className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl md:my-auto md:max-w-lg md:rounded-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
@@ -81,7 +91,7 @@ export function ConsentSheet({
         <button
           type="button"
           aria-disabled={pending}
-          onClick={() => void run(true)}
+          onClick={() => choose(true)}
           className="min-h-11 rounded-full bg-primary px-5 py-3.5 text-base font-semibold text-on-primary aria-disabled:opacity-60"
         >
           {pending && choice === true ? (
@@ -93,7 +103,7 @@ export function ConsentSheet({
         <button
           type="button"
           aria-disabled={pending}
-          onClick={() => void run(false)}
+          onClick={() => choose(false)}
           className="min-h-11 rounded-full border border-border px-5 py-3 text-sm font-semibold aria-disabled:opacity-60"
         >
           {pending && choice === false ? (

@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { useToast } from "@/components/providers/ToastProvider";
+import { isApiError } from "@/lib/async-action";
 import { CloseIcon } from "@/components/ui/icons";
 import { PendingLabel } from "@/components/ui/Spinner";
 import {
@@ -60,10 +62,16 @@ export function Wizard({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   const close = (reason: DismissReason = "close"): void => {
+    // A save in flight finishes first, so a reopened wizard cannot be reset by it.
+    if (busy) return;
     setIndex(0);
-    setBusy(false);
     if (onDismiss) onDismiss(reason);
     else onClose();
   };
@@ -88,6 +96,7 @@ export function Wizard({
     } catch (failure) {
       // A throwing caller must not become an unhandled rejection; stay on the step too.
       console.error("wizard finish failed", failure);
+      if (openRef.current && !isApiError(failure, 401)) toast.fail();
     } finally {
       setBusy(false);
     }
@@ -117,7 +126,7 @@ export function Wizard({
               type="button"
               onClick={() => close()}
               aria-label={t("evidence.close")}
-              className="-m-1 rounded-full p-1 text-muted"
+              className="-m-1 flex min-h-11 min-w-11 items-center justify-center rounded-full p-1 text-muted"
             >
               <CloseIcon />
             </button>
@@ -158,7 +167,7 @@ export function Wizard({
                 <button
                   type="button"
                   onClick={() => setIndex(current - 1)}
-                  className="rounded-full border border-border px-5 py-3 text-sm font-semibold"
+                  className="min-h-11 rounded-full border border-border px-5 py-3 text-sm font-semibold"
                 >
                   {t("wizard.back")}
                 </button>

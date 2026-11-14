@@ -398,7 +398,7 @@ export function ChatPanel({
         {voice.error === "mic" ? (
           <p className="mb-2 text-sm text-warning">{t("chat.micDenied")}</p>
         ) : null}
-        {voice.error === "unavailable" ? (
+        {voice.transcribeFailed ? (
           <p role="alert" className="mb-2 text-sm text-warning">
             {t("toast.error")}
           </p>
