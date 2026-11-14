@@ -99,6 +99,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **Voice call on iPhone.** Safari needs an audio helper the voice library fetched from a
+  public CDN, which the content security policy refused, so calls failed there and nowhere
+  else. The helper is now served from the app itself (`public/voice/`).
+- **Phone layout.** The app frame follows the visible part of the screen, so the header is no
+  longer pushed under the top edge with a gap under the bottom bar after the keyboard, a
+  rotation or a home-screen launch. The header logo has an outline so it no longer blends
+  into the header.
+
 - Safe-to-spend returned no usable estimate when the model called it with empty optional
   inputs.
 - Basic mode did not recognise "What is safe for me to spend this week?" or "my goals".

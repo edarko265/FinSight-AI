@@ -12,3 +12,4 @@ public/sw.js
 .e2e/
 playwright-report/
 test-results/
+public/voice/libsamplerate.worklet.js
