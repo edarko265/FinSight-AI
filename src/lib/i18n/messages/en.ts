@@ -431,12 +431,6 @@ export const en = {
   "reward.investing.body": "You invested {amount} last month.",
   "reward.goal.title": "Set a goal",
   "reward.goal.body": "Told the coach what you are saving for.",
-  "reward.coupon.coffee.title": "Free coffee",
-  "reward.coupon.coffee.body": "Example coupon: one coffee on the house.",
-  "reward.coupon.groceries.title": "Extra bonus on groceries",
-  "reward.coupon.groceries.body": "Example coupon: +1% bonus on groceries for a month.",
-  "reward.coupon.voucher.title": "€5 voucher",
-  "reward.coupon.voucher.body": "Example coupon: €5 off your next purchase.",
   "admin.title": "FinSight admin",
   "admin.login.title": "Admin sign-in",
   "admin.login.hint": "Aggregate statistics only. No customer data can be opened from here.",
@@ -737,7 +731,7 @@ export const en = {
   "admin.flag.voice": "Voice",
   "admin.flag.voice.note": "Spoken questions, spoken answers and voice calls.",
   "admin.flag.rewards": "Rewards",
-  "admin.flag.rewards.note": "Points, levels and coupons on the Goals page.",
+  "admin.flag.rewards.note": "Points, levels and vouchers on the Goals page.",
   "admin.flag.advisor": "Human adviser",
   "admin.flag.advisor.note": "Lets customers request an adviser from the coach.",
   "admin.fee": "Adviser fee",
@@ -760,10 +754,7 @@ export const en = {
   "admin.rules.points": "Points for each achievement",
   "admin.rules.pointsHint":
     "Set how many points each kind of progress earns. The streak value is per month, up to six months.",
-  "admin.rules.coupons": "When coupons unlock",
-  "admin.rules.couponsHint":
-    "Set the points a customer needs for each coupon. Lower numbers make rewards easier to reach.",
-  "admin.rules.summary": "{count} achievements · coupons at {a}, {b} and {c} points",
+  "admin.rules.summary": "{count} achievements · vouchers use the public saving-rate statistic",
   "admin.rule.under_average": "A lighter month",
   "admin.rule.choice_down": "Free-choice spending down 10%",
   "admin.rule.buffer": "One month of bills covered",
@@ -871,7 +862,7 @@ export const en = {
     "Use the service for your own account only. Do not try to reach other customers' data, overload the service or misuse the AI.",
   "terms.rewards.title": "Rewards and adviser",
   "terms.rewards.body":
-    "Points and coupons are examples and have no monetary value. Adviser conversations and their price are shown as an example of how the service could work.",
+    "Points and vouchers are examples and have no monetary value. Adviser conversations and their price are shown as an example of how the service could work.",
   "terms.changes.title": "Availability and changes",
   "terms.changes.body":
     "The prototype is provided as it is and may change or be unavailable. If these terms change you will be asked to accept them again.",

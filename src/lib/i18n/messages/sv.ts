@@ -422,12 +422,6 @@ export const sv: Record<MessageKey, string> = {
   "reward.investing.body": "Du investerade {amount} förra månaden.",
   "reward.goal.title": "Satte ett mål",
   "reward.goal.body": "Berättade för coachen vad du sparar till.",
-  "reward.coupon.coffee.title": "Gratis kaffe",
-  "reward.coupon.coffee.body": "Exempelkupong: en kaffe på huset.",
-  "reward.coupon.groceries.title": "Extra bonus på livsmedel",
-  "reward.coupon.groceries.body": "Exempelkupong: +1 % bonus på livsmedel i en månad.",
-  "reward.coupon.voucher.title": "Värdecheck på 5 €",
-  "reward.coupon.voucher.body": "Exempelkupong: 5 € rabatt på nästa köp.",
   "admin.title": "FinSight admin",
   "admin.login.title": "Admininloggning",
   "admin.login.hint": "Endast aggregerad statistik. Inga kunduppgifter kan öppnas härifrån.",
@@ -726,7 +720,7 @@ export const sv: Record<MessageKey, string> = {
   "admin.flag.voice": "Röst",
   "admin.flag.voice.note": "Talade frågor, talade svar och röstsamtal.",
   "admin.flag.rewards": "Belöningar",
-  "admin.flag.rewards.note": "Poäng, nivåer och kuponger på målsidan.",
+  "admin.flag.rewards.note": "Poäng, nivåer och värdechecker på målsidan.",
   "admin.flag.advisor": "Mänsklig rådgivare",
   "admin.flag.advisor.note": "Låter kunder be om en rådgivare från coachen.",
   "admin.fee": "Rådgivaravgift",
@@ -749,10 +743,7 @@ export const sv: Record<MessageKey, string> = {
   "admin.rules.points": "Poäng för varje prestation",
   "admin.rules.pointsHint":
     "Ange hur många poäng varje slags framsteg ger. Värdet för sviten gäller per månad, upp till sex månader.",
-  "admin.rules.coupons": "När kuponger låses upp",
-  "admin.rules.couponsHint":
-    "Ange poängen en kund behöver för varje kupong. Lägre tal gör belöningarna lättare att nå.",
-  "admin.rules.summary": "{count} prestationer · kuponger vid {a}, {b} och {c} poäng",
+  "admin.rules.summary": "{count} prestationer · värdechecker använder den offentliga sparkvotsstatistiken",
   "admin.rule.under_average": "En lättare månad",
   "admin.rule.choice_down": "Egna val −10 %",
   "admin.rule.buffer": "En månads räkningar täckta",
@@ -860,7 +851,7 @@ export const sv: Record<MessageKey, string> = {
     "Använd tjänsten bara för ditt eget konto. Försök inte komma åt andra kunders uppgifter, överbelasta tjänsten eller missbruka AI:n.",
   "terms.rewards.title": "Belöningar och rådgivare",
   "terms.rewards.body":
-    "Poäng och kuponger är exempel och har inget penningvärde. Rådgivarsamtal och deras pris visas som exempel på hur tjänsten skulle kunna fungera.",
+    "Poäng och värdechecker är exempel och har inget penningvärde. Rådgivarsamtal och deras pris visas som exempel på hur tjänsten skulle kunna fungera.",
   "terms.changes.title": "Tillgänglighet och ändringar",
   "terms.changes.body":
     "Prototypen tillhandahålls i befintligt skick och kan ändras eller vara otillgänglig. Om villkoren ändras ombeds du godkänna dem igen.",
