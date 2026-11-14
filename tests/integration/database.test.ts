@@ -121,7 +121,7 @@ describe("voucher pick", () => {
     const { readVoucherPick, writeVoucherPick, clearVoucherPick } =
       await import("@/lib/coach/vouchers");
     const { readState, writeState } = await import("@/lib/data/repository");
-    const pick = { month: "2026-08", tierId: "bronze", optionId: "bronze-coffee" } as const;
+    const pick = { month: "2026-08", tierId: "bronze", optionId: "bronze-grocery" } as const;
     await writeVoucherPick(refA, pick);
     expect(await readVoucherPick(refA, "2026-09-15")).toEqual(pick);
     expect(await readVoucherPick(refB, "2026-09-15")).toBeNull();
@@ -145,7 +145,7 @@ describe("voucher pick", () => {
     await writeState(refA, "voucher-pick", {
       month: "2026-08",
       tierId: "bronze",
-      optionId: "bronze-coffee",
+      optionId: "bronze-grocery",
     });
     const raw = await db.query<{ sealed_value: string }>(
       "SELECT sealed_value FROM customer_state WHERE customer_ref = $1 AND kind = 'voucher-pick'",
@@ -175,7 +175,7 @@ describe("voucher pick", () => {
     // One small purchase and no income: nothing to measure against, so every tier is locked.
     const { vouchers } = buildRewards(ctx, 0);
     expect(vouchers.available).toBe(false);
-    expect(canSelect(vouchers, "bronze", "bronze-coffee")).toBe(false);
+    expect(canSelect(vouchers, "bronze", "bronze-grocery")).toBe(false);
     const rich = {
       ...ctx,
       record: {
@@ -197,8 +197,8 @@ describe("voucher pick", () => {
     };
     const open = buildRewards(rich, 0).vouchers;
     expect(open.tiers[0]?.unlocked).toBe(true);
-    expect(canSelect(open, "bronze", "bronze-coffee")).toBe(true);
-    expect(canSelect(open, "bronze", "silver-coffee")).toBe(false);
+    expect(canSelect(open, "bronze", "bronze-grocery")).toBe(true);
+    expect(canSelect(open, "bronze", "silver-grocery")).toBe(false);
   });
 });
 

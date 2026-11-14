@@ -8,8 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- **Voucher ladder.** The three point-based example coupons are replaced by four voucher
-  tiers. Each tier's target is regular monthly income × the Finnish household saving rate
+- **Voucher ladder.** The three point-based example coupons are replaced by three voucher
+  tiers (bronze, silver, gold). Each offers the bank group's own grocery (5/10/15 % off one
+  product) or fuel (5/10/15 c/l off one top-up) voucher. Each tier's target is regular monthly income × the Finnish household saving rate
   (Statistics Finland 15ac, 3 % floor) × the tier multiplier, measured on the last completed
   month's saving. One pick per month, sealed per customer, changeable until the month ends
   (`POST`/`DELETE /api/goals/voucher`). The admin coupon thresholds are gone; stored settings

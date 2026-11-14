@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nextTierId, ringOffset, statusKey } from "@/components/goals/voucher-view";
+import { nextTierId, offerText, ringOffset, statusKey } from "@/components/goals/voucher-view";
 import type { VoucherTier } from "@/lib/contracts/rewards";
 
 const tier = (id: VoucherTier["id"], unlocked: boolean): VoucherTier => ({
@@ -32,5 +32,20 @@ describe("voucher view helpers", () => {
   it("names the provisional status only when it applies", () => {
     expect(statusKey(true)).toBe("voucher.provisional");
     expect(statusKey(false)).toBeNull();
+  });
+});
+
+describe("offerText", () => {
+  const t = (key: string): string => key;
+  it("formats grocery percent and fuel cents per locale", () => {
+    const grocery = offerText({ id: "silver-grocery", kind: "grocery", percentOff: 10 }, t, "en");
+    expect(grocery.params.percent).toBe("10%");
+    expect(grocery.titleKey).toBe("voucher.kind.grocery.title");
+    expect(offerText({ id: "x", kind: "grocery", percentOff: 10 }, t, "fi").params.percent).toMatch(
+      /^10\s%$/,
+    );
+    const fuel = offerText({ id: "gold-fuel", kind: "fuel", centsPerLitre: 15 }, t, "sv");
+    expect(fuel.params.cents).toBe("15");
+    expect(fuel.params.brand).toBe("voucher.brand.fuel");
   });
 });

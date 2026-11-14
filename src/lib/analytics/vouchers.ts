@@ -16,35 +16,24 @@ export const VOUCHER_TIERS: readonly {
     id: "bronze",
     multiplier: 1,
     options: [
-      { id: "bronze-coffee", kind: "coffee", valueCents: 500 },
-      { id: "bronze-groceries", kind: "groceries", valueCents: 500 },
+      { id: "bronze-grocery", kind: "grocery", percentOff: 5 },
+      { id: "bronze-fuel", kind: "fuel", centsPerLitre: 5 },
     ],
   },
   {
     id: "silver",
     multiplier: 2,
     options: [
-      { id: "silver-coffee", kind: "coffee", valueCents: 1000 },
-      { id: "silver-groceries", kind: "groceries", valueCents: 1000 },
-      { id: "silver-cinema", kind: "cinema", valueCents: 1000 },
+      { id: "silver-grocery", kind: "grocery", percentOff: 10 },
+      { id: "silver-fuel", kind: "fuel", centsPerLitre: 10 },
     ],
   },
   {
     id: "gold",
     multiplier: 3,
     options: [
-      { id: "gold-groceries", kind: "groceries", valueCents: 2000 },
-      { id: "gold-cinema", kind: "cinema", valueCents: 2000 },
-      { id: "gold-books", kind: "books", valueCents: 2000 },
-    ],
-  },
-  {
-    id: "platinum",
-    multiplier: 4,
-    options: [
-      { id: "platinum-groceries", kind: "groceries", valueCents: 4000 },
-      { id: "platinum-cinema", kind: "cinema", valueCents: 4000 },
-      { id: "platinum-books", kind: "books", valueCents: 4000 },
+      { id: "gold-grocery", kind: "grocery", percentOff: 15 },
+      { id: "gold-fuel", kind: "fuel", centsPerLitre: 15 },
     ],
   },
 ];

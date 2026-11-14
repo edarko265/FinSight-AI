@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { TIER_COLOUR, VoucherArt } from "@/components/goals/VoucherArt";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
-import { nextTierId, ringOffset, statusKey } from "@/components/goals/voucher-view";
+import { nextTierId, offerText, ringOffset, statusKey } from "@/components/goals/voucher-view";
 import { api, ApiError } from "@/lib/api-client";
 import type { VoucherLadder as Ladder, VoucherOption, VoucherTier } from "@/lib/contracts/rewards";
 import { formatMoney, formatMonth } from "@/lib/i18n/config";
@@ -91,8 +91,16 @@ export function VoucherLadder({
   const [draft, setDraft] = useState<string | null>(null);
   const inFlight = useRef(false);
   const money = (cents: number): string => formatMoney(cents, locale);
-  const kindLabel = (option: VoucherOption): string =>
-    t(`voucher.kind.${option.kind}` as MessageKey, { amount: money(option.valueCents) });
+  const offer = (option: VoucherOption): ReturnType<typeof offerText> =>
+    offerText(option, (key) => t(key), locale);
+  const offerTitle = (option: VoucherOption): string => {
+    const text = offer(option);
+    return t(text.titleKey, text.params);
+  };
+  const offerWhat = (option: VoucherOption): string => {
+    const text = offer(option);
+    return t(text.whatKey, text.params);
+  };
 
   async function run(request: () => Promise<Ladder>, done: MessageKey): Promise<void> {
     if (inFlight.current) return;
@@ -177,7 +185,9 @@ export function VoucherLadder({
                 <p className="text-xs font-semibold text-muted">
                   {t("voucher.yours", { month: formatMonth(ladder.month, locale, "long") })}
                 </p>
-                <p className="text-base font-semibold">{kindLabel(chosen)}</p>
+                <p className="text-base font-semibold">
+                  {t(offer(chosen).chosenKey, offer(chosen).params)}
+                </p>
                 <p className="text-sm text-muted">
                   {t(`voucher.tier.${chosenTier.id}` as MessageKey)}
                 </p>
@@ -282,7 +292,12 @@ export function VoucherLadder({
                               kind={option.kind}
                               className="size-8 shrink-0 text-accent"
                             />
-                            <span className="min-w-0">{kindLabel(option)}</span>
+                            <span className="min-w-0">
+                              <span className="block">{offerTitle(option)}</span>
+                              <span className="block text-xs font-normal text-muted">
+                                {offerWhat(option)}
+                              </span>
+                            </span>
                           </label>
                         );
                       })}
