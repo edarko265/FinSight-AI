@@ -243,8 +243,11 @@ dialog[open] {
 }
 
 @keyframes fs-shimmer {
+  from {
+    background-position: 100% 0;
+  }
   to {
-    background-position: -200% 0;
+    background-position: -100% 0;
   }
 }
 .fs-shimmer {
@@ -276,5 +279,8 @@ dialog[open] {
   .animate-spin,
   dialog[open] {
     animation: none;
+  }
+  .animate-ping {
+    opacity: 0;
   }
 }

@@ -3,7 +3,11 @@
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import type { MessageKey } from "@/lib/i18n/translate";
 
-/** Standard inline load failure with a retry button. */
+/**
+ * Standard inline load failure with a retry button. Callers should keep focus sensible on
+ * retry: keep this mounted with the button `aria-disabled` while retrying, or move focus to
+ * the loading region.
+ */
 export function LoadError({
   onRetry,
   messageKey = "common.loadFailed",

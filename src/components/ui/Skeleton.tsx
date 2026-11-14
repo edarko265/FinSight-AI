@@ -68,7 +68,10 @@ export function SkeletonList({
   );
 }
 
-/** Wraps skeletons so screen readers hear a single "Loading…" announcement. */
+/**
+ * Wraps skeletons so screen readers hear a single "Loading…" announcement.
+ * Use one per loading area, not one per card.
+ */
 export function LoadingRegion({
   children,
   labelKey = "common.loading",
@@ -80,7 +83,7 @@ export function LoadingRegion({
 }): React.JSX.Element {
   const { t } = usePreferences();
   return (
-    <div role="status" aria-busy="true" className={className}>
+    <div role="status" className={className}>
       <span className="sr-only">{t(labelKey)}</span>
       {children}
     </div>

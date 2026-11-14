@@ -524,7 +524,6 @@ export const fi: Record<MessageKey, string> = {
   "common.loadFailed": "Lataus epäonnistui. Tarkista yhteytesi ja yritä uudelleen.",
   "common.saveFailed": "Tallennus epäonnistui. Mitään ei muutettu.",
   "common.retry": "Yritä uudelleen",
-  "common.done": "Valmis",
   "info.show": "Lisätietoa",
   "info.hide": "Piilota lisätiedot",
   "chart.help.bar":

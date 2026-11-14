@@ -523,7 +523,6 @@ export const sv: Record<MessageKey, string> = {
   "common.loadFailed": "Det gick inte att ladda. Kontrollera anslutningen och försök igen.",
   "common.saveFailed": "Det gick inte att spara. Inget ändrades.",
   "common.retry": "Försök igen",
-  "common.done": "Klart",
   "info.show": "Mer information",
   "info.hide": "Dölj information",
   "chart.help.bar":

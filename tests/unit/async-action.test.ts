@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createAsyncAction } from "@/lib/async-action";
+import { ApiError } from "@/lib/api-client";
+import { ConcurrentRunError, createAsyncAction, isApiError } from "@/lib/async-action";
 
 function deferred<T>(): {
   promise: Promise<T>;
@@ -16,20 +17,52 @@ function deferred<T>(): {
 }
 
 describe("createAsyncAction", () => {
-  it("returns the in-flight promise on a second call and runs fn once", async () => {
+  it("drops a second call while pending without callbacks", async () => {
     const d = deferred<number>();
     const fn = vi.fn(() => d.promise);
-    const action = createAsyncAction(fn);
+    const onSuccess = vi.fn();
+    const onError = vi.fn();
+    const action = createAsyncAction(fn, { onSuccess, onError });
     const first = action.run();
-    const second = action.run();
-    expect(second).toBe(first);
+    const second = await action.run();
+    expect(second.ok).toBe(false);
+    expect(second).toMatchObject({ dropped: true });
+    expect(!second.ok && second.error).toBeInstanceOf(ConcurrentRunError);
     expect(action.isPending()).toBe(true);
     d.resolve(1);
     expect(await first).toEqual({ ok: true, value: 1 });
     expect(fn).toHaveBeenCalledTimes(1);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onError).not.toHaveBeenCalled();
     expect(action.isPending()).toBe(false);
     await action.run();
     expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it("never rejects when callbacks throw", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const ok = createAsyncAction(async () => 1, {
+      onPending: () => {
+        throw new Error("pending");
+      },
+      onSuccess: () => {
+        throw new Error("success");
+      },
+    });
+    expect(await ok.run()).toEqual({ ok: true, value: 1 });
+    expect(ok.isPending()).toBe(false);
+    const bad = createAsyncAction(
+      async () => {
+        throw new Error("x");
+      },
+      {
+        onError: () => {
+          throw new Error("handler");
+        },
+      },
+    );
+    expect((await bad.run()).ok).toBe(false);
+    spy.mockRestore();
   });
 
   it("calls onSuccess only on resolve, after pending ends", async () => {
@@ -69,5 +102,16 @@ describe("createAsyncAction", () => {
     });
     expect((await action.run()).ok).toBe(false);
     expect(await action.run()).toEqual({ ok: true, value: "ok" });
+  });
+});
+
+describe("isApiError", () => {
+  it("matches ApiError and optionally its status", () => {
+    const error = new ApiError(404, "not_found");
+    expect(isApiError(error)).toBe(true);
+    expect(isApiError(error, 404)).toBe(true);
+    expect(isApiError(error, 401)).toBe(false);
+    expect(isApiError(new Error("x"))).toBe(false);
+    expect(isApiError("nope", 401)).toBe(false);
   });
 });

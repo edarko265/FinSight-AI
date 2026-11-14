@@ -533,7 +533,6 @@ export const en = {
   "common.loadFailed": "Couldn't load this. Check your connection and try again.",
   "common.saveFailed": "Couldn't save. Nothing was changed.",
   "common.retry": "Try again",
-  "common.done": "Done",
   "info.show": "More information",
   "info.hide": "Hide information",
   "chart.help.bar":
