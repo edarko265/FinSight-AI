@@ -1,6 +1,6 @@
 import "server-only";
 
-import { activeAnnouncements } from "@/lib/admin/announcements";
+import { activeAnnouncements, localise } from "@/lib/admin/announcements";
 import { budgetStatuses } from "@/lib/coach/budgets";
 import type { SessionContext } from "@/lib/coach/context";
 import { listGoalPlans } from "@/lib/coach/goals";
@@ -22,8 +22,8 @@ export async function allInsights(ctx: SessionContext): Promise<Insight[]> {
   const notices: Insight[] = (await activeAnnouncements()).map((notice) => ({
     id: `announcement-${notice.id}-${notice.updatedAt}`,
     severity: notice.severity,
-    title: notice.title,
-    body: notice.body,
+    // In the customer's language where staff wrote one.
+    ...localise(notice, ctx.locale),
     ask: "",
   }));
 

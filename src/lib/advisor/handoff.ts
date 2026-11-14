@@ -18,6 +18,7 @@ export type AdvisorTopic = (typeof ADVISOR_TOPICS)[number];
 
 const DETAILS = "advisor_requests.sealed_details";
 const MESSAGE = "advisor_messages.sealed_text";
+const AUTHOR = "advisor_messages.sealed_author";
 
 interface Details {
   slot: string;
@@ -30,6 +31,8 @@ export interface AdvisorMessage {
   sender: "customer" | "advisor";
   text: string;
   at: string;
+  /** The member of staff who wrote an adviser reply, when they have a name. */
+  author?: string;
 }
 
 export interface AdvisorRequest {
@@ -74,9 +77,10 @@ async function messagesFor(requestId: string, ref: string): Promise<AdvisorMessa
     id: string;
     sender: "customer" | "advisor";
     sealed_text: string;
+    sealed_author: string | null;
     created_at: string | Date;
   }>(
-    "SELECT id, sender, sealed_text, created_at FROM advisor_messages WHERE request_id = $1 ORDER BY created_at, id",
+    "SELECT id, sender, sealed_text, sealed_author, created_at FROM advisor_messages WHERE request_id = $1 ORDER BY created_at, id",
     [requestId],
   );
   const key = customerKey(ref);
@@ -85,6 +89,7 @@ async function messagesFor(requestId: string, ref: string): Promise<AdvisorMessa
     sender: row.sender,
     text: decryptField(row.sealed_text, key, MESSAGE),
     at: iso(row.created_at),
+    author: row.sealed_author ? decryptField(row.sealed_author, key, AUTHOR) : undefined,
   }));
 }
 
@@ -156,11 +161,19 @@ async function addMessage(
   ref: string,
   sender: "customer" | "advisor",
   text: string,
+  author?: string,
 ): Promise<void> {
   const db = await getDb();
+  const key = customerKey(ref);
   await db.query(
-    "INSERT INTO advisor_messages (id, request_id, sender, sealed_text) VALUES ($1, $2, $3, $4)",
-    [randomUUID(), requestId, sender, encryptField(text, customerKey(ref), MESSAGE)],
+    "INSERT INTO advisor_messages (id, request_id, sender, sealed_text, sealed_author) VALUES ($1, $2, $3, $4, $5)",
+    [
+      randomUUID(),
+      requestId,
+      sender,
+      encryptField(text, key, MESSAGE),
+      author ? encryptField(author, key, AUTHOR) : null,
+    ],
   );
   await db.query("UPDATE advisor_requests SET updated_at = now() WHERE id = $1", [requestId]);
 }
@@ -226,10 +239,10 @@ export async function advisorThread(
   return row ? { ...(await open(row, true)), alias: alias(row.customer_ref) } : null;
 }
 
-export async function advisorReply(id: string, text: string): Promise<boolean> {
+export async function advisorReply(id: string, text: string, author?: string): Promise<boolean> {
   const row = await rowById(id);
   if (!row || row.status === "closed") return false;
-  await addMessage(id, row.customer_ref, "advisor", text);
+  await addMessage(id, row.customer_ref, "advisor", text, author);
   const db = await getDb();
   await db.query("UPDATE advisor_requests SET status = 'active' WHERE id = $1", [id]);
   return true;

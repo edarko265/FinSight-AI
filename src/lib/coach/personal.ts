@@ -1,8 +1,8 @@
 import "server-only";
 
 import { setBillAdjustments, type BillAdjustment } from "@/lib/analytics/recurrence";
+import { accountProvider } from "@/lib/data/account-providers";
 import {
-  generateLinked,
   mergeAccounts,
   transactionKey,
   type DemoBank,
@@ -75,9 +75,15 @@ export async function personalise(
     listSetAsides(ref),
     readState<MortgageStory>(ref, "mortgage"),
   ]);
+  const provider = accountProvider();
   const merged = mergeAccounts(
     base.transactions,
-    linked.map((account) => ({ account, transactions: generateLinked(account, ref, asOf) })),
+    await Promise.all(
+      linked.map(async (account) => ({
+        account,
+        transactions: await provider.transactions(account, ref, asOf),
+      })),
+    ),
     asOf,
   );
   const hasCorrections =

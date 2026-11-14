@@ -12,6 +12,8 @@ import {
   listPlans,
   normaliseCode,
   reconcileShares,
+  REPORT_REASONS,
+  reportPlan,
   sharedPlan,
   sharePlan,
   trackPlan,
@@ -95,6 +97,11 @@ const body = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("unshare"), id }),
   z.object({ action: z.literal("track"), id: id.nullable() }),
+  z.object({
+    action: z.literal("report"),
+    code: z.string().min(4).max(20),
+    reason: z.enum(REPORT_REASONS),
+  }),
   z.object({ action: z.literal("copy"), code: z.string().min(4).max(20) }),
 ]);
 
@@ -107,7 +114,10 @@ export async function POST(request: Request): Promise<Response> {
   if (blocked) return blocked;
   const input = parsed.data;
   const { features } = await getSettings();
-  if (!features.sharing && (input.action === "share" || input.action === "copy")) {
+  if (
+    !features.sharing &&
+    (input.action === "share" || input.action === "copy" || input.action === "report")
+  ) {
     return failure("sharing_off", 403);
   }
 
@@ -124,6 +134,12 @@ export async function POST(request: Request): Promise<Response> {
       break;
     case "share":
       result = await sharePlan(ctx, input.id, input);
+      break;
+    case "report":
+      if (!(await rateLimit(`plan-report:${ctx.customerRef}`, 5, 60_000))) {
+        return failure("too_many_attempts", 429);
+      }
+      result = (await reportPlan(normaliseCode(input.code), input.reason)) || "not_found";
       break;
     case "track":
       result = (await trackPlan(ctx, input.id)) || "not_found";

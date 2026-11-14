@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Goal } from "@/lib/coach/advice";
 import type { Budget } from "@/lib/coach/budgets";
+import type { Friend } from "@/lib/coach/friends";
 import type { SetAside } from "@/lib/coach/personal";
 import type { ChatMessage } from "@/lib/contracts/chat";
 import type { Plan } from "@/lib/coach/plans";
@@ -19,6 +20,7 @@ export type TrashItem =
   | { id: string; kind: "plan"; deletedAt: string; label: string; item: Plan }
   | { id: string; kind: "account"; deletedAt: string; label: string; item: LinkedAccount }
   | { id: string; kind: "budget"; deletedAt: string; label: string; item: Budget }
+  | { id: string; kind: "friend"; deletedAt: string; label: string; item: Friend }
   | { id: string; kind: "chat"; deletedAt: string; label: string; item: ChatMessage[] }
   | { id: string; kind: "setaside"; deletedAt: string; label: string; item: SetAside }
   | { id: string; kind: "view"; deletedAt: string; label: string; item: DashboardView }

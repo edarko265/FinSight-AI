@@ -10,6 +10,7 @@ import { Logo } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { Wizard, WizardField } from "@/components/ui/Wizard";
 import { api, ApiError } from "@/lib/api-client";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 export function AdminLogin(): React.JSX.Element {
   const { t } = usePreferences();
@@ -17,24 +18,34 @@ export function AdminLogin(): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<"login.error" | "login.tooMany" | "login.unavailable" | null>(
-    null,
-  );
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<MessageKey | null>(null);
 
-  async function signIn(): Promise<void> {
+  async function signIn(): Promise<boolean> {
     setError(null);
     try {
       await api("/api/admin/login", {
         method: "POST",
-        json: { username: username.trim() || undefined, password },
+        json: {
+          username: username.trim() || undefined,
+          password,
+          code: needsCode ? code : undefined,
+        },
       });
       router.replace("/admin");
+      return true;
     } catch (failure) {
       const status = failure instanceof ApiError ? failure.status : 0;
+      if (failure instanceof ApiError && failure.code === "totp_required") {
+        setNeedsCode(true);
+        return false;
+      }
       // A server fault is not the user's mistake: say so instead of blaming the password.
       setError(
         status === 429 ? "login.tooMany" : status === 401 ? "login.error" : "login.unavailable",
       );
+      return false;
     }
   }
 
@@ -98,6 +109,27 @@ export function AdminLogin(): React.JSX.Element {
               />
             ),
           },
+          ...(needsCode
+            ? [
+                {
+                  title: t("twoStep.code"),
+                  hint: t("twoStep.loginHint"),
+                  valid: /^\d{6}$/.test(code.replace(/\s/g, "")),
+                  content: (
+                    <WizardField
+                      label={t("twoStep.code")}
+                      value={code}
+                      onChange={(event) => setCode(event.target.value)}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      maxLength={7}
+                      autoFocus
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </main>

@@ -190,6 +190,7 @@ async function publish(
 async function withdraw(code: string): Promise<void> {
   const db = await getDb();
   await db.query("DELETE FROM shared_plans WHERE code = $1", [code]);
+  await db.query("DELETE FROM plan_reports WHERE code = $1", [code]);
 }
 
 /**
@@ -308,4 +309,39 @@ export async function reconcileShares(ctx: SessionContext, plans: Plan[]): Promi
   }
   if (changed) await save(ctx, next);
   return next;
+}
+
+// ---- Reports ----
+
+export const REPORT_REASONS = ["name", "misleading", "other"] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+
+/** A customer flags a shared plan for staff to look at. Who reported is not recorded. */
+export async function reportPlan(code: string, reason: ReportReason): Promise<boolean> {
+  const shared = await sharedPlan(code);
+  if (!shared) return false;
+  const db = await getDb();
+  await db.query("INSERT INTO plan_reports (id, code, reason) VALUES ($1, $2, $3)", [
+    crypto.randomUUID(),
+    shared.code,
+    reason,
+  ]);
+  return true;
+}
+
+/** Open reports per shared plan, for staff. */
+export async function planReports(): Promise<Record<string, Record<string, number>>> {
+  const db = await getDb();
+  const rows = await db.query<{ code: string; reason: string; n: number | string }>(
+    "SELECT code, reason, count(*) AS n FROM plan_reports GROUP BY code, reason",
+  );
+  const out: Record<string, Record<string, number>> = {};
+  for (const row of rows) (out[row.code] ??= {})[row.reason] = Number(row.n);
+  return out;
+}
+
+/** Staff have looked: the reports on a plan are cleared. */
+export async function dismissReports(code: string): Promise<void> {
+  const db = await getDb();
+  await db.query("DELETE FROM plan_reports WHERE code = $1", [code]);
 }

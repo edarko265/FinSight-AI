@@ -1,5 +1,6 @@
 import "server-only";
 
+import { takeDueAnnouncements } from "@/lib/admin/announcements";
 import { allInsights } from "@/lib/coach/all-insights";
 import { personalRecord, type SessionContext } from "@/lib/coach/context";
 import { loadBenchmarks, loadCustomer } from "@/lib/data/repository";
@@ -13,6 +14,7 @@ import {
   markSent,
   pushLocale,
   pushToCustomer,
+  pushToEveryone,
 } from "@/lib/push/push";
 
 export interface ReminderRun {
@@ -30,6 +32,10 @@ export interface ReminderRun {
  * body just says to open it.
  */
 export async function runReminders(): Promise<ReminderRun> {
+  // Announcements that were scheduled and whose time has come go out first.
+  for (const notice of await takeDueAnnouncements()) {
+    await pushToEveryone({ title: notice.title, body: notice.body, url: "/insights" });
+  }
   const refs = await customersWithDevices();
   const benchmarks = await loadBenchmarks();
   const asOf = getEnv().DEMO_AS_OF_DATE;

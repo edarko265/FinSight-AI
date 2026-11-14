@@ -56,6 +56,7 @@ export function GoalsView(): React.JSX.Element {
   const [saving, setSaving] = useState<{ id: string; name: string } | null>(null);
   const [euros, setEuros] = useState("");
   const [saveError, setSaveError] = useState<MessageKey | null>(null);
+  const [redeemed, setRedeemed] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +113,41 @@ export function GoalsView(): React.JSX.Element {
     setEuros("");
     setTick((value) => value + 1);
     return true;
+  }
+
+  // Rewards already redeemed this month, with the codes they gave.
+  useEffect(() => {
+    let cancelled = false;
+    api<{ redemptions: { couponId: string; code: string; month: string }[] }>("/api/rewards")
+      .then((payload) => {
+        if (cancelled) return;
+        const latest = payload.redemptions[0]?.month;
+        setRedeemed(
+          Object.fromEntries(
+            payload.redemptions
+              .filter((item) => item.month === latest)
+              .map((item) => [item.couponId, item.code]),
+          ),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [tick]);
+
+  async function redeem(couponId: string): Promise<void> {
+    try {
+      const { redemption } = await api<{ redemption: { code: string } }>("/api/rewards", {
+        method: "POST",
+        json: { couponId },
+      });
+      setRedeemed((current) => ({ ...current, [couponId]: redemption.code }));
+      toast.notify("toast.redeemed");
+    } catch (failure) {
+      if (failure instanceof ApiError && failure.code === "already") setTick((value) => value + 1);
+      else toast.fail();
+    }
   }
 
   const rewards = data?.rewards;
@@ -396,6 +432,23 @@ export function GoalsView(): React.JSX.Element {
                   </span>
                 </div>
                 <p className="mt-0.5 text-sm text-muted">{coupon.body}</p>
+                {redeemed[coupon.id] ? (
+                  <p className="mt-2 rounded-xl bg-accent-soft px-3 py-2 text-sm">
+                    {t("rewards.code")}{" "}
+                    <span className="font-mono font-semibold tracking-widest">
+                      {redeemed[coupon.id]}
+                    </span>
+                    <span className="block text-xs text-muted">{t("rewards.simulated")}</span>
+                  </p>
+                ) : coupon.unlocked ? (
+                  <button
+                    type="button"
+                    onClick={() => void redeem(coupon.id)}
+                    className="mt-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+                  >
+                    {t("rewards.redeem")}
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

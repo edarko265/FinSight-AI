@@ -130,7 +130,9 @@ export function OverviewSection(): React.JSX.Element {
         <Stat
           label={t("admin.questions")}
           value={number(total)}
-          note={t("admin.note.perDay", { count: number(Math.round((total / 30) * 10) / 10) })}
+          note={t("admin.note.perDay", {
+            count: number(Math.round((total / data.days) * 10) / 10),
+          })}
           href="/admin/usage"
         />
         <Stat
@@ -154,7 +156,7 @@ export function OverviewSection(): React.JSX.Element {
         />
       </div>
       <Panel title={t("admin.chart.daily")} href="/admin/usage">
-        <DailyChart points={usage.daily} unit={t("admin.questions.unit")} />
+        <DailyChart points={usage.daily} unit={t("admin.questions.unit")} span={data.days} />
       </Panel>
       <div className="grid gap-5 md:grid-cols-2">
         <Panel title={t("admin.usage")} href="/admin/usage">
@@ -229,7 +231,9 @@ export function UsageSection(): React.JSX.Element {
         <Stat
           label={t("admin.questions")}
           value={number(total)}
-          note={t("admin.note.perDay", { count: number(Math.round((total / 30) * 10) / 10) })}
+          note={t("admin.note.perDay", {
+            count: number(Math.round((total / data.days) * 10) / 10),
+          })}
         />
         <Stat
           label={t("admin.consent")}
@@ -269,7 +273,7 @@ export function UsageSection(): React.JSX.Element {
           </button>
         }
       >
-        <DailyChart points={usage.daily} unit={t("admin.questions.unit")} />
+        <DailyChart points={usage.daily} unit={t("admin.questions.unit")} span={data.days} />
       </Panel>
       <div className="grid gap-5 md:grid-cols-2">
         <Panel
@@ -366,6 +370,7 @@ export function AiSection(): React.JSX.Element {
         <DailyChart
           points={ai.daily.map((row) => ({ day: row.day, count: row.requests }))}
           unit={t("admin.aiUsage.requests")}
+          span={data.days}
         />
       </Panel>
       <div className="grid gap-5 md:grid-cols-2">
@@ -440,7 +445,7 @@ function HowItWorks(): React.JSX.Element {
 
 /** The adviser queue and how the team is keeping up. */
 export function AdvisersSection(): React.JSX.Element {
-  const { t } = usePreferences();
+  const { t, locale } = usePreferences();
   const { data, number } = useAdmin();
   const { workload } = data;
   return (
@@ -450,6 +455,13 @@ export function AdvisersSection(): React.JSX.Element {
         <Stat label={t("admin.workload.open")} value={number(workload.open)} />
         <Stat label={t("admin.workload.needsReply")} value={number(workload.needsReply)} />
         <Stat label={t("admin.workload.closed")} value={number(workload.closed)} />
+        <Stat
+          label={t("admin.payments")}
+          value={formatMoney(data.payments.cents, locale)}
+          note={t(data.payments.simulated ? "admin.payments.simulated" : "admin.payments.count", {
+            count: data.payments.count,
+          })}
+        />
         <Stat
           label={t("admin.workload.firstReply")}
           value={

@@ -10,7 +10,7 @@ import { hasMessage, type MessageKey } from "@/lib/i18n/translate";
 
 interface TrashEntry {
   id: string;
-  kind: "goal" | "plan" | "account" | "setaside" | "budget" | "chat" | "view" | "widget";
+  kind: "goal" | "plan" | "account" | "setaside" | "budget" | "chat" | "friend" | "view" | "widget";
   label: string;
   deletedAt: string;
 }

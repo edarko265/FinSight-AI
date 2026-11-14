@@ -22,9 +22,41 @@ interface Announcement {
   severity: Severity;
   deletedAt: string | null;
   views: number;
+  publishAt: string | null;
+  translations: { fi?: Wording; sv?: Wording };
 }
 
-const EMPTY = { title: "", body: "", severity: "info" as Severity };
+interface Wording {
+  title: string;
+  body: string;
+}
+
+const EMPTY = {
+  title: "",
+  body: "",
+  severity: "info" as Severity,
+  when: "now" as "now" | "later",
+  /** Local date and time, as a date-time field gives it. */
+  publishAt: "",
+  fi: { title: "", body: "" },
+  sv: { title: "", body: "" },
+};
+
+/** What the server expects: a moment in time, and only the languages that were filled in. */
+function toPayload(form: typeof EMPTY): Record<string, unknown> {
+  const wording = (value: Wording): Wording | undefined =>
+    value.title.trim() || value.body.trim()
+      ? { title: value.title.trim(), body: value.body.trim() }
+      : undefined;
+  return {
+    title: form.title,
+    body: form.body,
+    severity: form.severity,
+    publishAt:
+      form.when === "later" && form.publishAt ? new Date(form.publishAt).toISOString() : null,
+    translations: { fi: wording(form.fi), sv: wording(form.sv) },
+  };
+}
 const SEVERITIES: Severity[] = ["info", "warning", "good"];
 const EXAMPLES = ["feature", "tip", "break"] as const;
 
@@ -69,8 +101,8 @@ export function Announcements(): React.JSX.Element {
   async function submit(): Promise<void> {
     apply(
       editingId
-        ? await call(`/api/admin/announcements/${editingId}`, "PATCH", form)
-        : await call("/api/admin/announcements", "POST", form),
+        ? await call(`/api/admin/announcements/${editingId}`, "PATCH", toPayload(form))
+        : await call("/api/admin/announcements", "POST", toPayload(form)),
     );
     toast.notify(editingId ? "toast.updated" : "toast.published");
     close();
@@ -183,6 +215,85 @@ export function Announcements(): React.JSX.Element {
             ),
           },
           {
+            title: t("admin.announcements.step.languages"),
+            hint: t("admin.announcements.step.languagesHint"),
+            valid: true,
+            content: (
+              <div className="flex flex-col gap-4">
+                {(["fi", "sv"] as const).map((language) => (
+                  <fieldset key={language} className="flex flex-col gap-2">
+                    <legend className="text-sm font-semibold">
+                      {t(`admin.announcements.language.${language}` as MessageKey)}
+                    </legend>
+                    <WizardField
+                      label={t("admin.announcements.title")}
+                      value={form[language].title}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          [language]: { ...form[language], title: event.target.value },
+                        })
+                      }
+                      maxLength={120}
+                    />
+                    <label className="flex flex-col gap-1.5 text-sm font-medium">
+                      {t("admin.announcements.body")}
+                      <textarea
+                        value={form[language].body}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            [language]: { ...form[language], body: event.target.value },
+                          })
+                        }
+                        maxLength={600}
+                        rows={2}
+                        className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      />
+                    </label>
+                  </fieldset>
+                ))}
+              </div>
+            ),
+          },
+          {
+            title: t("admin.announcements.step.when"),
+            hint: t("admin.announcements.step.whenHint"),
+            valid: form.when === "now" || (form.publishAt !== "" && Date.parse(form.publishAt) > 0),
+            content: (
+              <>
+                <WizardChoices
+                  name="announcement-when"
+                  value={form.when}
+                  onChange={(when) => setForm({ ...form, when })}
+                  options={[
+                    {
+                      value: "now",
+                      label: t("admin.announcements.when.now"),
+                      note: t("admin.announcements.when.now.note"),
+                    },
+                    {
+                      value: "later",
+                      label: t("admin.announcements.when.later"),
+                      note: t("admin.announcements.when.later.note"),
+                    },
+                  ]}
+                />
+                {form.when === "later" ? (
+                  <label className="flex flex-col gap-1.5 text-sm font-medium">
+                    {t("admin.announcements.when.at")}
+                    <input
+                      type="datetime-local"
+                      value={form.publishAt}
+                      onChange={(event) => setForm({ ...form, publishAt: event.target.value })}
+                      className="rounded-xl border border-border bg-surface px-4 py-3 text-base font-normal"
+                    />
+                  </label>
+                ) : null}
+              </>
+            ),
+          },
+          {
             title: t("wizard.review"),
             hint: t("wizard.reviewHint"),
             valid: true,
@@ -215,13 +326,39 @@ export function Announcements(): React.JSX.Element {
               </span>
             </p>
             <p className="mt-0.5 text-muted">{item.body}</p>
-            <p className="mt-1 text-xs text-muted">{t("admin.reach", { count: item.views })}</p>
+            <p className="mt-1 text-xs text-muted">
+              {item.publishAt && Date.parse(item.publishAt) > Date.now()
+                ? t("admin.announcements.scheduled", {
+                    when: new Date(item.publishAt).toLocaleString(),
+                  })
+                : t("admin.reach", { count: item.views })}
+              {item.translations.fi || item.translations.sv
+                ? ` · ${["EN", item.translations.fi ? "FI" : "", item.translations.sv ? "SV" : ""].filter(Boolean).join(" ")}`
+                : ""}
+            </p>
             <div className="mt-2 flex gap-4 font-semibold">
               <button
                 type="button"
                 onClick={() => {
                   setEditingId(item.id);
-                  setForm({ title: item.title, body: item.body, severity: item.severity });
+                  const scheduled = item.publishAt && Date.parse(item.publishAt) > Date.now();
+                  setForm({
+                    title: item.title,
+                    body: item.body,
+                    severity: item.severity,
+                    when: scheduled ? "later" : "now",
+                    // A date-time field wants local time without a zone.
+                    publishAt: scheduled
+                      ? new Date(
+                          Date.parse(item.publishAt ?? "") -
+                            new Date().getTimezoneOffset() * 60_000,
+                        )
+                          .toISOString()
+                          .slice(0, 16)
+                      : "",
+                    fi: item.translations.fi ?? { title: "", body: "" },
+                    sv: item.translations.sv ?? { title: "", body: "" },
+                  });
                   setOpen(true);
                 }}
                 className="text-accent"
