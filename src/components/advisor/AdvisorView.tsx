@@ -154,7 +154,7 @@ export function AdvisorView(): React.JSX.Element {
                     : "self-start rounded-bl-md bg-surface shadow-sm"
                 }`}
               >
-                <span className="mb-0.5 block text-xs font-semibold opacity-80">
+                <span className="mb-0.5 block text-sm font-semibold opacity-80">
                   {t(message.sender === "customer" ? "advisor.you" : "advisor.adviser")}
                 </span>
                 {message.text}

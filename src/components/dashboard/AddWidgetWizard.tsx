@@ -313,7 +313,7 @@ export function AddWidgetWizard({
                           role="radio"
                           aria-checked={chart === style}
                           onClick={() => setChart(style)}
-                          className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                          className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                             chart === style
                               ? "border-accent bg-accent-soft text-accent"
                               : "border-border text-muted"

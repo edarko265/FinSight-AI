@@ -38,14 +38,14 @@ export function Stat({
   const { t } = usePreferences();
   const body = (
     <>
-      <p className="text-xs text-muted">{label}</p>
+      <p className="text-sm text-muted">{label}</p>
       <p
         className={`mt-1 text-xl font-semibold tabular-nums ${tone === "warning" ? "text-warning" : ""}`}
       >
         {value}
       </p>
-      {note ? <p className="mt-0.5 text-xs text-muted tabular-nums">{note}</p> : null}
-      {href ? <p className="mt-2 text-xs font-semibold text-accent">{t("admin.open")} →</p> : null}
+      {note ? <p className="mt-0.5 text-sm text-muted tabular-nums">{note}</p> : null}
+      {href ? <p className="mt-2 text-sm font-semibold text-accent">{t("admin.open")} →</p> : null}
     </>
   );
   const frame = "block h-full rounded-2xl border border-border bg-surface p-4";
@@ -275,7 +275,7 @@ export function DailyChart({
                 stroke="var(--border)"
                 strokeDasharray="3 4"
               />
-              <text x={left - 6} y={y + 4} fontSize={11} textAnchor="end" fill="var(--muted)">
+              <text x={left - 6} y={y + 4} fontSize="0.75rem" textAnchor="end" fill="var(--muted)">
                 {number(value)}
               </text>
             </g>
@@ -310,7 +310,7 @@ export function DailyChart({
                 <text
                   x={index === 0 ? left : index === days.length - 1 ? width : x + step / 2}
                   y={height + 17}
-                  fontSize={11}
+                  fontSize="0.75rem"
                   fill="var(--muted)"
                   textAnchor={index === 0 ? "start" : index === days.length - 1 ? "end" : "middle"}
                 >
@@ -321,7 +321,7 @@ export function DailyChart({
           );
         })}
       </svg>
-      <p className="text-xs text-muted">{t("admin.chart.hint")}</p>
+      <p className="text-sm text-muted">{t("admin.chart.hint")}</p>
     </figure>
   );
 }
@@ -374,13 +374,13 @@ export function Ring({
           x={70}
           y={68}
           textAnchor="middle"
-          fontSize={22}
+          fontSize="1.375rem"
           fontWeight={600}
           fill="var(--foreground)"
         >
           {shown ? `${Math.round((shown.count / total) * 100)} %` : number(total)}
         </text>
-        <text x={70} y={86} textAnchor="middle" fontSize={10} fill="var(--muted)">
+        <text x={70} y={86} textAnchor="middle" fontSize="0.75rem" fill="var(--muted)">
           {shown ? number(shown.count) : (unit ?? t("admin.chart.total"))}
         </text>
       </svg>

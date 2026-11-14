@@ -63,7 +63,7 @@ export function SharedPlans(): React.JSX.Element {
                   note: `${average(key)} %`,
                 }))}
               />
-              <p className="text-xs text-muted">{t("admin.plans.average.note")}</p>
+              <p className="text-sm text-muted">{t("admin.plans.average.note")}</p>
             </Panel>
             <Panel title={t("admin.plans.top")}>
               <Bars
@@ -87,7 +87,7 @@ export function SharedPlans(): React.JSX.Element {
             <PlanRow key={plan.code} plan={plan} onChange={(next) => setData({ plans: next })} />
           ))}
         </ul>
-        <p className="text-xs text-muted">{t("admin.plans.note")}</p>
+        <p className="text-sm text-muted">{t("admin.plans.note")}</p>
       </Panel>
     </>
   );

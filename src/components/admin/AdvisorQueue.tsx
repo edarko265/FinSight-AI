@@ -256,7 +256,7 @@ export function AdvisorQueue(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted">{t("admin.advisor.note")}</p>
+      <p className="text-sm text-muted">{t("admin.advisor.note")}</p>
       <LoadState show={!queue} failed={failed} onRetry={retry} />
       {queue && live.length === 0 ? (
         <p className="text-sm text-muted">{t("admin.advisor.empty")}</p>
@@ -371,7 +371,7 @@ function QueueRow({
           <span className="font-semibold">
             {item.alias} · {topic}
           </span>
-          <span className="text-xs text-muted">
+          <span className="text-sm text-muted">
             {t("admin.advisor.call")} {formatSlot(item.slot, locale)} · {fee}
           </span>
         </span>
@@ -389,7 +389,7 @@ function QueueRow({
           )}
         </span>
       </button>
-      <div className="mt-2 flex gap-4 text-xs font-semibold">
+      <div className="mt-2 flex gap-4 text-sm font-semibold">
         {item.status === "closed" ? (
           <RowButton
             pending={pending}

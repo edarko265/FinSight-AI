@@ -70,7 +70,7 @@ export function Announcements(): React.JSX.Element {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-muted">{t("admin.announcements.note")}</p>
+      <p className="text-sm text-muted">{t("admin.announcements.note")}</p>
 
       <button
         type="button"
@@ -276,7 +276,7 @@ function AnnouncementRow({
         </span>
       </p>
       <p className="mt-0.5 text-muted">{item.body}</p>
-      <p className="mt-1 text-xs text-muted">{t("admin.reach", { count: item.views })}</p>
+      <p className="mt-1 text-sm text-muted">{t("admin.reach", { count: item.views })}</p>
       <div className="mt-2 flex gap-4 font-semibold">
         <button type="button" onClick={onEdit} className="min-h-11 text-accent">
           {t("common.edit")}

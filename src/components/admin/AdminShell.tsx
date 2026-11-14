@@ -287,7 +287,7 @@ export function AdminShell({ children }: { children: React.ReactNode }): React.J
         </header>
         <main className="mx-auto flex w-full max-w-6xl min-w-0 flex-1 flex-col gap-5 px-4 py-5 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-muted" role="status">
+            <p className="text-sm text-muted" role="status">
               {loadedAt
                 ? t("admin.updated", {
                     time: new Intl.DateTimeFormat(LOCALE_INFO[locale].intl, {
@@ -364,7 +364,7 @@ function SignedInAs({ me }: { me: AdminData["me"] }): React.JSX.Element {
   const { t } = usePreferences();
   const role = t(`admin.role.${me.role}` as MessageKey);
   return (
-    <p className="text-xs text-muted">
+    <p className="text-sm text-muted">
       {t("admin.signedInAs")}{" "}
       <span className="font-semibold text-foreground">
         {me.name ? `${me.name} · ${role}` : role}

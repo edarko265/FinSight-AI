@@ -177,7 +177,7 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
             </ul>
           </div>
         ) : null}
-        <p className="text-xs text-muted">{t("admin.team.note")}</p>
+        <p className="text-sm text-muted">{t("admin.team.note")}</p>
       </Panel>
       <Panel title={t("admin.team.roles")}>
         <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">

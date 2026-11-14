@@ -127,7 +127,7 @@ export function Columns({ points }: { points: ChartPoint[] }): React.JSX.Element
         </div>
       ) : null}
       {labels ? (
-        <p className="mt-2 text-xs text-muted">
+        <p className="mt-2 text-sm text-muted">
           {t("chart.caption.columns", { average: formatMoney(average, locale) })}
         </p>
       ) : null}

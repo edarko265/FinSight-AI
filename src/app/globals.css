@@ -91,7 +91,9 @@
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --font-sans: var(--font-geist-sans);
-  /* Type floor: nothing in the app is set smaller than text-xs. Reading text uses text-sm. */
+  /* Type floor: readable text is at least text-sm (0.875rem). text-xs is only for tab bar labels, short
+     count/status badges and chart axis ticks. Sizes are rem so they follow the font-size setting;
+     no fixed px text. */
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.25;
   --font-mono: var(--font-geist-mono);

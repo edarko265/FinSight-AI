@@ -106,7 +106,7 @@ export function SideNav(): React.JSX.Element {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2.5 text-xs font-medium lg:flex-row lg:gap-3 lg:text-sm ${
+                className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2.5 text-sm font-medium lg:flex-row lg:gap-3 lg:text-sm ${
                   active ? "bg-accent-soft text-accent" : "text-muted hover:bg-background"
                 }`}
               >

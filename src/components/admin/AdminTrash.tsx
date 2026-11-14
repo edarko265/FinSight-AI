@@ -198,7 +198,7 @@ export function AdminTrash({ manager }: { manager: boolean }): React.JSX.Element
           )}
         </>
       )}
-      <p className="text-xs text-muted">{t("admin.trash.note")}</p>
+      <p className="text-sm text-muted">{t("admin.trash.note")}</p>
     </Panel>
   );
 }
@@ -238,7 +238,7 @@ function TrashRow({
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm">
       <span className="min-w-0">
-        <span className="block text-xs text-muted">{label}</span>
+        <span className="block text-sm text-muted">{label}</span>
         <span className="block truncate">{item.label}</span>
       </span>
       <span className="flex gap-4 font-semibold">
