@@ -31,8 +31,10 @@ export function NotificationPrompt(): React.JSX.Element | null {
       open
       title={t("notify.prompt.title")}
       finishLabel={t("notify.prompt.allow")}
-      onClose={() => {
-        markAsked();
+      onClose={() => setOpen(false)}
+      onDismiss={(reason) => {
+        // Only an explicit decline is remembered; a tab tap, Escape or backdrop tap asks again next session.
+        if (reason === "close") markAsked();
         setOpen(false);
       }}
       onFinish={async () => {

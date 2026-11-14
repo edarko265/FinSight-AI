@@ -349,8 +349,16 @@ estimated monthly value; the list is sorted by that value and the top five are s
 
 ## 9. Rewards
 
-[`advice.ts`](../src/lib/coach/advice.ts) — `buildRewards`. Point values and coupon
-thresholds are set by staff in Admin → Controls.
+[`advice.ts`](../src/lib/coach/advice.ts) — `buildRewards`. Point values are set by staff in Admin → Controls.
+Voucher targets are not staff thresholds: they come from the user's regular income
+× the Statistics Finland household saving rate (3% floor).
+
+The voucher ladder (`buildRewards().vouchers`, maths in
+[`vouchers.ts`](../src/lib/analytics/vouchers.ts)) has three tiers, bronze, silver and gold,
+with targets of regular income × max(national saving rate, 3 %) × 1, 2 or 3. Each tier offers
+a grocery voucher (5, 10 or 15 % off one product at the group's grocery stores) or a fuel
+voucher (5, 10 or 15 cents per litre off one top-up at its fuel stations). A stored pick with
+an id from an earlier version of the ladder is read as no pick.
 
 | Achievement               | Earned when…                                                | Default points   |
 | ------------------------- | ----------------------------------------------------------- | ---------------- |

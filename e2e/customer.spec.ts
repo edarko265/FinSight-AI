@@ -10,7 +10,7 @@ test("signs in through the step-by-step form and accepts the terms", async ({ pa
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   // A customer no other test signs in as, so this really is their first sign-in.
   await page.getByLabel("Customer ID").fill(E2E_CUSTOMER_TIGHT);
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill(E2E_DEMO_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).last().click();
   await page.waitForURL("**/dashboard");
@@ -46,15 +46,13 @@ test.describe("signed in", () => {
     await expectAccessible(page);
   });
 
-  test("the coach answers without AI, shows its steps and the transactions behind them", async ({
+  test("the coach answers without AI and shows the transactions behind the answer", async ({
     page,
   }) => {
     await page.goto(
       `/chat?q=${encodeURIComponent("How much did I spend on restaurants last month?")}`,
     );
     await expect(page.getByText("Basic mode (no AI)")).toBeVisible();
-    await page.getByText("How this was worked out").click();
-    await expect(page.getByText(/Added them up in whole cents/)).toBeVisible();
     await page.getByRole("button", { name: /See transactions/ }).click();
     await expect(page.getByRole("heading", { name: /transactions/i })).toBeVisible();
     // Let the sheet finish opening before it is audited.
@@ -65,15 +63,17 @@ test.describe("signed in", () => {
   test("a widget can be added, minimised and removed", async ({ page }) => {
     await page.goto("/dashboard");
     await page.getByRole("button", { name: "New widget" }).click();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByText("The three baskets", { exact: true }).click();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("radio", { name: "Tree map" }).click();
-    await page.getByRole("button", { name: "Next" }).click();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Add to dashboard" }).click();
     const card = page.locator("article").first();
     await expect(card.getByRole("heading")).toContainText("baskets");
+    // The controls appear once the widget is picked up by its title.
+    await card.getByRole("heading").click();
     await card.getByRole("button", { name: /^Minimise/ }).click();
     await expect(card.getByRole("button", { name: /^Open/ })).toBeVisible();
     await card.getByRole("button", { name: /^Remove/ }).click();
@@ -84,20 +84,20 @@ test.describe("signed in", () => {
     await page.goto("/goals");
     await page.getByRole("button", { name: "Add a goal" }).click();
     await page.getByLabel("Name").fill("Summer trip");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByLabel("Amount (€)").fill("1200");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByLabel("Months").fill("12");
-    await page.getByRole("button", { name: "Next" }).click();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Save goal" }).click();
     await expect(page.getByRole("heading", { name: "Summer trip" })).toBeVisible();
 
     await page.getByRole("button", { name: "Set money aside" }).click();
     await page.getByLabel("Amount, €").fill("100");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Mark as set aside" }).click();
-    await expect(page.getByText(/€100\.00 \/ €1,200\.00/)).toBeVisible();
+    await expect(page.getByText(/Already set aside for goals: €100\.00/)).toBeVisible();
     await expectAccessible(page);
   });
 
@@ -105,11 +105,11 @@ test.describe("signed in", () => {
     await page.goto("/plans");
     await page.getByRole("button", { name: "Make a plan" }).click();
     await page.getByText("Saver", { exact: true }).click();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Student budget" }).click();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await expect(page.getByText("Adds up to 100 %")).toBeVisible();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("heading", { name: "Student budget" })).toBeVisible();
     await page.getByRole("button", { name: "Follow this plan" }).click();
@@ -124,7 +124,7 @@ test.describe("signed in", () => {
     await expect(page.getByText(/Other banks are simulated/)).toBeVisible();
     await page.getByRole("button", { name: "Link an account" }).click();
     for (let step = 0; step < 4; step += 1)
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Link the account" }).click();
     await expect(page.getByText("simulated", { exact: true })).toBeVisible();
     await expect(page.getByText(/2 accounts counted/)).toBeVisible();
@@ -165,11 +165,11 @@ test.describe("signed in", () => {
     await expect(page.getByRole("heading", { name: "Income and expenses" })).toBeVisible();
     await page.getByRole("button", { name: "Add expense" }).click();
     await page.getByLabel("Amount in euros").fill("150");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("radio", { name: "Restaurants" }).check();
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByLabel("Note (optional)").fill("Birthday dinner");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await expect(page.getByText("Balance after this")).toBeVisible();
     await page.getByRole("button", { name: "Save" }).click();
 

@@ -8,10 +8,14 @@ import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Suggestions, Wizard, WizardField } from "@/components/ui/Wizard";
-import { api, ApiError } from "@/lib/api-client";
-import type { MessageKey } from "@/lib/i18n/translate";
+import { api } from "@/lib/api-client";
+import { isApiError } from "@/lib/async-action";
 import { DEMO_PERSONAS } from "@/lib/demo/personas";
+import type { MessageKey } from "@/lib/i18n/translate";
+
+const NAVIGATION_TIMEOUT_MS = 10_000;
 
 /** The sign-in page: a welcome with one button, which opens a two-step sign-in. */
 export function LoginForm({ demoPassword }: { demoPassword: string | null }): React.JSX.Element {
@@ -25,18 +29,23 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
   const [code, setCode] = useState("");
   const [error, setError] = useState<MessageKey | null>(null);
 
-  async function signIn(): Promise<boolean> {
-    setError(null);
-    try {
-      await api("/api/auth/login", {
+  const [navigating, setNavigating] = useState(false);
+  // The error shows inside the wizard, so no toast.
+  const login = useAsyncAction(
+    () =>
+      api("/api/auth/login", {
         method: "POST",
         json: { customerId, password, code: needsCode ? code : undefined },
-      });
-      router.replace("/dashboard");
-      return true;
-    } catch (failure) {
-      const status = failure instanceof ApiError ? failure.status : 0;
-      const reason = failure instanceof ApiError ? failure.code : "";
+      }),
+    { errorKey: () => null },
+  );
+
+  async function signIn(): Promise<boolean> {
+    setError(null);
+    const result = await login.run();
+    if (!result.ok) {
+      const status = isApiError(result.error) ? result.error.status : 0;
+      const reason = isApiError(result.error) ? result.error.code : "";
       if (reason === "totp_required") {
         // The password was right: show the extra step instead of an error.
         setNeedsCode(true);
@@ -54,6 +63,17 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
       );
       return false;
     }
+    setNavigating(true);
+    router.replace("/dashboard");
+    // Stay pending until the page changes, so the button is not re-enabled mid-navigation.
+    // If it never does, give the button back with an error instead of leaving it dead.
+    return new Promise<boolean>((resolve) => {
+      window.setTimeout(() => {
+        setNavigating(false);
+        setError("login.unavailable");
+        resolve(false);
+      }, NAVIGATION_TIMEOUT_MS);
+    });
   }
 
   return (
@@ -79,13 +99,13 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
         <Link href="/forgot-password" className="text-center text-sm font-medium text-accent">
           {t("login.forgot")}
         </Link>
-        <p className="text-center text-xs text-muted">{t("login.notBank")}</p>
+        <p className="text-center text-sm text-muted">{t("login.notBank")}</p>
       </div>
 
       <Wizard
         open={open}
         title={t("login.title")}
-        finishLabel={t("login.submit")}
+        finishLabel={navigating ? t("login.submitting") : t("login.submit")}
         error={error ? t(error) : null}
         onClose={() => {
           setOpen(false);

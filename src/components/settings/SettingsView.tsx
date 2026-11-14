@@ -16,6 +16,8 @@ import {
 } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { LanguagePicker } from "@/components/settings/LanguagePicker";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { api } from "@/lib/api-client";
 import type { MessageKey } from "@/lib/i18n/translate";
 
@@ -83,27 +85,43 @@ export function SettingsView(): React.JSX.Element {
   const [confirmErase, setConfirmErase] = useState(false);
   const router = useRouter();
 
+  // `leaving` keeps the buttons busy through the redirect after a successful call.
+  const [leaving, setLeaving] = useState(false);
+
+  const signOutAction = useAsyncAction(() => api("/api/auth/logout", { method: "POST" }));
+  const notificationsAction = useAsyncAction(async (on: boolean) =>
+    on ? await notifications.enable() : (await notifications.disable(), false),
+  );
+  const consentAction = useAsyncAction((accepted: boolean) =>
+    api("/api/consent", { method: "POST", json: { accepted } }),
+  );
+  const eraseAction = useAsyncAction(() => api("/api/privacy/erase", { method: "POST" }));
+
   async function signOut(): Promise<void> {
-    await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    const result = await signOutAction.run();
+    if (!result.ok) return;
+    setLeaving(true);
     router.replace("/login");
   }
 
   async function toggleNotifications(on: boolean): Promise<void> {
-    if (on) toast.notify((await notifications.enable()) ? "notify.on" : "notify.off");
-    else {
-      await notifications.disable();
-      toast.notify("notify.off");
-    }
+    const result = await notificationsAction.run(on);
+    if (!result.ok) return;
+    toast.notify(on && result.value ? "notify.on" : "notify.off");
   }
 
   async function setConsent(accepted: boolean): Promise<void> {
-    await api("/api/consent", { method: "POST", json: { accepted } }).catch(() => undefined);
+    const result = await consentAction.run(accepted);
+    if (!result.ok) return;
     toast.notify(accepted ? "toast.consentOn" : "toast.consentOff");
     refresh();
   }
 
+  // A failed erase must not look like a successful one: stay here and show the error.
   async function erase(): Promise<void> {
-    await api("/api/privacy/erase", { method: "POST" }).catch(() => undefined);
+    const result = await eraseAction.run();
+    if (!result.ok) return;
+    setLeaving(true);
     router.replace("/login");
   }
 
@@ -162,6 +180,7 @@ export function SettingsView(): React.JSX.Element {
             type="checkbox"
             checked={notifications.state === "on"}
             disabled={notifications.state === "unsupported" || notifications.state === "blocked"}
+            aria-disabled={notificationsAction.pending}
             onChange={(event) => void toggleNotifications(event.target.checked)}
             className="size-5 shrink-0 accent-(--accent)"
           />
@@ -178,6 +197,7 @@ export function SettingsView(): React.JSX.Element {
             <input
               type="checkbox"
               checked={me.aiConsent}
+              aria-disabled={consentAction.pending}
               onChange={(event) => void setConsent(event.target.checked)}
               className="size-5 shrink-0 accent-(--accent)"
             />
@@ -196,9 +216,6 @@ export function SettingsView(): React.JSX.Element {
           </Link>
           <Link href="/corrections" className="font-semibold text-accent">
             {t("corrections.title")}
-          </Link>
-          <Link href="/plans" className="font-semibold text-accent">
-            {t("plans.title")}
           </Link>
           <Link href="/mortgage" className="font-semibold text-accent">
             {t("mortgage.title")}
@@ -227,15 +244,23 @@ export function SettingsView(): React.JSX.Element {
               <div className="flex gap-2">
                 <button
                   type="button"
+                  aria-disabled={eraseAction.pending || leaving}
                   onClick={() => void erase()}
-                  className="rounded-full bg-brand px-4 py-2 font-semibold text-on-brand"
+                  className="min-h-11 rounded-full bg-brand px-4 py-2 font-semibold text-on-brand"
                 >
-                  {t("settings.eraseYes")}
+                  {eraseAction.pending || leaving ? (
+                    <PendingLabel>{t("common.erasing")}</PendingLabel>
+                  ) : (
+                    t("settings.eraseYes")
+                  )}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setConfirmErase(false)}
-                  className="rounded-full border border-border px-4 py-2 font-semibold"
+                  aria-disabled={eraseAction.pending || leaving}
+                  onClick={() => {
+                    if (!eraseAction.pending && !leaving) setConfirmErase(false);
+                  }}
+                  className="min-h-11 rounded-full border border-border px-4 py-2 font-semibold"
                 >
                   {t("dashboard.cancel")}
                 </button>
@@ -260,10 +285,15 @@ export function SettingsView(): React.JSX.Element {
           </span>
           <button
             type="button"
+            aria-disabled={signOutAction.pending || leaving}
             onClick={() => void signOut()}
-            className="text-sm font-semibold text-accent"
+            className="min-h-11 text-sm font-semibold text-accent"
           >
-            {t("settings.signOut")}
+            {signOutAction.pending || leaving ? (
+              <PendingLabel>{t("common.signingOut")}</PendingLabel>
+            ) : (
+              t("settings.signOut")
+            )}
           </button>
         </div>
       </Section>

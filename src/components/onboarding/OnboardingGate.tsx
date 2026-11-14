@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { usePreferences } from "@/components/providers/PreferencesProvider";
+import { PendingLabel } from "@/components/ui/Spinner";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import { Wizard, WizardChoices } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
 import type { MessageKey } from "@/lib/i18n/translate";
@@ -79,16 +81,27 @@ export function OnboardingGate({
   const [privacy, setPrivacy] = useState(false);
   const [ai, setAi] = useState<"yes" | "no">("yes");
 
-  async function finish(): Promise<void> {
-    await api("/api/consent", {
+  const [leaving, setLeaving] = useState(false);
+  const consent = useAsyncAction(() =>
+    api("/api/consent", {
       method: "POST",
       json: { terms: true, accepted: aiAvailable && ai === "yes" },
-    });
+    }),
+  );
+  const logout = useAsyncAction(() => api("/api/auth/logout", { method: "POST" }));
+
+  // Returning false keeps the wizard open so the choices are not lost after a failure.
+  async function finish(): Promise<boolean> {
+    const result = await consent.run();
+    if (!result.ok) return false;
     onDone();
+    return true;
   }
 
   async function signOut(): Promise<void> {
-    await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    const result = await logout.run();
+    if (!result.ok) return;
+    setLeaving(true);
     router.replace("/login");
   }
 
@@ -107,10 +120,15 @@ export function OnboardingGate({
           <Agree checked={terms} onChange={setTerms} label={t("onboarding.terms.accept")} />
           <button
             type="button"
+            aria-disabled={logout.pending || leaving}
             onClick={() => void signOut()}
-            className="mt-3 block text-sm text-muted underline"
+            className="mt-3 block min-h-11 text-sm text-muted underline"
           >
-            {t("onboarding.signOut")}
+            {logout.pending || leaving ? (
+              <PendingLabel>{t("common.signingOut")}</PendingLabel>
+            ) : (
+              t("onboarding.signOut")
+            )}
           </button>
         </>
       ),

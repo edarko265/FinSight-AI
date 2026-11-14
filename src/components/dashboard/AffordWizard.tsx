@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useChatDock } from "@/components/chat/ChatDockProvider";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { Suggestions, Wizard, WizardChoices, WizardField } from "@/components/ui/Wizard";
 import { formatMoney } from "@/lib/i18n/config";
@@ -20,7 +20,7 @@ export function AffordWizard({
   onClose: () => void;
 }): React.JSX.Element {
   const { t, locale } = usePreferences();
-  const router = useRouter();
+  const dock = useChatDock();
   const [price, setPrice] = useState("");
   const [days, setDays] = useState<(typeof SPANS)[number]>("7");
   const euros = Number(price.replace(",", "."));
@@ -38,7 +38,7 @@ export function AffordWizard({
           days,
         });
         onClose();
-        router.push(`/chat?q=${encodeURIComponent(question)}`);
+        dock.open({ question });
       }}
       steps={[
         {

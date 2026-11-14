@@ -2,6 +2,8 @@
 
 /* Palette follows S-Pankki's published design system: deep green, mint accent, neutral greys. */
 :root {
+  /* Height of the phone tab bar above the safe-area inset; 0 where there is no tab bar. */
+  --bottom-nav-h: 0rem;
   --background: #f5f5f5;
   --surface: #ffffff;
   --foreground: #1f1f1f;
@@ -24,11 +26,8 @@
   --chart-5: #6a4c9c;
   --chart-6: #b3365e;
   --chart-ink: #ffffff;
-  --chart-ink-5: #ffffff;
-  --chart-bar-muted: #8fc4a5;
-
-  /* Browser-drawn parts (menus, scroll bars, date pickers) follow the theme too. */
-  color-scheme: light;
+  --chart-bar-muted: #b7d9c4;
+  --chart-rest: #4da07a;
 }
 
 /* Dark theme: follows the system unless the user picks a theme in Settings. */
@@ -54,8 +53,7 @@
     --chart-ink: #04291a;
     --chart-ink-5: #04291a;
     --chart-bar-muted: #2c5a43;
-
-    color-scheme: dark;
+    --chart-rest: #348259;
   }
 }
 
@@ -80,8 +78,7 @@
   --chart-ink: #04291a;
   --chart-ink-5: #04291a;
   --chart-bar-muted: #2c5a43;
-
-  color-scheme: dark;
+  --chart-rest: #348259;
 }
 
 @theme inline {
@@ -99,7 +96,21 @@
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --font-sans: var(--font-geist-sans);
+  /* Type floor: nothing in the app is set smaller than text-xs. Reading text uses text-sm. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.25;
   --font-mono: var(--font-geist-mono);
+}
+
+/* Only pages that render the tab bar (marked data-bottom-nav) make room for it. */
+:root:has([data-bottom-nav]) {
+  --bottom-nav-h: 3.75rem;
+}
+
+@media (min-width: 48rem) {
+  :root:has([data-bottom-nav]) {
+    --bottom-nav-h: 0rem;
+  }
 }
 
 body {
@@ -260,6 +271,26 @@ dialog[open] {
   animation: fs-rise 0.24s ease-out both;
 }
 
+@keyframes fs-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+.fs-shimmer {
+  background-color: var(--border);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--foreground) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: fs-shimmer 1.6s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fs-rise,
   .fs-pop,
@@ -271,7 +302,14 @@ dialog[open] {
   .fs-wave,
   .fs-breathe,
   .fs-spin,
+  .fs-shimmer,
+  .animate-pulse,
+  .animate-ping,
+  .animate-spin,
   dialog[open] {
     animation: none;
+  }
+  .animate-ping {
+    opacity: 0;
   }
 }

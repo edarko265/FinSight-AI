@@ -1,6 +1,6 @@
 import { ageBand, customerMetrics } from "@/lib/analytics/benchmarks";
 import { classify, isConsumption } from "@/lib/analytics/classify";
-import { completedMonths, inPeriod, lastCompletedMonth } from "@/lib/analytics/periods";
+import { completedMonths, inPeriod, lastCompletedMonth, monthKey } from "@/lib/analytics/periods";
 import { detectRegularBills } from "@/lib/analytics/recurrence";
 import {
   basketBreakdown,
@@ -8,7 +8,10 @@ import {
   recordedBalance,
   summariseSpending,
 } from "@/lib/analytics/spending";
+import savingRate from "@/lib/analytics/saving-rate-data.json";
 import { mean } from "@/lib/analytics/stats";
+import { voucherLadder } from "@/lib/analytics/vouchers";
+import type { VoucherLadder, VoucherSelection } from "@/lib/contracts/rewards";
 import { forecastFor, type CoachContext, type ToolResult } from "@/lib/coach/tools";
 import { formatMoney } from "@/lib/i18n/config";
 import { hasMessage, translate, type MessageKey, type MessageParams } from "@/lib/i18n/translate";
@@ -318,10 +321,10 @@ export interface RewardsSummary {
   level: "starter" | "bronze" | "silver" | "gold";
   nextLevelAt: number | null;
   achievements: Achievement[];
-  coupons: { id: string; title: string; body: string; unlockAt: number; unlocked: boolean }[];
+  vouchers: VoucherLadder;
 }
 
-/** Points and coupon thresholds. Staff can change these from the admin area. */
+/** Points per achievement. Staff can change these from the admin area. */
 export interface RewardRules {
   points: {
     under_average: number;
@@ -331,7 +334,6 @@ export interface RewardRules {
     investing: number;
     goal: number;
   };
-  couponUnlockAt: { coffee: number; groceries: number; voucher: number };
 }
 
 export const DEFAULT_REWARD_RULES: RewardRules = {
@@ -343,7 +345,6 @@ export const DEFAULT_REWARD_RULES: RewardRules = {
     investing: 50,
     goal: 25,
   },
-  couponUnlockAt: { coffee: 100, groceries: 200, voucher: 350 },
 };
 
 const LEVELS: [RewardsSummary["level"], number][] = [
@@ -356,13 +357,18 @@ const LEVELS: [RewardsSummary["level"], number][] = [
 /**
  * Rewards for progress the data can show: spending below one's own average,
  * a buffer, a surplus, a goal. Measured against the customer's own past,
- * never against other people. The coupons are examples of what a bank's
- * bonus programme could attach.
+ * never against other people. The one exception is the voucher ladder: its
+ * targets come from a public statistic (Statistics Finland's household saving
+ * rate, see `saving-rate-data.json`), applied to the customer's own income.
+ * `selection` is the stored voucher pick; only one for the evaluated month
+ * (the last completed month) counts. The vouchers are examples of what a
+ * bank's bonus programme could attach.
  */
 export function buildRewards(
   ctx: CoachContext,
   goalCount: number,
   rules: RewardRules = DEFAULT_REWARD_RULES,
+  selection: VoucherSelection | null = null,
 ): RewardsSummary {
   const { t, money } = helpers(ctx);
   const txs = ctx.record.transactions;
@@ -446,24 +452,34 @@ export function buildRewards(
   const points = achievements.reduce((sum, item) => sum + (item.earned ? item.points : 0), 0);
   const level = [...LEVELS].reverse().find(([, at]) => points >= at)?.[0] ?? "starter";
   const next = LEVELS.find(([, at]) => at > points);
-  const coupon = (id: string, unlockAt: number) => ({
-    id,
-    title: t(`reward.coupon.${id}.title` as MessageKey),
-    body: t(`reward.coupon.${id}.body` as MessageKey),
-    unlockAt,
-    unlocked: points >= unlockAt,
+  const month = monthKey(last.startInclusive);
+  // Saving in the evaluated month: regular monthly income (the same 6-month mean the target
+  // uses) minus that month's consumption. Income is the mean, not the month's own deposits, so a
+  // salary paid early or late does not show two salaries in one month and none in the next.
+  // Consumption already nets refunds booked as positive purchases. Investing, transfers, the
+  // salary sweep and unknown movements are not consumption and are left out: cashFlow does not
+  // tell refunds from other unknowns, so unknownCents is excluded.
+  const incomeCents = monthlyRoom(ctx).incomeCents;
+  const savedCents = incomeCents - cashFlow(txs, last).consumptionCents;
+  const vouchers = voucherLadder({
+    incomeCents,
+    savedCents,
+    month,
+    nationalRatePercent: savingRate.ratePercent,
+    selection: selection?.month === month ? selection : null,
+    source: {
+      id: "statfin-15ac",
+      name: savingRate.source.name,
+      table: savingRate.source.table,
+      url: savingRate.source.url,
+      licence: savingRate.source.licence,
+      updated: savingRate.source.updated,
+      provisional: savingRate.provisional,
+      year: savingRate.year,
+      ratePercent: savingRate.ratePercent,
+    },
   });
-  return {
-    points,
-    level,
-    nextLevelAt: next?.[1] ?? null,
-    achievements,
-    coupons: [
-      coupon("coffee", rules.couponUnlockAt.coffee),
-      coupon("groceries", rules.couponUnlockAt.groceries),
-      coupon("voucher", rules.couponUnlockAt.voucher),
-    ],
-  };
+  return { points, level, nextLevelAt: next?.[1] ?? null, achievements, vouchers };
 }
 
 const SAVE_HORIZON_DAYS = 30;

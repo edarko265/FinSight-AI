@@ -66,6 +66,13 @@ export const fi: Record<MessageKey, string> = {
   "chat.error": "Jokin meni vikaan. Yritä uudelleen.",
   "chat.addToDashboard": "Lisää koontinäyttöön",
   "chat.added": "Lisätty",
+  "dock.open": "Avaa valmentaja",
+  "dock.close": "Sulje",
+  "dock.expand": "Koko näyttö",
+  "dock.collapse": "Puolikas näyttö",
+  "dock.new": "Uusi keskustelu",
+  "dock.unread": "Lukematon vastaus valmentajalta",
+  "dock.call": "Soita valmentajalle",
   "chat.seeTransactions": "Näytä tapahtumat",
   "chat.why": "Miksi tämä vastaus?",
   "chat.modeAi": "Tekoälyvalmentaja",
@@ -99,8 +106,10 @@ export const fi: Record<MessageKey, string> = {
   "dashboard.cancel": "Peruuta",
   "dashboard.noChart": "En saanut tästä kaaviota. Kokeile nimetä luokka tai ajanjakso.",
 
-  "chart.showValues": "Näytä luvut",
   "evidence.title": "Vastauksen taustalla olevat tapahtumat",
+  "chart.average": "Keskiarvo {amount}",
+  "chart.caption.columns":
+    "Viimeisin kuukausi on tummempi; katkoviiva on kuukausikeskiarvo, {average}.",
   "evidence.count": "{count} tapahtumaa",
   "evidence.empty": "Ei vastaavia tapahtumia tässä datassa ja tällä jaksolla.",
   "evidence.close": "Sulje",
@@ -364,11 +373,36 @@ export const fi: Record<MessageKey, string> = {
   "rewards.next": "{points} pistettä seuraavalle tasolle",
   "rewards.earned": "Ansaittu",
   "rewards.notYet": "Ei vielä",
-  "rewards.coupons": "Kupongit",
   "rewards.unlocked": "Avattu",
-  "rewards.locked": "Aukeaa {points} pisteellä",
-  "rewards.note":
-    "Palkinnot mitataan omiin aiempiin kuukausiisi, ei koskaan muihin ihmisiin. Kupongit ovat esimerkkejä siitä, mitä pankin bonusohjelma voisi tarjota.",
+
+  "voucher.title": "Kuukausittaiset etuudet",
+  "voucher.unavailable":
+    "Etuustavoitteita ei voi vielä asettaa, koska tältä kuulta ei ole tuloa mitattavaksi. Ne ilmestyvät, kun tulosi näkyvät.",
+  "voucher.tier.bronze": "Pronssi",
+  "voucher.tier.silver": "Hopea",
+  "voucher.tier.gold": "Kulta",
+  "voucher.tier.platinum": "Platina",
+  "voucher.tier.diamond": "Timantti",
+  "voucher.stage.prev": "Edellinen vaihe",
+  "voucher.stage.next": "Seuraava vaihe",
+  "voucher.brand.grocery": "ruokakauppoissamme",
+  "voucher.brand.fuel": "huoltoasemillamme",
+  "voucher.kind.grocery.title": "{percent} alennus yhdestä ruokatuotteesta",
+  "voucher.kind.grocery.chosen": "{percent} alennus yhdestä ruokatuotteesta {brand}",
+  "voucher.kind.fuel.title": "{cents} snt/l alennus polttoaineesta",
+  "voucher.kind.fuel.chosen": "{cents} snt/l alennus yhdestä tankkauksesta {brand}",
+  "voucher.next": "Seuraava tavoite",
+  "voucher.progress": "{saved} / {target}",
+  "voucher.choose": "Valitse {tier}-etuus",
+  "voucher.remove": "Poista valinta",
+  "voucher.invalid": "Aiempi valintasi ei ole enää saatavilla. Valitse toinen etuus.",
+  "voucher.toast.picked": "Etuus valittu",
+  "voucher.toast.removed": "Valinta poistettu",
+  "voucher.lockedNow": "Tämä etuus ei ole enää avattu. Päivitimme edistymisesi.",
+  "voucher.confirm": "Valitse tämä etuus",
+  "voucher.choosing": "Valitaan…",
+  "voucher.off": "Etuudet eivät ole tällä hetkellä käytössä.",
+
   "reward.underAverage.title": "Kevyempi kuukausi",
   "reward.underAverage.body":
     "Käytit viime kuussa {amount}, alle kolmen kuukauden keskiarvosi {average}.",
@@ -383,12 +417,6 @@ export const fi: Record<MessageKey, string> = {
   "reward.investing.body": "Sijoitit viime kuussa {amount}.",
   "reward.goal.title": "Asetit tavoitteen",
   "reward.goal.body": "Kerroit valmentajalle, mihin säästät.",
-  "reward.coupon.coffee.title": "Ilmainen kahvi",
-  "reward.coupon.coffee.body": "Esimerkkikuponki: yksi kahvi talon piikkiin.",
-  "reward.coupon.groceries.title": "Lisäbonus ruokaostoksista",
-  "reward.coupon.groceries.body": "Esimerkkikuponki: +1 % bonusta ruokaostoksista kuukauden ajan.",
-  "reward.coupon.voucher.title": "5 €:n etuseteli",
-  "reward.coupon.voucher.body": "Esimerkkikuponki: 5 € alennus seuraavasta ostoksesta.",
   "admin.title": "FinSight-hallinta",
   "admin.login.title": "Ylläpidon kirjautuminen",
   "admin.login.hint": "Vain koostetilastoja. Asiakastietoja ei voi avata täältä.",
@@ -501,6 +529,52 @@ export const fi: Record<MessageKey, string> = {
   "common.restore": "Palauta",
   "common.deleteForever": "Poista pysyvästi",
   "common.moveToBin": "Siirrä roskakoriin",
+  "common.loading": "Ladataan…",
+  "common.saving": "Tallennetaan…",
+  "common.deleting": "Poistetaan…",
+  "common.removing": "Poistetaan…",
+  "common.restoring": "Palautetaan…",
+  "common.sending": "Lähetetään…",
+  "common.signingOut": "Kirjaudutaan ulos…",
+  "common.erasing": "Tietojasi poistetaan…",
+  "common.transcribing": "Litteroidaan…",
+  "common.connecting": "Yhdistetään…",
+  "common.refreshing": "Päivitetään…",
+  "common.loadFailed": "Lataus epäonnistui. Tarkista yhteytesi ja yritä uudelleen.",
+  "common.saveFailed": "Tallennus epäonnistui. Mitään ei muutettu.",
+  "common.retry": "Yritä uudelleen",
+  "info.show": "Lisätietoa",
+  "info.hide": "Piilota lisätiedot",
+  "chart.help.bar":
+    "Pidempi tai korkeampi palkki tarkoittaa enemmän rahaa. Tummempi palkki on suurin erä tai kuukausikaaviossa viimeisin kuukausi. Summat on kirjoitettu näkyviin kaavion yhteyteen.",
+  "chart.help.hbar":
+    "Jokainen rivi on yksi kohde, ja pidempi palkki tarkoittaa enemmän rahaa. Värit vastaavat kaavion alla olevaa luetteloa.",
+  "chart.help.line":
+    "Viiva seuraa summaa jaksosta toiseen. Ylempänä oleva piste tarkoittaa enemmän rahaa, ja iso piste on viimeisin. Summat on lueteltu kaavion alla.",
+  "chart.help.area":
+    "Viiva seuraa summaa ajan yli, ja sen alla oleva väritys helpottaa tason hahmottamista. Ylempänä tarkoittaa enemmän rahaa.",
+  "chart.help.donut":
+    "Rengas on kokonaisuus ja jokainen värillinen osa on yksi sen osista. Suurempi osa on suurempi osuus. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.pie":
+    "Ympyrä on kokonaisuus ja jokainen värillinen siivu on yksi sen osista. Suurempi siivu on suurempi osuus. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.stack":
+    "Palkki on kokonaisuus, joka on jaettu värillisiin osiin. Leveämpi osa on suurempi osuus. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.treemap":
+    "Jokainen lohko on yksi kohde, ja sen pinta-ala kertoo koon: isompi lohko on suurempi summa. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.radial":
+    "Jokainen rengas on yksi kohde, ja pidempi värillinen kaari tarkoittaa suurempaa summaa suurimpaan kohteeseen verrattuna. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.radar":
+    "Jokainen säde on yksi kohde, ja mitä kauempana keskipisteestä sen piste on, sitä suurempi summa. Muoto näyttää, mitkä kohteet erottuvat.",
+  "chart.help.waterfall": "Jokainen palkki lisätään edellisen päälle, ja yhteensä näkyy oikealla.",
+  "chart.help.lollipop":
+    "Jokainen varsi on yksi kohde, ja korkeammalla oleva pallo tarkoittaa enemmän rahaa. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.funnel":
+    "Kohteet on järjestetty suurimmasta pienimpään, joten palkit kapenevat ylhäältä alas. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
+  "chart.help.table":
+    "Kohteet ja niiden summat tavallisena luettelona, ja pieni palkki näyttää kunkin osuuden.",
+  "chart.help.stat": "Summat suurina lukuina, yksi kutakin kohdetta kohden.",
+  "chart.help.flow":
+    "Tulosi vasemmalla jakautuvat oikealla niihin kohteisiin, joihin raha meni. Paksumpi kaista tarkoittaa enemmän rahaa. Kaavion alla oleva luettelo kertoo, mikä väri on mikä.",
   "trash.title": "Roskakori",
   "trash.intro": "Poistamasi asiat säilyvät täällä, kunnes palautat ne tai poistat ne pysyvästi.",
   "trash.empty": "Roskakori on tyhjä.",
@@ -514,8 +588,6 @@ export const fi: Record<MessageKey, string> = {
   "goals.edit.months": "Kuukaudet",
   "views.rename": "Nimeä uudelleen",
   "admin.announcements": "Tiedotteet asiakkaille",
-  "admin.announcements.note":
-    "Näytetään jokaiselle asiakkaalle havaintojen joukossa. Kirjoita kielellä, jota asiakkaasi lukevat.",
   "admin.announcements.title": "Otsikko",
   "admin.announcements.body": "Viesti",
   "admin.announcements.severity": "Tyyppi",
@@ -632,15 +704,13 @@ export const fi: Record<MessageKey, string> = {
   "voice.call.end": "Lopeta puhelu",
   "voice.call.failed": "Puhelua ei voitu aloittaa.",
   "admin.controls": "Hallinta",
-  "admin.controls.note":
-    "Muutokset tulevat voimaan muutamassa sekunnissa ilman käyttöönottoa. Jokainen muutos kirjataan lokiin.",
   "admin.flag.ai": "Tekoälyvalmentaja",
   "admin.flag.ai.note":
     "Pois: kaikki asiakkaat saavat perustilan, eikä mitään lähetetä tekoälypalveluun.",
   "admin.flag.voice": "Ääni",
   "admin.flag.voice.note": "Puhutut kysymykset, puhutut vastaukset ja äänipuhelut.",
   "admin.flag.rewards": "Palkinnot",
-  "admin.flag.rewards.note": "Pisteet, tasot ja kupongit Tavoitteet-sivulla.",
+  "admin.flag.rewards.note": "Pisteet, tasot ja etusetelit Tavoitteet-sivulla.",
   "admin.flag.advisor": "Neuvoja",
   "admin.flag.advisor.note": "Antaa asiakkaiden pyytää neuvojaa valmentajasta.",
   "admin.fee": "Neuvojan maksu",
@@ -663,10 +733,7 @@ export const fi: Record<MessageKey, string> = {
   "admin.rules.points": "Pisteet kustakin saavutuksesta",
   "admin.rules.pointsHint":
     "Aseta, montako pistettä kustakin edistymisestä saa. Putken arvo on kuukautta kohti, enintään kuusi kuukautta.",
-  "admin.rules.coupons": "Milloin kupongit aukeavat",
-  "admin.rules.couponsHint":
-    "Aseta pistemäärä, jonka asiakas tarvitsee kuhunkin kuponkiin. Pienemmät luvut tekevät palkinnoista helpommin saavutettavia.",
-  "admin.rules.summary": "{count} saavutusta · kupongit {a}, {b} ja {c} pisteellä",
+  "admin.rules.summary": "{count} saavutusta · etusetelit käyttävät julkista säästöasteen tilastoa",
   "admin.rule.under_average": "Kevyempi kuukausi",
   "admin.rule.choice_down": "Omat valinnat −10 %",
   "admin.rule.buffer": "Kuukauden laskut katettu",
@@ -679,8 +746,6 @@ export const fi: Record<MessageKey, string> = {
   "admin.aiUsage.month": "Jaksolla",
   "admin.aiUsage.input": "Lähetetyt tokenit",
   "admin.aiUsage.output": "Vastaanotetut tokenit",
-  "admin.aiUsage.note":
-    "Tokenit ovat se, mistä tekoälypalvelu laskuttaa. Kerro palveluntarjoajasi nykyisillä hinnoilla saadaksesi kustannuksen.",
   "admin.aiUsage.empty": "Ei vielä tallennettuja tekoälyvastauksia.",
   "admin.workload": "Neuvojien työkuorma",
   "admin.workload.open": "Avoinna",
@@ -775,7 +840,7 @@ export const fi: Record<MessageKey, string> = {
     "Käytä palvelua vain omaa tiliäsi varten. Älä yritä päästä muiden asiakkaiden tietoihin, kuormittaa palvelua tai käyttää tekoälyä väärin.",
   "terms.rewards.title": "Palkinnot ja neuvoja",
   "terms.rewards.body":
-    "Pisteet ja kupongit ovat esimerkkejä, eikä niillä ole rahallista arvoa. Neuvojakeskustelut ja niiden hinta esitetään esimerkkinä siitä, miten palvelu voisi toimia.",
+    "Pisteet ja etusetelit ovat esimerkkejä, eikä niillä ole rahallista arvoa. Neuvojakeskustelut ja niiden hinta esitetään esimerkkinä siitä, miten palvelu voisi toimia.",
   "terms.changes.title": "Saatavuus ja muutokset",
   "terms.changes.body":
     "Prototyyppi tarjotaan sellaisenaan, ja se voi muuttua tai olla poissa käytöstä. Jos ehdot muuttuvat, sinua pyydetään hyväksymään ne uudelleen.",
@@ -895,16 +960,12 @@ export const fi: Record<MessageKey, string> = {
   "admin.chart.consent": "Suostumusvalinnat",
   "admin.chart.tokens": "Tokenit malleittain",
   "admin.chart.empty": "Ei vielä kaavioitavaa.",
-  "admin.overview.intro":
-    "Mihin asiakkaat käyttävät valmentajaa ja mitä se maksaa. Avaa ruutu nähdäksesi lisää ja toimiaksesi.",
   "admin.notifications.devices": "{count} asiakkaalla on ilmoitukset päällä",
   "admin.notifications.note":
     "Muistutukset lähtevät joka aamu: tavoite, johon laittaa rahaa, pian erääntyvä lasku, väärään suuntaan menevä tottumus tai mahdollinen vaje. Kukin asiakas saa yhden ilmoituksen tärkeimmästä asiasta, josta hänelle ei ole vielä kerrottu. Ilmoituksessa on vain otsikko; summat pysyvät sovelluksessa.",
   "admin.notifications.send": "Lähetä muistutukset nyt",
   "admin.notifications.sending": "Lähetetään…",
   "admin.notifications.result": "{sent} muistutusta lähetetty {customers} asiakkaalle",
-  "admin.notifications.announce":
-    "Tiedotteet lähetetään myös jokaiseen laitteeseen, kun ne julkaistaan.",
   "admin.menu": "Hallinnan osiot",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
@@ -974,8 +1035,6 @@ export const fi: Record<MessageKey, string> = {
   "admin.role.banker": "Henkilökohtainen pankkineuvoja",
   "admin.role.banker.note":
     "Sama kuin neuvoja; asiakkaiden arjen pankkiasioita hoitavalle henkilökunnalle.",
-  "admin.team.intro":
-    "Henkilöt, jotka voivat kirjautua tänne omistajan lisäksi. Jokaisella on oma käyttäjätunnus, salasana ja rooli.",
   "admin.team.add": "Lisää tiimin jäsen",
   "admin.team.edit": "Muokkaa tiimin jäsentä",
   "admin.team.count": "Tiimin jäseniä",
@@ -1001,8 +1060,6 @@ export const fi: Record<MessageKey, string> = {
     "Kirjoita salasana nyt muistiin: se tallennetaan vain tiivisteenä eikä sitä voi näyttää uudelleen.",
   "admin.team.note":
     "Roskakoriin siirtäminen päättää käyttöoikeuden heti. Nimet ja käyttäjätunnukset tallennetaan salattuina, salasanat vain suolattuna tiivisteenä.",
-  "admin.training.intro":
-    "Kun valmentajalla ei ole vastausta, kirjoita vastaus, joka sen olisi pitänyt antaa. Sen jälkeen se antaa sinun vastauksesi sanasta sanaan kaikille kysyjille.",
   "admin.training.gaps": "Mihin valmentaja ei osannut vastata",
   "admin.training.gaps.note":
     "Teemoittain viimeisten 30 päivän ajalta. Kysymykset lajitellaan teemaan saapuessaan ja vain teema lasketaan: kenenkään kysymystä ei tallenneta.",
@@ -1031,8 +1088,6 @@ export const fi: Record<MessageKey, string> = {
   "admin.training.useExample": "Aloita esimerkistä",
   "admin.training.note":
     "Opetetut vastaukset näytetään täsmälleen kirjoitettuina ja merkitään pankin tiimiltä tuleviksi. Niitä käytetään vain, kun mikään laskelma ei sovi kysymykseen.",
-  "admin.trash.intro":
-    "Kaikki henkilökunnan poistama odottaa täällä. Palauta se tai poista pysyvästi.",
   "admin.trash.note": "Pysyvää poistoa ei voi perua.",
   "admin.trash.confirm": "Poistetaanko kaikki {count} kohdetta pysyvästi?",
   "admin.trash.kind.announcement": "Tiedote",
@@ -1200,14 +1255,10 @@ export const fi: Record<MessageKey, string> = {
   "admin.flag.sharing.note":
     "Antaa asiakkaiden jakaa suunnitelmia prosentteina ja kopioida toistensa suunnitelmia.",
   "admin.nav.plans": "Jaetut suunnitelmat",
-  "admin.plans.intro":
-    "Mitä asiakkaat ovat jakaneet keskenään: nimi ja prosentit. Ei jakajaa eikä koskaan summaa.",
   "admin.plans.shared": "Jaettuja suunnitelmia",
   "admin.plans.listed": "Julkaistu kaikille",
   "admin.plans.copies": "Kopiointikertoja",
   "admin.plans.average": "Keskimääräinen jaettu suunnitelma",
-  "admin.plans.average.note":
-    "Osuuksien keskiarvo kaikissa jaetuissa suunnitelmissa: mihin asiakkaat tähtäävät.",
   "admin.plans.top": "Kopioiduimmat",
   "admin.plans.empty": "Ei vielä jaettuja suunnitelmia.",
   "admin.plans.isListed": "julkaistu",
@@ -1407,6 +1458,9 @@ export const fi: Record<MessageKey, string> = {
   "goals.reached": "Tavoite saavutettu.",
   "goals.monthsLeft": "Noin {months} kuukautta lisää suunnitellulla summalla.",
   "goals.aside.cta": "Laita rahaa sivuun",
+  "goals.safeShort": "Turvallisesti säästettävissä",
+  "goals.savedShort": "Säästetty tähän mennessä",
+  "goals.monthsShort": "{months} kk jäljellä",
   "goals.aside.safe":
     "Voisit laittaa nyt sivuun noin {amount} ja silti kattaa kuukauden laskut, välttämättömät menot ja tavallisen kulutuksesi.",
   "goals.aside.none":

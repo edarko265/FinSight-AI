@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { adminCall, adminSubmit } from "@/components/admin/admin-api";
+import {
+  adminCall,
+  adminSubmit,
+  requireResult,
+  unlessSignedOut,
+} from "@/components/admin/admin-api";
+import { LoadState } from "@/components/admin/LoadState";
 import { Panel, Stat } from "@/components/admin/parts";
+import { RowButton } from "@/components/admin/RowButton";
+import { useAdminLoad } from "@/components/admin/use-admin-load";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { useAsyncAction } from "@/components/ui/useAsyncAction";
 import {
   Suggestions,
   Wizard,
@@ -60,24 +69,12 @@ function usernamesFor(name: string): string[] {
 export function Team({ myId }: { myId: string }): React.JSX.Element {
   const { t } = usePreferences();
   const toast = useToast();
-  const [items, setItems] = useState<Member[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  const { data, failed, reload, setData } = useAdminLoad<Result>("/api/admin/staff");
+  const items = data?.staff ?? null;
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<MessageKey | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void adminCall<Result>("/api/admin/staff").then((result) => {
-      if (cancelled) return;
-      if (result) setItems(result.staff);
-      else setFailed(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const live = items?.filter((item) => !item.deletedAt) ?? [];
   const binned = items?.filter((item) => item.deletedAt) ?? [];
@@ -107,26 +104,10 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
       setError(result.error === "username_taken" ? "admin.team.taken" : "toast.error");
       return false;
     }
-    setItems(result.data.staff);
+    setData(result.data);
     toast.notify(editingId ? "toast.updated" : "toast.saved");
     close();
     return true;
-  }
-
-  async function act(id: string, action: "trash" | "restore" | "purge"): Promise<void> {
-    const result = await adminCall<Result>(`/api/admin/staff/${id}`, "POST", { action });
-    if (!result) {
-      toast.fail();
-      return;
-    }
-    setItems(result.staff);
-    toast.notify(
-      action === "trash"
-        ? "toast.movedToBin"
-        : action === "restore"
-          ? "toast.restored"
-          : "toast.deleted",
-    );
   }
 
   const passwordValid = editingId
@@ -135,16 +116,18 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("admin.team.count")} value={String(live.length)} />
-        {ROLES.map((value) => (
-          <Stat
-            key={value}
-            label={role(value)}
-            value={String(live.filter((member) => member.role === value).length)}
-          />
-        ))}
-      </div>
+      {items ? (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat label={t("admin.team.count")} value={String(live.length)} />
+          {ROLES.map((value) => (
+            <Stat
+              key={value}
+              label={role(value)}
+              value={String(live.filter((member) => member.role === value).length)}
+            />
+          ))}
+        </div>
+      ) : null}
       <Panel title={t("admin.team.members")}>
         <button
           type="button"
@@ -153,53 +136,29 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
         >
           {t("admin.team.add")}
         </button>
-        {failed ? <p className="text-sm text-warning">{t("admin.loadFailed")}</p> : null}
+        <LoadState show={!items} failed={failed} onRetry={reload} />
         {items && live.length === 0 ? (
           <p className="text-sm text-muted">{t("admin.team.empty")}</p>
         ) : null}
         <ul className="flex flex-col gap-2">
           {live.map((member) => (
-            <li
+            <MemberRow
               key={member.id}
-              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm"
-            >
-              <span className="min-w-0">
-                <span className="font-semibold">{member.name}</span>
-                {member.id === myId ? (
-                  <span className="text-muted"> · {t("admin.team.you")}</span>
-                ) : null}
-                <span className="block text-muted">
-                  {member.username} · {role(member.role)}
-                </span>
-              </span>
-              <span className="flex gap-4 font-semibold">
-                <button
-                  type="button"
-                  className="text-accent"
-                  onClick={() => {
-                    setEditingId(member.id);
-                    setForm({
-                      name: member.name,
-                      username: member.username,
-                      role: member.role,
-                      password: "",
-                    });
-                    setOpen(true);
-                  }}
-                >
-                  {t("common.edit")}
-                </button>
-                {member.id === myId ? null : (
-                  <button
-                    type="button"
-                    className="text-muted"
-                    onClick={() => void act(member.id, "trash")}
-                  >
-                    {t("common.moveToBin")}
-                  </button>
-                )}
-              </span>
-            </li>
+              member={member}
+              mine={member.id === myId}
+              roleLabel={role(member.role)}
+              onEdit={() => {
+                setEditingId(member.id);
+                setForm({
+                  name: member.name,
+                  username: member.username,
+                  role: member.role,
+                  password: "",
+                });
+                setOpen(true);
+              }}
+              onChange={setData}
+            />
           ))}
         </ul>
         {binned.length > 0 ? (
@@ -207,30 +166,13 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
             <h3 className="text-sm font-semibold">{t("admin.bin")}</h3>
             <ul className="flex flex-col gap-2">
               {binned.map((member) => (
-                <li
+                <MemberRow
                   key={member.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm"
-                >
-                  <span className="text-muted">
-                    {member.name} · {role(member.role)}
-                  </span>
-                  <span className="flex gap-4 font-semibold">
-                    <button
-                      type="button"
-                      className="text-accent"
-                      onClick={() => void act(member.id, "restore")}
-                    >
-                      {t("common.restore")}
-                    </button>
-                    <button
-                      type="button"
-                      className="text-warning"
-                      onClick={() => void act(member.id, "purge")}
-                    >
-                      {t("common.deleteForever")}
-                    </button>
-                  </span>
-                </li>
+                  member={member}
+                  mine={false}
+                  roleLabel={role(member.role)}
+                  onChange={setData}
+                />
               ))}
             </ul>
           </div>
@@ -256,7 +198,7 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
         finishLabel={t("common.save")}
         error={error ? t(error) : null}
         onClose={close}
-        onFinish={submit}
+        onFinish={() => unlessSignedOut(submit)}
         steps={[
           {
             title: t("admin.team.name"),
@@ -360,5 +302,99 @@ export function Team({ myId }: { myId: string }): React.JSX.Element {
         ]}
       />
     </>
+  );
+}
+
+type Action = "trash" | "restore" | "purge";
+
+function MemberRow({
+  member,
+  mine,
+  roleLabel,
+  onEdit,
+  onChange,
+}: {
+  member: Member;
+  mine: boolean;
+  roleLabel: string;
+  /** Only live members can be edited. */
+  onEdit?: () => void;
+  onChange: (result: Result) => void;
+}): React.JSX.Element {
+  const { t } = usePreferences();
+  const toast = useToast();
+  const [which, setWhich] = useState<Action>("trash");
+  const { run, pending } = useAsyncAction(async (action: Action): Promise<void> => {
+    const result = requireResult(
+      await adminCall<Result>(`/api/admin/staff/${member.id}`, "POST", { action }),
+    );
+    onChange(result);
+    toast.notify(
+      action === "trash"
+        ? "toast.movedToBin"
+        : action === "restore"
+          ? "toast.restored"
+          : "toast.deleted",
+    );
+  });
+  const start = (action: Action): void => {
+    setWhich(action);
+    void run(action);
+  };
+
+  if (member.deletedAt) {
+    return (
+      <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm">
+        <span className="text-muted">
+          {member.name} · {roleLabel}
+        </span>
+        <span className="flex gap-4 font-semibold">
+          <RowButton
+            pending={pending}
+            active={which === "restore"}
+            pendingLabel={t("common.restoring")}
+            className="min-h-11 text-accent"
+            onClick={() => start("restore")}
+          >
+            {t("common.restore")}
+          </RowButton>
+          <RowButton
+            pending={pending}
+            active={which === "purge"}
+            pendingLabel={t("common.deleting")}
+            className="min-h-11 text-warning"
+            onClick={() => start("purge")}
+          >
+            {t("common.deleteForever")}
+          </RowButton>
+        </span>
+      </li>
+    );
+  }
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm">
+      <span className="min-w-0">
+        <span className="font-semibold">{member.name}</span>
+        {mine ? <span className="text-muted"> · {t("admin.team.you")}</span> : null}
+        <span className="block text-muted">
+          {member.username} · {roleLabel}
+        </span>
+      </span>
+      <span className="flex gap-4 font-semibold">
+        <button type="button" className="min-h-11 text-accent" onClick={onEdit}>
+          {t("common.edit")}
+        </button>
+        {mine ? null : (
+          <RowButton
+            pending={pending}
+            pendingLabel={t("common.deleting")}
+            className="min-h-11 text-muted"
+            onClick={() => start("trash")}
+          >
+            {t("common.moveToBin")}
+          </RowButton>
+        )}
+      </span>
+    </li>
   );
 }
