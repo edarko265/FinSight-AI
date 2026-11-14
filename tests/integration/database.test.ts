@@ -116,6 +116,92 @@ describe("data at rest", () => {
   });
 });
 
+describe("voucher pick", () => {
+  it("is sealed per customer, only counts for the evaluated month, and drops invalid values", async () => {
+    const { readVoucherPick, writeVoucherPick, clearVoucherPick } =
+      await import("@/lib/coach/vouchers");
+    const { readState, writeState } = await import("@/lib/data/repository");
+    const pick = { month: "2026-08", tierId: "bronze", optionId: "bronze-coffee" } as const;
+    await writeVoucherPick(refA, pick);
+    expect(await readVoucherPick(refA, "2026-09-15")).toEqual(pick);
+    expect(await readVoucherPick(refB, "2026-09-15")).toBeNull();
+    // Another evaluated month: the old pick no longer counts.
+    expect(await readVoucherPick(refA, "2026-10-02")).toBeNull();
+    const raw = await db.query<{ sealed_value: string }>(
+      "SELECT sealed_value FROM customer_state WHERE kind = 'voucher-pick'",
+    );
+    expect(raw[0]?.sealed_value).not.toContain("bronze");
+    await writeState(refA, "voucher-pick", { month: "2026-08", tierId: "x", optionId: "y" });
+    expect(await readVoucherPick(refA, "2026-09-15")).toBeNull();
+    await writeVoucherPick(refA, pick);
+    await clearVoucherPick(refA);
+    expect(await readVoucherPick(refA, "2026-09-15")).toBeNull();
+    expect(await readState(refA, "voucher-pick")).toBeNull();
+  });
+
+  it("treats a corrupt or undecryptable stored pick as no pick", async () => {
+    const { readVoucherPick } = await import("@/lib/coach/vouchers");
+    const { writeState } = await import("@/lib/data/repository");
+    await writeState(refA, "voucher-pick", {
+      month: "2026-08",
+      tierId: "bronze",
+      optionId: "bronze-coffee",
+    });
+    const raw = await db.query<{ sealed_value: string }>(
+      "SELECT sealed_value FROM customer_state WHERE customer_ref = $1 AND kind = 'voucher-pick'",
+      [refA],
+    );
+    // A's ciphertext under B's key cannot be opened.
+    await db.query(
+      "INSERT INTO customer_state (customer_ref, kind, sealed_value) VALUES ($1, 'voucher-pick', $2)",
+      [refB, raw[0]?.sealed_value],
+    );
+    expect(await readVoucherPick(refB, "2026-09-15")).toBeNull();
+    await db.query(
+      "UPDATE customer_state SET sealed_value = 'garbage' WHERE customer_ref = $1 AND kind = 'voucher-pick'",
+      [refA],
+    );
+    expect(await readVoucherPick(refA, "2026-09-15")).toBeNull();
+    await db.query("DELETE FROM customer_state WHERE kind = 'voucher-pick'");
+  });
+
+  it("rejects a locked tier and accepts an unlocked one", async () => {
+    const { buildRewards } = await import("@/lib/coach/advice");
+    const { canSelect } = await import("@/lib/analytics/vouchers");
+    const { loadCustomer } = await import("@/lib/data/repository");
+    const record = await loadCustomer(refA);
+    if (!record) throw new Error("fixture missing");
+    const ctx = { record, asOf: "2026-09-15", locale: "en" as const, benchmarks: [] };
+    // One small purchase and no income: nothing to measure against, so every tier is locked.
+    const { vouchers } = buildRewards(ctx, 0);
+    expect(vouchers.available).toBe(false);
+    expect(canSelect(vouchers, "bronze", "bronze-coffee")).toBe(false);
+    const rich = {
+      ...ctx,
+      record: {
+        ...record,
+        transactions: [
+          {
+            row: 2,
+            date: "2026-08-03",
+            time: "10:00:00",
+            amountCents: 300_000,
+            balanceCents: 300_000,
+            category: "Salary",
+            type: "salary",
+            merchantId: null,
+            mcc: null,
+          },
+        ],
+      },
+    };
+    const open = buildRewards(rich, 0).vouchers;
+    expect(open.tiers[0]?.unlocked).toBe(true);
+    expect(canSelect(open, "bronze", "bronze-coffee")).toBe(true);
+    expect(canSelect(open, "bronze", "silver-coffee")).toBe(false);
+  });
+});
+
 describe("consent", () => {
   it("requires the terms before AI can be switched on, and records withdrawal", async () => {
     const consent = await import("@/lib/coach/consent");

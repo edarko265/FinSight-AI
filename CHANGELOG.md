@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Voucher ladder.** The three point-based example coupons are replaced by four voucher
+  tiers. Each tier's target is regular monthly income × the Finnish household saving rate
+  (Statistics Finland 15ac, 3 % floor) × the tier multiplier, measured on the last completed
+  month's saving. One pick per month, sealed per customer, changeable until the month ends
+  (`POST`/`DELETE /api/goals/voucher`). The admin coupon thresholds are gone; stored settings
+  that still contain them keep working.
+
 - **Coach.** Text and voice conversation in English, Finnish and Swedish; eleven
   calculations (spending, trends, three baskets, money flow, balance, safe to spend,
   what-if, peer comparison, spending pattern, regular payments, recommendations); goals set
