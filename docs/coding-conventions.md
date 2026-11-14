@@ -24,18 +24,24 @@ over personal preference.
 ```
 src/
   app/                 pages and route handlers
-  components/          chat, cards, charts, evidence, layout, ui
+    (app)/             signed-in area
+    (auth)/            sign-in, password reset, privacy, terms
+    admin/             staff dashboard
+    api/               route handlers
+  components/          screens and shared UI (ui/Wizard, providers/ToastProvider, charts)
   lib/
-    ai/                provider adapter, prompts, tool registry
-    analytics/         spending, baskets, recurrence, forecast, scenarios
-    contracts/         shared Zod schemas and serialisable types
-    data/              repositories, category and MCC mappings
-    db/                schema, connection, migrations
-    demo/              persona registry, simulated clock, session
-    security/          encryption, validation, limits
-    money.ts
-scripts/               ingestion and profiling
-tests/                 fixtures, unit, integration, e2e, evals
+    analytics/         spending, baskets, forecast, recurrence, benchmarks
+    coach/             calculations as tools, model path, basic mode, goals, grounding
+    admin/             settings, usage counters, audit, announcements
+    advisor/           hand-over to a human
+    contracts/         shapes shared by server and client
+    data/              ledger codec, repository, source parsing
+    db/                client and SQL migrations
+    i18n/              messages in English, Finnish, Swedish
+    security/          encryption, keys, sessions, rate limits
+    voice/             speech
+scripts/               ingestion, migrations, voice agent, checks
+tests/                 unit, integration
 docs/
 ```
 
@@ -140,3 +146,47 @@ Full detail in [security.md](security.md). The short version:
 - Update the relevant doc and `CHANGELOG.md` in the same pull request that changes
   behaviour.
 - Bank answers go into [decisions.md](decisions.md) the moment we get them.
+
+## 14. User interface rules
+
+These apply to every screen, customer or admin.
+
+- **No bare forms.** A form is opened by a button and built with
+  [`Wizard`](../src/components/ui/Wizard.tsx): one question per step, progress visible from
+  the first step, a hint that says what to enter, and suggestions to tap where they help.
+  End with a review step when more than one thing was entered.
+- **Everything creatable is editable and recoverable.** A new kind of thing needs edit,
+  move to the recycle bin, restore and permanent delete, on whichever side creates it.
+- **Confirm what happened.** After saving, changing, deleting, restoring or sending, call
+  `useToast().notify(...)`. On failure, `useToast().fail()`.
+- **The customer chooses the presentation.** Charts must work as bars, a line or a pie, and
+  be reachable by asking the coach. Do not hard-code one view of the data.
+- **Three languages, always.** Every string comes from
+  [`src/lib/i18n/messages`](../src/lib/i18n/messages). Add a key to `en.ts`, `fi.ts` and
+  `sv.ts` together; a test fails if a key or a placeholder is missing in any language.
+- **Motion is decoration.** Use the `fs-*` classes in `globals.css`; they are switched off
+  for people who prefer reduced motion. Nothing may depend on an animation to be understood.
+
+## 15. Adding a calculation the coach can run
+
+1. Write the calculation as a pure function over transactions in `src/lib/analytics`.
+2. Wrap it as a tool in `src/lib/coach/tools.ts` (or `advice.ts`): it returns text, an
+   optional chart, facts and evidence, all localised.
+3. Register it with an input schema in `src/lib/coach/registry.ts`.
+4. Expose it to the model in `src/lib/coach/llm.ts` and add keywords for basic mode in
+   `src/lib/coach/router.ts`, in all three languages.
+5. Add a test with a hand-authored fixture and exact cent values.
+
+## 16. Database changes
+
+- Add the next numbered `.sql` file in `src/lib/db/migrations`. Never edit one that has
+  been applied.
+- Anything a customer owns is sealed with their key before it is written. Only technical
+  metadata and anonymous aggregates may be plain.
+- Run `pnpm db:migrate` locally and against the hosted database.
+
+## 17. Tests
+
+- `tests/unit` — pure logic with hand-authored fixtures. Money is asserted in exact cents.
+- `tests/integration` — the real migrations and server modules on an in-memory PostgreSQL.
+- Never copy bank data into a test. Never call a paid model from a test.

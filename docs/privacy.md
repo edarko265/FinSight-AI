@@ -8,56 +8,96 @@ processed today; these are the controls a real deployment would build on.
 > real launch needs the bank's data protection officer, a data protection impact
 > assessment, and data processing agreements with each provider.
 
+---
+
 ## Principles and how they are met
 
-| GDPR principle                | In the product                                                                                                                                  |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Lawfulness and transparency   | A plain-language privacy notice at `/privacy` in English, Finnish and Swedish; a consent sheet before the AI coach is used                      |
-| Purpose limitation            | Data is used only to show and explain the customer's own finances                                                                               |
-| Data minimisation             | The AI model receives the question plus totals and short summaries. Never the transaction list, customer ID, account number, age or postal code |
-| Accuracy                      | Every figure is calculated from the source transactions and links to the transactions behind it                                                 |
-| Storage limitation            | Sessions expire after 8 hours; conversations are not stored; saved views and consent live until the customer deletes them                       |
-| Integrity and confidentiality | Field-level encryption with per-customer keys, blind-index lookup, TLS, hashed session tokens (see [security.md](security.md))                  |
-| Accountability                | Consent is recorded with terms version and timestamps for both acceptance and withdrawal                                                        |
+| GDPR principle                | In the product                                                                                                                                                               |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lawfulness and transparency   | Terms of use and a plain-language privacy notice, in English, Finnish and Swedish, accepted at first sign-in. The AI coach is a separate choice                              |
+| Purpose limitation            | Data is used only to show and explain the customer's own finances                                                                                                            |
+| Data minimisation             | The AI model receives the question and totals. Never the transaction list, customer ID, account number, age or postal code. Admin statistics hold counts, not people or text |
+| Accuracy                      | Every figure is calculated from the source transactions, links to the transactions behind it, and the model's wording is checked against it                                  |
+| Storage limitation            | Sessions end after 8 hours; conversations are not stored; what the customer saves lives until they delete it                                                                 |
+| Integrity and confidentiality | Field-level encryption with per-customer keys, blind-index lookup, TLS, hashed session tokens (see [security.md](security.md))                                               |
+| Accountability                | Consent is versioned and timestamped for acceptance and withdrawal; staff actions are written to an audit log                                                                |
 
-## Consent for AI processing
+## What the customer agrees to, and when
 
-- AI is **opt-in**. Until the customer accepts the current terms, the coach answers in basic
-  mode with calculations done on our own server, and nothing is sent to an AI or speech
-  provider.
-- Consent is versioned (`AI_TERMS_VERSION`). Changing the terms asks again.
-- Withdrawing is one switch in Settings and takes effect on the next question.
-- Voice uses a speech provider, so it requires the same consent.
+```mermaid
+flowchart LR
+    S["Sign in"] --> T{"Terms and privacy<br/>accepted?"}
+    T -->|no| O["Three-step acceptance"]
+    O --> T
+    T -->|yes| APP["The app"]
+    APP --> A{"AI coach on?"}
+    A -->|yes| AI["Question + totals go to<br/>an AI provider"]
+    A -->|no| B["Basic mode:<br/>nothing leaves our server"]
+
+    style O fill:#15365F,color:#fff
+    style B fill:#1B7F4B,color:#fff
+```
+
+- **Terms of use and the privacy notice** are required. Until they are accepted, the server
+  refuses every request for the customer's data.
+- **AI processing** is optional and off until the customer says yes. Saying no still gives a
+  working coach. The choice can be changed in Settings at any time and takes effect on the
+  next question.
+- **Voice** uses a speech provider, so it needs the same yes.
+- **Talking to an adviser** shares only what the customer writes in that request.
+- Both the terms and the AI terms carry a version. Changing a version asks again.
 
 ## Data subject rights
 
-| Right                         | Where                                                                                                             |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Access and portability        | Settings → _Download my data_ (`GET /api/privacy/export`), one JSON file                                          |
-| Erasure                       | Settings → _Delete my app data_ (`POST /api/privacy/erase`): saved views, read insights, consent and all sessions |
-| Withdraw consent              | Settings → _AI coach_ switch                                                                                      |
-| Information                   | `/privacy`, linked from the consent sheet and Settings                                                            |
-| No solely automated decisions | The coach explains and estimates; it makes no decision with legal or similar effect                               |
+| Right                         | Where                                                                                                                                                |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Information                   | `/privacy` and `/terms`, linked from the first sign-in and from Settings                                                                             |
+| Access and portability        | Settings → _Download my data_: one JSON file with profile, transactions and their classification, saved views, goals, recycle bin and consent record |
+| Erasure                       | Settings → _Delete my app data_: saved views, goals, recycle bin, read insights, adviser conversations, the consent record and all sessions          |
+| Rectification of app data     | Goals and views can be edited; deleted items can be restored                                                                                         |
+| Withdraw consent              | Settings → _AI coach_                                                                                                                                |
+| No solely automated decisions | The coach explains and estimates; it makes no decision with legal or similar effect. A human adviser can be asked for                                |
 
 The transaction ledger is the bank's record. In a real deployment its erasure follows the
 bank's retention rules; because each customer's data is sealed with their own derived key,
 retiring that key makes it unreadable everywhere, including in backups.
 
-## Processors
+## Who receives what
 
-| Provider                                 | Receives                                                        | Only when                                    |
-| ---------------------------------------- | --------------------------------------------------------------- | -------------------------------------------- |
-| Language model (OpenAI or Google Gemini) | The question, recent conversation turns, and aggregated results | AI is enabled and the customer has consented |
-| ElevenLabs                               | Spoken question audio; the coach's answer text                  | Voice is used and the customer has consented |
-| Database host (PostgreSQL, EU region)    | Ciphertext only                                                 | Always                                       |
+| Receiver                                 | Receives                                                                                                                                                                                                | Only when                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Language model (OpenAI or Google Gemini) | The question, recent conversation turns, and totals and summaries from the calculations                                                                                                                 | The AI coach is on in Admin and the customer has agreed |
+| ElevenLabs, speech                       | The recording of a spoken question; the text of an answer to be read aloud                                                                                                                              | Voice is used and the customer has agreed               |
+| ElevenLabs, voice call                   | The live audio of the call; the question as heard; the answer text our coach returned. The call is run by an ElevenLabs agent, which uses a language model on ElevenLabs' side to hold the conversation | A voice call is started and the customer has agreed     |
+| Database host                            | Ciphertext, blind indexes and anonymous counters                                                                                                                                                        | Always                                                  |
+| A bank adviser                           | The topic, the chosen call time, the customer's note and messages, under a pseudonym                                                                                                                    | The customer requests an adviser                        |
+
+None of them receives the transaction list, the customer ID, the account number, age or
+postal code.
 
 Before real data: sign data processing agreements, choose EU data residency and
 zero-retention options where the provider offers them, and document international transfers.
 
+## What staff can see
+
+- **Counts**: how many questions per topic, language and day; how many consents; how many
+  goals. Never who, and never the text.
+- **Themes** of questions the coach could not calculate. The question is reduced to a theme
+  when it arrives and is not kept.
+- **Announcement reach**: how many customers saw each one, not which.
+- **Adviser requests**: what the customer chose to share, under a pseudonym.
+- **Not** a customer's transactions, balance or profile. No admin route returns them.
+
+## Rewards
+
+Rewards compare a customer with their own earlier months, never with other customers, and
+never score or rank a person. Peer comparisons use percentiles of groups of at least 30.
+
 ## Still required before real customers
 
-- Data protection impact assessment (profiling of financial behaviour)
+- A data protection impact assessment (the service profiles financial behaviour)
 - The bank's lawful-basis decision and records of processing
-- Processor agreements and transfer assessments
+- Processor agreements and transfer assessments for the AI and speech providers
 - Breach response and retention procedures
 - Strong customer authentication in place of the demo sign-in
+- Individual staff accounts for advisers, with access to adviser requests logged per person

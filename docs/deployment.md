@@ -67,6 +67,31 @@ Vercel's own integration, so there is only one deployer.
 
 CI (`pr-validation.yml`, `security.yml`) runs on every pull request into `dev` or `main`.
 
+## After a schema change
+
+Migrations are not run by the deployment. When a pull request adds a file under
+`src/lib/db/migrations`, apply it to the hosted database from your machine, with
+`DATABASE_URL` pointing at it:
+
+```bash
+pnpm db:migrate
+pnpm db:check
+```
+
+The app keeps working with older data while a migration is pending only if the new code
+does not need the new table yet, so apply migrations **before** promoting to `main`.
+
+## Voice call
+
+The realtime voice call needs an ElevenLabs agent. It is created once:
+
+```bash
+pnpm voice:setup          # prints an agent id
+```
+
+Put the ID in `ELEVENLABS_AGENT_ID`, locally and in Vercel. The API key needs these
+permissions: Text to Speech, Speech to Text, Voices (read) and ElevenAgents (write).
+
 ## Before sharing the link
 
 - Change `ADMIN_PASSWORD` and `DEMO_LOGIN_PASSWORD` from the local defaults.
