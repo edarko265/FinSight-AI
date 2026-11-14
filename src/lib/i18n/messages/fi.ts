@@ -21,6 +21,8 @@ export const fi: Record<MessageKey, string> = {
   "login.submitting": "Kirjaudutaan…",
   "login.forgot": "Unohditko salasanan?",
   "login.error": "Asiakastunnus tai salasana on väärin.",
+  "login.unavailable":
+    "Kirjautuminen ei ole juuri nyt käytettävissä. Yritä hetken kuluttua uudelleen.",
   "login.tooMany": "Liian monta yritystä. Odota hetki ja yritä uudelleen.",
   "login.demoTitle": "Demoasiakkaat",
   "login.demoHint": "Tämä on demo synteettisellä datalla. Valitse asiakas, niin lomake täytetään.",

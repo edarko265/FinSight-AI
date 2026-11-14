@@ -21,6 +21,7 @@ export const en = {
   "login.submitting": "Signing in…",
   "login.forgot": "Forgot password?",
   "login.error": "That customer ID or password is not right.",
+  "login.unavailable": "Sign-in is not available right now. Please try again in a moment.",
   "login.tooMany": "Too many attempts. Please wait a minute and try again.",
   "login.demoTitle": "Demo customers",
   "login.demoHint": "This is a demo on synthetic data. Pick a customer to fill in the form.",

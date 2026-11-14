@@ -21,6 +21,7 @@ export const sv: Record<MessageKey, string> = {
   "login.submitting": "Loggar in…",
   "login.forgot": "Glömt lösenordet?",
   "login.error": "Kund-ID eller lösenord stämmer inte.",
+  "login.unavailable": "Inloggningen är inte tillgänglig just nu. Försök igen om en stund.",
   "login.tooMany": "För många försök. Vänta en minut och försök igen.",
   "login.demoTitle": "Demokunder",
   "login.demoHint": "Det här är en demo med syntetisk data. Välj en kund så fylls formuläret i.",

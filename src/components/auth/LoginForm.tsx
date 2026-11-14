@@ -19,7 +19,9 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
   const [open, setOpen] = useState(false);
   const [customerId, setCustomerId] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<"login.error" | "login.tooMany" | null>(null);
+  const [error, setError] = useState<"login.error" | "login.tooMany" | "login.unavailable" | null>(
+    null,
+  );
 
   async function signIn(): Promise<void> {
     setError(null);
@@ -27,8 +29,10 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
       await api("/api/auth/login", { method: "POST", json: { customerId, password } });
       router.replace("/dashboard");
     } catch (failure) {
+      const status = failure instanceof ApiError ? failure.status : 0;
+      // A server fault is not the user's mistake: say so instead of blaming the password.
       setError(
-        failure instanceof ApiError && failure.status === 429 ? "login.tooMany" : "login.error",
+        status === 429 ? "login.tooMany" : status === 401 ? "login.error" : "login.unavailable",
       );
     }
   }

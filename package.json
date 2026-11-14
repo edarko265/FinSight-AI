@@ -16,7 +16,8 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:migrate": "tsx scripts/migrate.ts",
     "data:ingest": "tsx scripts/ingest.ts",
-    "voice:setup": "tsx scripts/setup-voice-agent.ts"
+    "voice:setup": "tsx scripts/setup-voice-agent.ts",
+    "db:check": "tsx scripts/db-check.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.119",
