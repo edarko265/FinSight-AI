@@ -741,6 +741,53 @@ export const en = {
   "admin.provider.gemini": "Google Gemini",
   "admin.provider.ready": "Key configured",
   "admin.provider.noKey": "No key configured",
+  "onboarding.title": "Before you start",
+  "onboarding.finish": "Agree and continue",
+  "onboarding.terms.title": "Terms of use",
+  "onboarding.terms.hint":
+    "Please read how this service works and what it is not. You need to accept these terms to use FinSight-AI.",
+  "onboarding.terms.accept": "I accept the terms of use",
+  "onboarding.terms.read": "Read the full terms",
+  "onboarding.privacy.title": "Your data and privacy",
+  "onboarding.privacy.hint":
+    "This is how your information is used and protected. Confirm that you have read it.",
+  "onboarding.privacy.accept": "I have read the privacy notice",
+  "onboarding.privacy.point.what":
+    "We use your account transactions to show and explain your own finances to you.",
+  "onboarding.privacy.point.secure":
+    "Your data is encrypted with a key that belongs only to your account.",
+  "onboarding.privacy.point.rights":
+    "You can download your data, delete what the app stores, and change your choices in Settings at any time.",
+  "onboarding.ai.title": "Do you want the AI coach?",
+  "onboarding.ai.hint":
+    "This one is your choice, and you can change it later in Settings. With AI on, your question and totals calculated from your transactions go to an AI service. Your transaction list and identity never do.",
+  "onboarding.ai.yes": "Yes, use the AI coach",
+  "onboarding.ai.yesNote": "Free-form questions, voice and smarter advice",
+  "onboarding.ai.no": "Not now",
+  "onboarding.ai.noNote": "The coach still answers common questions, with calculations done here",
+  "onboarding.signOut": "I do not agree, sign me out",
+  "terms.title": "Terms of use",
+  "terms.intro":
+    "FinSight-AI is a prototype built for a hackathon. It runs on synthetic data and is not a banking service.",
+  "terms.service.title": "What the service does",
+  "terms.service.body":
+    "It shows and explains spending, estimates what is safe to spend, runs what-if scenarios and helps you set savings goals, all calculated from the account's transactions.",
+  "terms.advice.title": "Not financial advice",
+  "terms.advice.body":
+    "The coach explains and estimates. It does not give investment, credit, tax or legal advice, and its estimates are not guarantees. For advice, ask to talk to a person.",
+  "terms.ai.title": "About AI answers",
+  "terms.ai.body":
+    "Figures are calculated by the service, not by the AI. The AI words the explanation and can still be wrong or unclear, so check the numbers and the transactions shown with each answer before acting on them.",
+  "terms.use.title": "Using it fairly",
+  "terms.use.body":
+    "Use the service for your own account only. Do not try to reach other customers' data, overload the service or misuse the AI.",
+  "terms.rewards.title": "Rewards and adviser",
+  "terms.rewards.body":
+    "Points and coupons are examples and have no monetary value. Adviser conversations and their price are shown as an example of how the service could work.",
+  "terms.changes.title": "Availability and changes",
+  "terms.changes.body":
+    "The prototype is provided as it is and may change or be unavailable. If these terms change you will be asked to accept them again.",
+  "settings.termsLink": "Terms of use",
   "coach.fallback":
     "I can show where your money goes, what is safe to spend, what a cut would save, your regular payments, or how you compare with people your age.",
   "coach.statfin.title": "You and households in Finland",

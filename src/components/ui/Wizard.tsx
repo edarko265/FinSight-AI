@@ -23,6 +23,8 @@ interface WizardProps {
   onFinish: () => Promise<void> | void;
   /** Shown above the buttons, for example when saving failed. */
   error?: string | null;
+  /** False for a step the user must complete, such as accepting terms: no close button, no Escape. */
+  dismissable?: boolean;
 }
 
 /**
@@ -38,6 +40,7 @@ export function Wizard({
   onClose,
   onFinish,
   error,
+  dismissable = true,
 }: WizardProps): React.JSX.Element {
   const { t } = usePreferences();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -81,6 +84,9 @@ export function Wizard({
     <dialog
       ref={dialogRef}
       onClose={close}
+      onCancel={(event) => {
+        if (!dismissable) event.preventDefault();
+      }}
       aria-labelledby="wizard-title"
       className="m-0 mx-auto mt-auto max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-black/50 open:flex"
     >
@@ -88,14 +94,16 @@ export function Wizard({
         <h2 id="wizard-title" className="text-base font-semibold">
           {title}
         </h2>
-        <button
-          type="button"
-          onClick={close}
-          aria-label={t("evidence.close")}
-          className="-m-1 rounded-full p-1 text-muted"
-        >
-          <CloseIcon />
-        </button>
+        {dismissable ? (
+          <button
+            type="button"
+            onClick={close}
+            aria-label={t("evidence.close")}
+            className="-m-1 rounded-full p-1 text-muted"
+          >
+            <CloseIcon />
+          </button>
+        ) : null}
       </header>
 
       <div className="px-5 pt-3">

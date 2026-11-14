@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { usePreferences } from "@/components/providers/PreferencesProvider";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api-client";
 
@@ -23,6 +24,10 @@ export interface Me {
   asOf: string;
   aiEnabled: boolean;
   aiConsent: boolean;
+  /** False until the customer accepts the terms of use and privacy notice. */
+  termsAccepted: boolean;
+  /** True once the customer has said yes or no to the AI coach. */
+  aiDecided: boolean;
   voiceEnabled: boolean;
   voiceAgentEnabled: boolean;
   advisorEnabled: boolean;
@@ -49,7 +54,10 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
   const [me, setMe] = useState<Me | null>(null);
   const [tick, setTick] = useState(0);
 
+  const ready = me?.termsAccepted === true;
+
   useEffect(() => {
+    if (!ready) return;
     let cancelled = false;
     api<Overview>(`/api/overview?locale=${locale}`)
       .then((data) => {
@@ -59,7 +67,7 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
     return () => {
       cancelled = true;
     };
-  }, [locale, tick]);
+  }, [locale, tick, ready]);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,7 +89,16 @@ export function OverviewProvider({ children }: { children: React.ReactNode }): R
 
   const refresh = useCallback(() => setTick((value) => value + 1), []);
   const value = useMemo(() => ({ overview, me, refresh }), [overview, me, refresh]);
-  return <OverviewContext.Provider value={value}>{children}</OverviewContext.Provider>;
+  return (
+    <OverviewContext.Provider value={value}>
+      {/* Nothing of the customer's is shown until the terms are accepted. */}
+      {me && !me.termsAccepted ? (
+        <OnboardingGate aiAvailable={me.aiEnabled} onDone={refresh} />
+      ) : (
+        children
+      )}
+    </OverviewContext.Provider>
+  );
 }
 
 export function useOverview(): OverviewValue {

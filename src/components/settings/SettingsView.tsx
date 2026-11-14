@@ -159,6 +159,9 @@ export function SettingsView(): React.JSX.Element {
           <Link href="/privacy" className="font-semibold text-accent">
             {t("settings.privacyLink")}
           </Link>
+          <Link href="/terms" className="font-semibold text-accent">
+            {t("settings.termsLink")}
+          </Link>
           <Link href="/trash" className="font-semibold text-accent">
             {t("trash.open")}
           </Link>

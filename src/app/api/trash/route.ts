@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { restoreGoal } from "@/lib/coach/goals";
 import { emptyTrash, listTrash, takeFromTrash } from "@/lib/coach/trash";
 import { restoreToDashboard } from "@/lib/coach/views";
@@ -9,6 +9,8 @@ import { restoreToDashboard } from "@/lib/coach/views";
 export async function GET(): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   const items = await listTrash(ctx.customerRef);
   return Response.json({
     items: items.map(({ id, kind, label, deletedAt }) => ({ id, kind, label, deletedAt })),
@@ -26,6 +28,8 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
 
   if (parsed.data.action === "empty") {
     await emptyTrash(ctx.customerRef);

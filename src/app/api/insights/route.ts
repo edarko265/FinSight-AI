@@ -1,6 +1,6 @@
 import { countAnnouncementViews } from "@/lib/admin/announcements";
 import { allInsights } from "@/lib/coach/all-insights";
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { readState, writeState } from "@/lib/data/repository";
 
 const PREFIX = "announcement-";
@@ -9,6 +9,8 @@ const UUID_LENGTH = 36;
 export async function GET(request: Request): Promise<Response> {
   const ctx = await getSessionContext(new URL(request.url).searchParams.get("locale"));
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   const read = new Set((await readState<string[]>(ctx.customerRef, "insights_read")) ?? []);
   const insights = await allInsights(ctx);
 
@@ -33,6 +35,8 @@ export async function GET(request: Request): Promise<Response> {
 export async function POST(): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   await writeState(
     ctx.customerRef,
     "insights_read",

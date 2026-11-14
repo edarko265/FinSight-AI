@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "fs_session";
 const ADMIN_COOKIE = "fs_admin";
-const PUBLIC_PATHS = ["/login", "/forgot-password", "/privacy"];
+const PUBLIC_PATHS = ["/login", "/forgot-password", "/privacy", "/terms"];
 
 /**
  * Sends signed-out visitors to the sign-in page. This only checks that a

@@ -731,6 +731,53 @@ export const sv: Record<MessageKey, string> = {
   "admin.provider.gemini": "Google Gemini",
   "admin.provider.ready": "Nyckel konfigurerad",
   "admin.provider.noKey": "Ingen nyckel konfigurerad",
+  "onboarding.title": "Innan du börjar",
+  "onboarding.finish": "Godkänn och fortsätt",
+  "onboarding.terms.title": "Användarvillkor",
+  "onboarding.terms.hint":
+    "Läs hur tjänsten fungerar och vad den inte är. Du behöver godkänna villkoren för att använda FinSight-AI.",
+  "onboarding.terms.accept": "Jag godkänner användarvillkoren",
+  "onboarding.terms.read": "Läs de fullständiga villkoren",
+  "onboarding.privacy.title": "Dina uppgifter och din integritet",
+  "onboarding.privacy.hint":
+    "Så används och skyddas dina uppgifter. Bekräfta att du har läst detta.",
+  "onboarding.privacy.accept": "Jag har läst integritetsmeddelandet",
+  "onboarding.privacy.point.what":
+    "Vi använder dina kontotransaktioner för att visa och förklara din egen ekonomi för dig.",
+  "onboarding.privacy.point.secure":
+    "Dina uppgifter krypteras med en nyckel som bara hör till ditt konto.",
+  "onboarding.privacy.point.rights":
+    "Du kan ladda ner dina uppgifter, radera det appen lagrar och ändra dina val i Inställningar när som helst.",
+  "onboarding.ai.title": "Vill du ha AI-coachen?",
+  "onboarding.ai.hint":
+    "Det här är ditt val, och du kan ändra det senare i Inställningar. Med AI på skickas din fråga och summor som räknats fram ur dina transaktioner till en AI-tjänst. Din transaktionslista och identitet skickas aldrig.",
+  "onboarding.ai.yes": "Ja, använd AI-coachen",
+  "onboarding.ai.yesNote": "Fria frågor, röst och smartare råd",
+  "onboarding.ai.no": "Inte nu",
+  "onboarding.ai.noNote": "Coachen svarar ändå på vanliga frågor, med beräkningar som görs här",
+  "onboarding.signOut": "Jag godkänner inte, logga ut mig",
+  "terms.title": "Användarvillkor",
+  "terms.intro":
+    "FinSight-AI är en prototyp byggd för ett hackathon. Den körs på syntetisk data och är ingen banktjänst.",
+  "terms.service.title": "Vad tjänsten gör",
+  "terms.service.body":
+    "Den visar och förklarar utgifter, uppskattar vad som är tryggt att använda, räknar på tänk om-scenarier och hjälper dig sätta sparmål, allt beräknat utifrån kontots transaktioner.",
+  "terms.advice.title": "Inte finansiell rådgivning",
+  "terms.advice.body":
+    "Coachen förklarar och uppskattar. Den ger inte investerings-, kredit-, skatte- eller juridisk rådgivning, och uppskattningarna är inga garantier. Be att få prata med en människa om du behöver rådgivning.",
+  "terms.ai.title": "Om AI-svar",
+  "terms.ai.body":
+    "Siffrorna räknas fram av tjänsten, inte av AI:n. AI:n formulerar förklaringen och kan ändå ha fel eller vara otydlig, så kontrollera siffrorna och transaktionerna som visas med varje svar innan du agerar på dem.",
+  "terms.use.title": "Rättvis användning",
+  "terms.use.body":
+    "Använd tjänsten bara för ditt eget konto. Försök inte komma åt andra kunders uppgifter, överbelasta tjänsten eller missbruka AI:n.",
+  "terms.rewards.title": "Belöningar och rådgivare",
+  "terms.rewards.body":
+    "Poäng och kuponger är exempel och har inget penningvärde. Rådgivarsamtal och deras pris visas som exempel på hur tjänsten skulle kunna fungera.",
+  "terms.changes.title": "Tillgänglighet och ändringar",
+  "terms.changes.body":
+    "Prototypen tillhandahålls i befintligt skick och kan ändras eller vara otillgänglig. Om villkoren ändras ombeds du godkänna dem igen.",
+  "settings.termsLink": "Användarvillkor",
   "coach.fallback":
     "Jag kan visa vart dina pengar tar vägen, vad som är tryggt att använda, vad en minskning skulle spara, dina regelbundna betalningar eller hur du ligger till jämfört med jämnåriga.",
   "coach.statfin.title": "Du och hushållen i Finland",

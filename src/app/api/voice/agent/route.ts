@@ -1,7 +1,7 @@
 import { getSettings } from "@/lib/admin/settings";
 import { recordUsage } from "@/lib/admin/usage";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { getEnv } from "@/lib/env";
 import { rateLimit } from "@/lib/security/session";
 
@@ -13,6 +13,8 @@ import { rateLimit } from "@/lib/security/session";
 export async function GET(): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   const env = getEnv();
   const settings = await getSettings();
   if (!settings.features.voice || !env.ELEVENLABS_API_KEY || !env.ELEVENLABS_AGENT_ID) {

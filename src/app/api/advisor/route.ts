@@ -9,12 +9,14 @@ import {
   currentRequest,
   nextFeeCents,
 } from "@/lib/advisor/handoff";
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 
 /** The customer's current adviser conversation, the available call times and what the next request costs. */
 export async function GET(): Promise<Response> {
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   return Response.json({
     request: await currentRequest(ctx.customerRef),
     slots: callSlots(ctx.asOf),
@@ -33,6 +35,8 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   if (!(await getSettings()).features.advisor) {
     return Response.json({ error: "unavailable" }, { status: 503 });
   }

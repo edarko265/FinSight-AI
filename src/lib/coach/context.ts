@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
+import { hasAcceptedTerms, readConsent } from "@/lib/coach/consent";
 import type { CoachContext } from "@/lib/coach/tools";
 import { loadBenchmarks, loadCustomer } from "@/lib/data/repository";
 import { getEnv } from "@/lib/env";
@@ -36,4 +37,14 @@ export async function getSessionContext(preferredLocale?: unknown): Promise<Sess
 
 export function unauthorized(): Response {
   return Response.json({ error: "unauthorized" }, { status: 401 });
+}
+
+/**
+ * Blocks a request until the customer has accepted the terms of use and the
+ * privacy notice. Returns a response to send, or null to carry on. Used by
+ * every route that shows or changes customer data.
+ */
+export async function termsRequired(ctx: SessionContext): Promise<Response | null> {
+  if (hasAcceptedTerms(await readConsent(ctx.customerRef))) return null;
+  return Response.json({ error: "terms_required" }, { status: 403 });
 }

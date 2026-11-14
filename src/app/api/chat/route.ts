@@ -4,7 +4,7 @@ import { themeOf } from "@/lib/admin/themes";
 import { recordUsage } from "@/lib/admin/usage";
 import { answerQuestion } from "@/lib/coach/answer";
 import { hasAiConsent, readConsent } from "@/lib/coach/consent";
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { rateLimit } from "@/lib/security/session";
 
 /** Subjects the coach cannot calculate, whatever tool the model reached for. */
@@ -34,6 +34,8 @@ export async function POST(request: Request): Promise<Response> {
 
   const ctx = await getSessionContext(parsed.data.locale);
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   if (!rateLimit(`chat:${ctx.customerRef}`, 20, 60_000)) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }

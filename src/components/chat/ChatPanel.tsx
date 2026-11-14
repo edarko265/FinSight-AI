@@ -295,11 +295,14 @@ export function ChatPanel({
 
       <EvidenceSheet evidence={evidence} onClose={() => setEvidence(null)} />
       <ConsentSheet
-        open={Boolean(me?.aiEnabled && !me.aiConsent && !declined)}
+        open={Boolean(me?.aiEnabled && !me.aiConsent && !me.aiDecided && !declined)}
         onChoose={(accepted) => {
           setDeclined(!accepted);
           if (accepted) {
             void api("/api/consent", { method: "POST", json: { accepted: true } }).then(refresh);
+          } else {
+            // Remember the "no", so the question is not asked again on every visit.
+            void api("/api/consent", { method: "POST", json: { accepted: false } }).then(refresh);
           }
         }}
       />

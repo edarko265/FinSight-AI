@@ -732,6 +732,54 @@ export const fi: Record<MessageKey, string> = {
   "admin.provider.gemini": "Google Gemini",
   "admin.provider.ready": "Avain määritetty",
   "admin.provider.noKey": "Avainta ei ole määritetty",
+  "onboarding.title": "Ennen kuin aloitat",
+  "onboarding.finish": "Hyväksy ja jatka",
+  "onboarding.terms.title": "Käyttöehdot",
+  "onboarding.terms.hint":
+    "Lue, miten palvelu toimii ja mitä se ei ole. Sinun on hyväksyttävä nämä ehdot käyttääksesi FinSight-AI:ta.",
+  "onboarding.terms.accept": "Hyväksyn käyttöehdot",
+  "onboarding.terms.read": "Lue ehdot kokonaan",
+  "onboarding.privacy.title": "Tietosi ja yksityisyytesi",
+  "onboarding.privacy.hint":
+    "Näin tietojasi käytetään ja suojataan. Vahvista, että olet lukenut tämän.",
+  "onboarding.privacy.accept": "Olen lukenut tietosuojaselosteen",
+  "onboarding.privacy.point.what":
+    "Käytämme tilitapahtumiasi näyttääksemme ja selittääksemme sinulle oman taloutesi.",
+  "onboarding.privacy.point.secure":
+    "Tietosi salataan avaimella, joka kuuluu vain sinun tilillesi.",
+  "onboarding.privacy.point.rights":
+    "Voit ladata tietosi, poistaa sovelluksen tallentamat tiedot ja muuttaa valintojasi asetuksissa milloin tahansa.",
+  "onboarding.ai.title": "Haluatko tekoälyvalmentajan?",
+  "onboarding.ai.hint":
+    "Tämä on sinun valintasi, ja voit muuttaa sitä myöhemmin asetuksissa. Kun tekoäly on päällä, kysymyksesi ja tapahtumistasi lasketut summat lähetetään tekoälypalveluun. Tapahtumaluetteloasi ja henkilöllisyyttäsi ei koskaan lähetetä.",
+  "onboarding.ai.yes": "Kyllä, käytä tekoälyvalmentajaa",
+  "onboarding.ai.yesNote": "Vapaamuotoiset kysymykset, ääni ja älykkäämmät neuvot",
+  "onboarding.ai.no": "Ei nyt",
+  "onboarding.ai.noNote":
+    "Valmentaja vastaa silti yleisimpiin kysymyksiin täällä tehdyillä laskelmilla",
+  "onboarding.signOut": "En hyväksy, kirjaa minut ulos",
+  "terms.title": "Käyttöehdot",
+  "terms.intro":
+    "FinSight-AI on hackathonia varten rakennettu prototyyppi. Se käyttää synteettistä dataa eikä ole pankkipalvelu.",
+  "terms.service.title": "Mitä palvelu tekee",
+  "terms.service.body":
+    "Se näyttää ja selittää kulutusta, arvioi turvallisesti käytettävissä olevan summan, laskee entä jos -tilanteita ja auttaa asettamaan säästötavoitteita. Kaikki lasketaan tilin tapahtumista.",
+  "terms.advice.title": "Ei talousneuvontaa",
+  "terms.advice.body":
+    "Valmentaja selittää ja arvioi. Se ei anna sijoitus-, luotto-, vero- tai oikeudellista neuvontaa, eivätkä sen arviot ole takuita. Jos tarvitset neuvontaa, pyydä keskustelua ihmisen kanssa.",
+  "terms.ai.title": "Tekoälyn vastauksista",
+  "terms.ai.body":
+    "Luvut laskee palvelu, ei tekoäly. Tekoäly muotoilee selityksen ja voi silti olla väärässä tai epäselvä, joten tarkista kunkin vastauksen luvut ja tapahtumat ennen kuin toimit niiden perusteella.",
+  "terms.use.title": "Reilu käyttö",
+  "terms.use.body":
+    "Käytä palvelua vain omaa tiliäsi varten. Älä yritä päästä muiden asiakkaiden tietoihin, kuormittaa palvelua tai käyttää tekoälyä väärin.",
+  "terms.rewards.title": "Palkinnot ja neuvoja",
+  "terms.rewards.body":
+    "Pisteet ja kupongit ovat esimerkkejä, eikä niillä ole rahallista arvoa. Neuvojakeskustelut ja niiden hinta esitetään esimerkkinä siitä, miten palvelu voisi toimia.",
+  "terms.changes.title": "Saatavuus ja muutokset",
+  "terms.changes.body":
+    "Prototyyppi tarjotaan sellaisenaan, ja se voi muuttua tai olla poissa käytöstä. Jos ehdot muuttuvat, sinua pyydetään hyväksymään ne uudelleen.",
+  "settings.termsLink": "Käyttöehdot",
   "coach.fallback":
     "Voin näyttää, mihin rahasi menevät, paljonko on turvallista käyttää, mitä vähennys säästäisi, säännölliset maksusi tai miten vertaudut ikäisiisi.",
   "coach.statfin.title": "Sinä ja suomalaiset kotitaloudet",

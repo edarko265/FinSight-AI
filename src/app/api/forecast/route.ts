@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { forecastFor } from "@/lib/coach/tools";
 
 const body = z.object({
@@ -16,5 +16,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   return Response.json(forecastFor(ctx, parsed.data));
 }

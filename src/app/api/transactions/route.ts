@@ -3,7 +3,7 @@ import { z } from "zod";
 import { classify } from "@/lib/analytics/classify";
 import { isValidDate } from "@/lib/analytics/periods";
 import { filterSpending } from "@/lib/analytics/spending";
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 
 const date = z.string().refine(isValidDate);
 const list = z
@@ -26,6 +26,8 @@ export async function GET(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
 
   const { start, end, categories, mccs, offset, limit } = parsed.data;
   const matches = filterSpending(ctx.record.transactions, {

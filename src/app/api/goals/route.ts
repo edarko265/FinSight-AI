@@ -2,13 +2,15 @@ import { z } from "zod";
 
 import { getSettings } from "@/lib/admin/settings";
 import { buildRecommendations, buildRewards } from "@/lib/coach/advice";
-import { getSessionContext, unauthorized } from "@/lib/coach/context";
+import { getSessionContext, termsRequired, unauthorized } from "@/lib/coach/context";
 import { deleteGoal, listGoalPlans, setGoal, updateGoal } from "@/lib/coach/goals";
 
 /** The customer's goals with their funding plans, their rewards and current recommendations. */
 export async function GET(request: Request): Promise<Response> {
   const ctx = await getSessionContext(new URL(request.url).searchParams.get("locale"));
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   const plans = await listGoalPlans(ctx);
   const settings = await getSettings();
   return Response.json({
@@ -25,6 +27,8 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   await deleteGoal(ctx, parsed.data.id);
   return Response.json({ ok: true });
 }
@@ -42,6 +46,8 @@ export async function PATCH(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   const { id, ...changes } = parsed.data;
   if (!(await updateGoal(ctx, id, changes)))
     return Response.json({ error: "not_found" }, { status: 404 });
@@ -60,6 +66,8 @@ export async function POST(request: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
   const ctx = await getSessionContext();
   if (!ctx) return unauthorized();
+  const blocked = await termsRequired(ctx);
+  if (blocked) return blocked;
   await setGoal(ctx, parsed.data);
   return Response.json({ ok: true });
 }
