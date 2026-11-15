@@ -97,6 +97,11 @@ All notable changes to this project are documented here. The format follows
   once, and saving one says straight away if it took a limit or the plan off course.
   Stored sealed with the customer's key. English, Finnish and Swedish.
 
+- **Demo sign-in by customer kind.** Sign-in first asks which kind of customer to see
+  (steady, tight before payday, young adult, retired, mortgage approved, mortgage turned
+  down), then lists four of that kind to pick from, with the home price and the reason for a
+  mortgage customer. Any other customer ID can still be typed.
+
 ### Changed
 
 - **Speed.** The server functions now run in Frankfurt, next to the database (they had been

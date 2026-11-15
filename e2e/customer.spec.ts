@@ -10,6 +10,9 @@ test("signs in through the step-by-step form and accepts the terms", async ({ pa
   await expectAccessible(page);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   // A customer no other test signs in as, so this really is their first sign-in.
+  // The demo offers customers by kind; these tests use their own made-up customer.
+  await page.getByRole("radio", { name: /I have a customer ID/ }).check();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByLabel("Customer ID").fill(E2E_CUSTOMER_TIGHT);
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill(E2E_DEMO_PASSWORD);
@@ -17,6 +20,22 @@ test("signs in through the step-by-step form and accepts the terms", async ({ pa
   await page.waitForURL("**/dashboard");
   // First sign-in: the terms come before anything of the customer's is shown.
   await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("the demo sign-in offers customers by kind, mortgage customers included", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Which kind of customer?" })).toBeVisible();
+  await page.getByRole("radio", { name: /Mortgage turned down/ }).check();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Pick a customer" })).toBeVisible();
+  // Four customers of that kind, each with the reason on record; the first is already chosen.
+  await expect(page.getByRole("radio")).toHaveCount(4);
+  await expect(page.getByText(/Income too low for the payments/)).toBeVisible();
+  await expect(page.getByRole("radio").first()).toBeChecked();
+  await expectAccessible(page);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
 });
 
 test("a wrong password is refused", async ({ page }) => {
@@ -42,6 +61,9 @@ test("a customer with two-step sign-in is asked for the code, and gets in with i
     await page.context().clearCookies();
     await page.goto("/login");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    // The demo offers customers by kind; these tests use their own made-up customer.
+    await page.getByRole("radio", { name: /I have a customer ID/ }).check();
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByLabel("Customer ID").fill(E2E_CUSTOMER_TIGHT);
     await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByLabel("Password", { exact: true }).fill(E2E_DEMO_PASSWORD);
