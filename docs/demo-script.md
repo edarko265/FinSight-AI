@@ -21,22 +21,28 @@ useful as a backup if the network fails on stage.
 
 The figures above are for the demo date, 15 September 2026.
 
+Sign-in offers customers by kind: steady month, tight before payday, young adult, retired,
+mortgage approved and mortgage turned down, four of each. To show the Mortgage guide with a
+real application in it, choose a mortgage kind, for example `CUST04457` (approved) or
+`CUST00296` (turned down: income too low for the payments). **I have a customer ID** takes
+any other ID.
+
 ---
 
 ## Three minutes
 
-| Time | Do                                                                                                 | Say                                                                                                                                         |
-| ---- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0:00 | Open the sign-in page. Tap **Sign in**, pick _Steady month_, use the demo password                 | "Synthetic customer, synthetic data. No Finnish bank lets you talk to your own money yet. This does."                                       |
-| 0:20 | Dashboard appears. Point at the balance card                                                       | "Balance, and what is actually safe to spend this week after bills, essentials and a reserve. An estimate, and it says so."                 |
-| 0:35 | Coach → tap **How much did I spend on taxis last month?**                                          | "The model does not do the sum. It picks a calculation; our server runs it to the cent."                                                    |
-| 0:50 | Tap **See transactions**                                                                           | "Every answer opens the transactions behind it. That is the trust."                                                                         |
-| 1:05 | Type: _where does my money go, as a pie chart_                                                     | "The three baskets from the brief: regular bills, irregular essentials, everyday spending. And the customer chose the chart, not the bank." |
-| 1:25 | Tap **Add to dashboard**, go to Dashboard, switch the widget to **Bars**                           | "They build their own dashboard and save it as a view."                                                                                     |
-| 1:40 | Coach → **Start a voice call**. Ask aloud: _"Paljonko voin käyttää tällä viikolla?"_               | "Finnish, by voice, same numbers. The voice agent has no access to data; it asks our coach."                                                |
-| 2:10 | End call. Type: _I want to take the kids to Lapland next winter, maybe two thousand_               | "A goal from a sentence, with a plan built from what this customer usually has left."                                                       |
-| 2:30 | Goals tab                                                                                          | "Recommendations with their monthly value, and rewards for progress against their own past, not against other people."                      |
-| 2:45 | Admin tab → **Controls** → switch **AI coach** off. Back to the phone, ask the taxi question again | "AI off. Same answer, same chart, labelled basic mode. And staff see what customers ask about without ever seeing who asked."               |
+| Time | Do                                                                                                     | Say                                                                                                                                         |
+| ---- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00 | Open the sign-in page. Tap **Sign in**, choose _Steady month_, pick `CUST03707`, use the demo password | "Synthetic customer, synthetic data. No Finnish bank lets you talk to your own money yet. This does."                                       |
+| 0:20 | Dashboard appears. Point at the balance card                                                           | "Balance, and what is actually safe to spend this week after bills, essentials and a reserve. An estimate, and it says so."                 |
+| 0:35 | Coach → tap **How much did I spend on taxis last month?**                                              | "The model does not do the sum. It picks a calculation; our server runs it to the cent."                                                    |
+| 0:50 | Tap **See transactions**                                                                               | "Every answer opens the transactions behind it. That is the trust."                                                                         |
+| 1:05 | Type: _where does my money go, as a pie chart_                                                         | "The three baskets from the brief: regular bills, irregular essentials, everyday spending. And the customer chose the chart, not the bank." |
+| 1:25 | Tap **Add to dashboard**, go to Dashboard, switch the widget to **Bars**                               | "They build their own dashboard and save it as a view."                                                                                     |
+| 1:40 | Coach → **Start a voice call**. Ask aloud: _"Paljonko voin käyttää tällä viikolla?"_                   | "Finnish, by voice, same numbers. The voice agent has no access to data; it asks our coach."                                                |
+| 2:10 | End call. Type: _I want to take the kids to Lapland next winter, maybe two thousand_                   | "A goal from a sentence, with a plan built from what this customer usually has left."                                                       |
+| 2:30 | Goals tab                                                                                              | "Recommendations with their monthly value, and rewards for progress against their own past, not against other people."                      |
+| 2:45 | Admin tab → **Controls** → switch **AI coach** off. Back to the phone, ask the taxi question again     | "AI off. Same answer, same chart, labelled basic mode. And staff see what customers ask about without ever seeing who asked."               |
 
 ### If something fails live
 

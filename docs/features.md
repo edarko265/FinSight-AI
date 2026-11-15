@@ -7,12 +7,12 @@ screen: a bottom bar on a phone, a side menu on a tablet or desktop. Screens are
 
 ## 1. Signing in
 
-|                     |                                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Where**           | `/login`                                                                                                     |
-| **How**             | Tap **Sign in**. A two-step sheet asks for the customer ID, then the password                                |
-| **Help on the way** | Each step says what to enter. In demo mode, example customers and the demo password can be tapped to fill in |
-| **Also**            | Eye button to show the password; **Forgot password?**; language selector with flags                          |
+|                     |                                                                                                                                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Where**           | `/login`                                                                                                                                                                                                                                                      |
+| **How**             | Tap **Sign in**. A sheet asks which customer, then the password. In demo mode the customer is chosen by kind (steady, tight, young adult, retired, mortgage approved, mortgage turned down) and then picked from four of that kind; any other ID can be typed |
+| **Help on the way** | Each step says what to enter. In demo mode, example customers and the demo password can be tapped to fill in                                                                                                                                                  |
+| **Also**            | Eye button to show the password; **Forgot password?**; language selector with flags                                                                                                                                                                           |
 
 The accounts are the bank's 5,100 synthetic customers. There is no real bank login.
 

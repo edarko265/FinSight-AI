@@ -9,20 +9,30 @@ import { LanguagePicker } from "@/components/settings/LanguagePicker";
 import { Logo } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { useAsyncAction } from "@/components/ui/useAsyncAction";
-import { Suggestions, Wizard, WizardField } from "@/components/ui/Wizard";
+import { Suggestions, Wizard, WizardChoices, WizardField } from "@/components/ui/Wizard";
 import { api } from "@/lib/api-client";
 import { isApiError } from "@/lib/async-action";
-import { DEMO_PERSONAS } from "@/lib/demo/personas";
+import {
+  DEMO_PERSONAS,
+  PERSONA_TYPES,
+  type DemoPersona,
+  type PersonaType,
+} from "@/lib/demo/personas";
+import { formatMoney } from "@/lib/i18n/config";
 import type { MessageKey } from "@/lib/i18n/translate";
 
 const NAVIGATION_TIMEOUT_MS = 10_000;
 
 /** The sign-in page: a welcome with one button, which opens a two-step sign-in. */
 export function LoginForm({ demoPassword }: { demoPassword: string | null }): React.JSX.Element {
-  const { t } = usePreferences();
+  const { t, locale } = usePreferences();
+  // In the demo the customer is picked by the kind of story their data tells; "own" types an ID.
+  const [kind, setKind] = useState<PersonaType | "own">("steady");
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [customerId, setCustomerId] = useState("");
+  const [customerId, setCustomerId] = useState(
+    demoPassword ? (DEMO_PERSONAS.steady[0]?.customerId ?? "") : "",
+  );
   const [password, setPassword] = useState("");
   // Asked for only when this customer has two-step sign-in on.
   const [needsCode, setNeedsCode] = useState(false);
@@ -39,6 +49,16 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
       }),
     { errorKey: () => null },
   );
+
+  /** What the list says about a demo customer: age, and for a mortgage the home and the outcome. */
+  function describe(persona: DemoPersona): string {
+    const parts = [t("login.persona.age", { age: persona.age })];
+    if (persona.homePriceCents) {
+      parts.push(t("login.persona.home", { price: formatMoney(persona.homePriceCents, locale) }));
+    }
+    if (persona.declined) parts.push(t(`mortgage.reason.${persona.declined}`));
+    return parts.join(" · ");
+  }
 
   async function signIn(): Promise<boolean> {
     setError(null);
@@ -113,34 +133,74 @@ export function LoginForm({ demoPassword }: { demoPassword: string | null }): Re
         }}
         onFinish={signIn}
         steps={[
-          {
-            title: t("login.step.id"),
-            hint: t("login.step.idHint"),
-            valid: customerId.trim().length > 0,
-            content: (
-              <>
-                <WizardField
-                  label={t("login.customerId")}
-                  value={customerId}
-                  onChange={(event) => setCustomerId(event.target.value)}
-                  placeholder={t("login.customerIdHint")}
-                  autoComplete="username"
-                  autoCapitalize="characters"
-                  autoFocus
-                />
-                {demoPassword ? (
-                  <Suggestions
-                    label={t("login.demoTitle")}
-                    options={DEMO_PERSONAS.map((persona) => ({
-                      label: `${t(persona.label)} · ${persona.customerId}`,
+          ...(demoPassword
+            ? [
+                {
+                  title: t("login.step.type"),
+                  hint: t("login.step.typeHint"),
+                  valid: true,
+                  content: (
+                    <WizardChoices
+                      name="customer-type"
+                      value={kind}
+                      onChange={(next: PersonaType | "own") => {
+                        setKind(next);
+                        // Start on the first customer of the kind, so Next always has one chosen.
+                        setCustomerId(
+                          next === "own" ? "" : (DEMO_PERSONAS[next][0]?.customerId ?? ""),
+                        );
+                      }}
+                      options={[
+                        ...PERSONA_TYPES.map((type) => ({
+                          value: type,
+                          label: t(`login.type.${type}`),
+                          note: t(`login.type.${type}.note`),
+                        })),
+                        {
+                          value: "own" as const,
+                          label: t("login.type.own"),
+                          note: t("login.type.own.note"),
+                        },
+                      ]}
+                    />
+                  ),
+                },
+              ]
+            : []),
+          demoPassword && kind !== "own"
+            ? {
+                title: t("login.step.pick"),
+                hint: t("login.step.pickHint", { type: t(`login.type.${kind}`) }),
+                valid: customerId.trim().length > 0,
+                content: (
+                  <WizardChoices
+                    name="customer"
+                    value={customerId}
+                    onChange={setCustomerId}
+                    options={DEMO_PERSONAS[kind].map((persona) => ({
                       value: persona.customerId,
+                      label: persona.customerId,
+                      note: describe(persona),
                     }))}
-                    onPick={setCustomerId}
                   />
-                ) : null}
-              </>
-            ),
-          },
+                ),
+              }
+            : {
+                title: t("login.step.id"),
+                hint: t("login.step.idHint"),
+                valid: customerId.trim().length > 0,
+                content: (
+                  <WizardField
+                    label={t("login.customerId")}
+                    value={customerId}
+                    onChange={(event) => setCustomerId(event.target.value)}
+                    placeholder={t("login.customerIdHint")}
+                    autoComplete="username"
+                    autoCapitalize="characters"
+                    autoFocus
+                  />
+                ),
+              },
           {
             title: t("login.step.password"),
             hint: t("login.step.passwordHint"),

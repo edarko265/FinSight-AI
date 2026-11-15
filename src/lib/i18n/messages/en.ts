@@ -1909,6 +1909,28 @@ export const en = {
   "trash.kind.entry": "Income or expense",
   "admin.topic.entry_income": "Income recorded",
   "admin.topic.entry_expense": "Expense recorded",
+  "login.step.type": "Which kind of customer?",
+  "login.step.typeHint":
+    "This is a demo on synthetic data. Choose the kind of customer you want to see.",
+  "login.step.pick": "Pick a customer",
+  "login.step.pickHint": "A few customers of this kind: {type}. Choose one to sign in as.",
+  "login.type.steady": "Steady month",
+  "login.type.steady.note": "Income covers the month with room to spare",
+  "login.type.tight": "Tight before payday",
+  "login.type.tight.note": "Likely to run short this week",
+  "login.type.young": "Young adult",
+  "login.type.young.note": "Aged 18 to 25",
+  "login.type.senior": "Retired",
+  "login.type.senior.note": "Aged 66 or over",
+  "login.type.mortgageApproved": "Mortgage approved",
+  "login.type.mortgageApproved.note":
+    "Applied for a home loan and got it. See it in the Mortgage guide",
+  "login.type.mortgageDeclined": "Mortgage turned down",
+  "login.type.mortgageDeclined.note": "Applied for a home loan and was refused, with the reason",
+  "login.type.own": "I have a customer ID",
+  "login.type.own.note": "Type any customer ID yourself",
+  "login.persona.age": "Age {age}",
+  "login.persona.home": "home {price}",
 } as const;
 
 export type MessageKey = keyof typeof en;
