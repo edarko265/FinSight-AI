@@ -25,25 +25,25 @@
     "limits:clear": "tsx scripts/clear-limits.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^4.0.119",
-    "@ai-sdk/openai": "^4.0.116",
-    "@electric-sql/pglite": "^0.5.16",
-    "@elevenlabs/react": "^1.22.0",
-    "ai": "^7.0.171",
+    "@ai-sdk/google": "^4.0.126",
+    "@ai-sdk/openai": "^4.0.123",
+    "@electric-sql/pglite": "^0.6.0",
+    "@elevenlabs/react": "^1.24.0",
+    "ai": "^7.0.181",
     "csv-parse": "^7.0.3",
     "next": "16.4.6",
     "pg": "^8.23.1",
     "qrcode": "1.5.4",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "server-only": "^0.0.1",
     "web-push": "^4.0.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.14.0",
-    "@playwright/test": "1.65.0",
-    "@tailwindcss/turbopack": "4.3.3",
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "1.65.1",
+    "@tailwindcss/turbopack": "4.3.5",
     "@types/node": "^24",
     "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
@@ -53,10 +53,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "prettier": "^3.10.1",
-    "tailwindcss": "4.3.3",
+    "tailwindcss": "4.3.5",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "engines": {
     "node": "24.x"
